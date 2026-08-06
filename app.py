@@ -410,4 +410,17 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:
+        import traceback
+        err_msg = traceback.format_exc()
+        try:
+            with open("optimizer_error.log", "a") as f:
+                f.write(err_msg + "\n")
+        except Exception:
+            pass
+        try:
+            messagebox.showerror("Optimizer Error", f"An error occurred:\n\n{err_msg}")
+        except Exception:
+            pass

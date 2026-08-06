@@ -209,8 +209,8 @@ class OptimizerCore:
             try:
                 script_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "app.py"))
                 work_dir = os.path.dirname(script_path)
-                params = f'"{script_path}"'
-                ret = ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, params, work_dir, 1)
+                cmd_args = f'/c ""{sys.executable}" "{script_path}""'
+                ret = ctypes.windll.shell32.ShellExecuteW(None, "runas", "cmd.exe", cmd_args, work_dir, 1)
                 return int(ret) > 32
             except Exception as e:
                 return False
