@@ -7,13 +7,13 @@ import subprocess
 import tkinter as tk
 from tkinter import ttk, messagebox, scrolledtext
 
-# Import our core optimizer module
-try:
-    from optimizer_core import OptimizerCore
-except ImportError:
-    # If called from different path
-    sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-    from optimizer_core import OptimizerCore
+# Ensure working directory is set to script location (prevents UAC System32 dir reset)
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+os.chdir(SCRIPT_DIR)
+if SCRIPT_DIR not in sys.path:
+    sys.path.insert(0, SCRIPT_DIR)
+
+from optimizer_core import OptimizerCore
 
 
 class DeviceOptimizerApp(tk.Tk):
