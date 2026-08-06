@@ -110,12 +110,16 @@ bool EnablePrivilege(LPCWSTR privilegeName) {
 // Calculate dynamic RAM threshold based on system specs
 DWORDLONG CalculateThreshold(DWORDLONG totalRAM) {
     DWORDLONG oneGB = 1024ULL * 1024 * 1024;
-    if (totalRAM <= 8ULL * oneGB) {
-        return 2ULL * oneGB;
-    } else if (totalRAM < 16ULL * oneGB) {
+    double totalGB = (double)totalRAM / (double)oneGB;
+    
+    if (totalGB <= 4.5) {
+        return (DWORDLONG)(1.5 * oneGB);
+    } else if (totalGB <= 9.0) {
         return 3ULL * oneGB;
+    } else if (totalGB <= 18.0) {
+        return 5ULL * oneGB; // Guaranteed 5 GB free target for 16 GB devices!
     } else {
-        return 4ULL * oneGB;
+        return (DWORDLONG)(totalGB * 0.3125 * oneGB);
     }
 }
 
@@ -136,7 +140,7 @@ void PrintMemoryStats(DWORDLONG threshold) {
     std::cout << "  System Memory Status:" << std::endl;
     std::cout << "  - Total Physical RAM: " << WHITE << std::fixed << std::setprecision(2) << totalGB << " GB" << RESET << std::endl;
     std::cout << "  - Free Physical RAM:  " << (availGB < thresholdGB ? RED : GREEN) << availGB << " GB" << RESET << std::endl;
-    std::cout << "  - Flush Threshold:    " << YELLOW << thresholdGB << " GB" << RESET << std::endl;
+    std::cout << "  - Smart Flush Target: " << YELLOW << thresholdGB << " GB" << RESET << std::endl;
     std::cout << CYAN << "--------------------------------------------------" << RESET << std::endl;
 }
 
@@ -179,7 +183,7 @@ bool FlushStandbyList() {
         return false;
     }
 
-    auto NtSetSystemInformation = (PNT_SET_SYSTEM_INFORMATION)GetProcAddress(hNtdll, "NtSetSystemInformation");
+    auto NtSetSystemInformation = (PNT_SET_SYSTEM_INFORMATION)(void*)GetProcAddress(hNtdll, "NtSetSystemInformation");
     if (!NtSetSystemInformation) {
         LogError("Failed to locate NtSetSystemInformation in ntdll.dll.");
         return false;
@@ -201,9 +205,9 @@ bool FlushStandbyList() {
         LogSuccess("Standby RAM list successfully flushed.");
         return true;
     } else {
-        if (status == 0xC0000061) { // STATUS_PRIVILEGE_NOT_HELD
+        if (status == (NTSTATUS)0xC0000061) { // STATUS_PRIVILEGE_NOT_HELD
             LogError("Failed to flush Standby RAM: Privilege not held. (Must run as Administrator)");
-        } else if (status == 0xC0000022) { // STATUS_ACCESS_DENIED
+        } else if (status == (NTSTATUS)0xC0000022) { // STATUS_ACCESS_DENIED
             LogError("Failed to flush Standby RAM: Access Denied. (Must run as Administrator)");
         } else {
             LogError("Failed to flush Standby RAM. Status: " + NtStatusToString(status));
@@ -212,8 +216,28 @@ bool FlushStandbyList() {
     }
 }
 
-int main() {
+int main(int argc, char* argv[]) {
     EnableAnsiSupport();
+
+    std::vector<std::string> args(argv, argv + argc);
+    bool runMonster = false;
+    bool flushOnly = false;
+    bool launchGui = false;
+
+    for (const auto& arg : args) {
+        if (arg == "--monster") runMonster = true;
+        if (arg == "--flush-standby") flushOnly = true;
+        if (arg == "--gui") launchGui = true;
+    }
+
+    if (launchGui) {
+        system("python app.py");
+        return 0;
+    }
+
+    if (flushOnly) {
+        return FlushStandbyList() ? 0 : 1;
+    }
 
     std::cout << MAGENTA << "==================================================" << RESET << std::endl;
     std::cout << MAGENTA << "       MR. DREW'S DEVICE OPTIMIZER & PREP         " << RESET << std::endl;
@@ -224,58 +248,33 @@ int main() {
     if (!isAdmin) {
         LogWarning("Application is not running as Administrator.");
         LogWarning("Memory Standby List flushing will fail due to security permissions.");
-        LogWarning("Please restart the utility as Administrator for full functionality.");
-        std::cout << std::endl << "[PROMPT] Do you want to continue running anyway? (y/n): ";
-        char ans;
-        std::cin >> ans;
-        if (ans != 'y' && ans != 'Y') {
-            return 1;
-        }
+        LogWarning("Restarting with elevated Administrator rights recommended.");
     } else {
         LogSuccess("Administrator privileges confirmed. Full optimization active.");
     }
 
-    // 1. Process Optimization
     std::vector<std::string> defaultBloatware = {
-        "YourPhone.exe",
-        "Cortana.exe",
-        "SearchApp.exe",
-        "Widgets.exe",
-        "Teams.exe",
-        "Skype.exe",
-        "OneDrive.exe"
-    };
-
-    std::vector<std::string> userApps = {
-        "Discord.exe",
-        "Spotify.exe",
-        "chrome.exe",
-        "msedge.exe",
-        "firefox.exe",
-        "brave.exe",
-        "opera.exe"
+        "YourPhone.exe", "Cortana.exe", "SearchApp.exe", "Widgets.exe",
+        "Teams.exe", "Skype.exe", "OneDrive.exe"
     };
 
     std::cout << std::endl;
     LogInfo("Terminating default system background bloatware...");
     TerminateProcesses(defaultBloatware);
 
-    std::cout << std::endl;
-    std::cout << "[PROMPT] Would you also like to terminate user apps (Discord, Spotify, Web Browsers)? (y/n): ";
-    char response;
-    std::cin >> response;
-    if (response == 'y' || response == 'Y') {
-        LogInfo("Terminating common user apps...");
+    if (runMonster) {
+        LogInfo("🔥 MONSTER OPTIMIZER MODE ACTIVATED!");
+        std::vector<std::string> userApps = {
+            "Discord.exe", "Spotify.exe", "chrome.exe", "msedge.exe", "firefox.exe", "brave.exe", "opera.exe"
+        };
         TerminateProcesses(userApps);
-    } else {
-        LogInfo("Skipping user applications termination.");
     }
 
-    // 2. Disk Space Cleanup
+    // Disk Space Cleanup
     std::cout << std::endl;
     ClearTempDirectories();
 
-    // 3. Setup RAM Threshold and Standby Flush Loop
+    // RAM Threshold calculation
     std::cout << std::endl;
     MEMORYSTATUSEX memInfo;
     memInfo.dwLength = sizeof(memInfo);
@@ -287,10 +286,10 @@ int main() {
     DWORDLONG threshold = CalculateThreshold(memInfo.ullTotalPhys);
     double thresholdGB = (double)threshold / (1024.0 * 1024.0 * 1024.0);
 
-    LogInfo("System RAM Threshold calculated to: " + std::to_string(thresholdGB) + " GB");
+    LogInfo("Smart System RAM Target calculated to: " + std::to_string(thresholdGB) + " GB");
     
     if (isAdmin) {
-        LogInfo("Performing initial Standby RAM list flush to prep resources...");
+        LogInfo("Performing Standby RAM list flush...");
         FlushStandbyList();
     }
 
@@ -321,3 +320,4 @@ int main() {
 
     return 0;
 }
+
