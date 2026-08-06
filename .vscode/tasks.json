@@ -29,7 +29,7 @@
         {
             "label": "C/C++: Build Native Binary (g++)",
             "type": "shell",
-            "command": "C:/Users/Raghav Gogoi/AppData/Local/Microsoft/WinGet/Packages/BrechtSanders.WinLibs.POSIX.UCRT_Microsoft.Winget.Source_8wekyb3d8bbwe/mingw64/bin/g++.exe",
+            "command": "g++",
             "args": [
                 "-O3",
                 "-std=c++17",

@@ -64,9 +64,9 @@ chmod +x run.sh
 
 ## 📁 Repository Structure
 
-- [app.py](file:///c:/Users/Raghav%20Gogoi/Mr.%20Drew%27s%20Device%20Optimizer/app.py): Main Desktop GUI Application.
-- [optimizer_core.py](file:///c:/Users/Raghav%20Gogoi/Mr.%20Drew%27s%20Device%20Optimizer/optimizer_core.py): Cross-platform OS & RAM smart adaptation engine with Monster Optimizer logic.
-- [main.cpp](file:///c:/Users/Raghav%20Gogoi/Mr.%20Drew%27s%20Device%20Optimizer/main.cpp): Native C++ high-performance Windows flusher helper binary.
-- [run.bat](file:///c:/Users/Raghav%20Gogoi/Mr.%20Drew%27s%20Device%20Optimizer/run.bat): One-click launcher for Windows.
-- [run.sh](file:///c:/Users/Raghav%20Gogoi/Mr.%20Drew%27s%20Device%20Optimizer/run.sh): One-click launcher for Linux / macOS.
-- [.vscode/tasks.json](file:///c:/Users/Raghav%20Gogoi/Mr.%20Drew%27s%20Device%20Optimizer/.vscode/tasks.json): Integrated VSCode tasks for one-key execution.
+- `app.py`: Main Desktop GUI Application.
+- `optimizer_core.py`: Cross-platform OS & RAM smart adaptation engine with Monster Optimizer logic.
+- `main.cpp`: Native C++ high-performance Windows flusher helper binary.
+- `run.bat`: One-click launcher for Windows.
+- `run.sh`: One-click launcher for Linux / macOS.
+- `.vscode/tasks.json`: Integrated VSCode tasks for one-key execution.
