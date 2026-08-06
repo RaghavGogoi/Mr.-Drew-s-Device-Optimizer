@@ -203,6 +203,17 @@ class OptimizerCore:
         except Exception:
             return False
 
+    def relaunch_as_admin(self) -> bool:
+        """Relaunch the current script with Administrator privileges on Windows."""
+        if self.os_type == "windows" and not self.is_admin:
+            try:
+                args = " ".join([f'"{arg}"' for arg in sys.argv])
+                ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, args, None, 1)
+                return True
+            except Exception:
+                return False
+        return False
+
     def flush_standby_list(self) -> Tuple[bool, str]:
         """Flushes system standby memory cache."""
         if self.os_type == "windows":
@@ -220,12 +231,14 @@ class OptimizerCore:
                     ctypes.byref(cmd),
                     ctypes.sizeof(cmd)
                 )
-                if status == 0:
+                
+                unsigned_status = ctypes.c_ulong(status).value
+                if unsigned_status == 0:
                     return True, "Standby RAM list successfully flushed via NT Kernel."
-                elif status == 0xC0000061 or status == 0xC0000022:
+                elif unsigned_status in (0xC0000061, 0xC0000022):
                     return False, "Administrator privilege required to purge Windows Standby Memory."
                 else:
-                    return False, f"NtSetSystemInformation returned status code: {hex(status)}"
+                    return False, f"NtSetSystemInformation returned status code: {hex(unsigned_status)}"
             except Exception as e:
                 return False, f"Failed to flush Standby RAM: {str(e)}"
         elif self.os_type == "linux":

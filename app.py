@@ -112,15 +112,20 @@ class DeviceOptimizerApp(tk.Tk):
         os_badge.pack(side='left', padx=5)
 
         admin_color = self.COLOR_GREEN if self.specs['is_admin'] else self.COLOR_AMBER
-        admin_text = "🛡️ ADMIN ACTIVE" if self.specs['is_admin'] else "⚠️ USER MODE"
-        admin_badge = tk.Label(
+        admin_text = "🛡️ ADMIN ACTIVE" if self.specs['is_admin'] else "⚠️ USER MODE (Click to Elevate)"
+        admin_badge = tk.Button(
             right_frame,
             text=admin_text,
             font=('Segoe UI', 9, 'bold'),
             fg=admin_color,
             bg=self.COLOR_CARD,
+            activebackground="#334155",
+            activeforeground=admin_color,
+            relief='flat',
+            cursor='hand2',
             padx=12,
-            pady=6
+            pady=6,
+            command=self._on_click_elevate
         )
         admin_badge.pack(side='left', padx=5)
 
@@ -343,7 +348,29 @@ class DeviceOptimizerApp(tk.Tk):
 
         threading.Thread(target=worker, daemon=True).start()
 
+    def _on_click_elevate(self):
+        if not self.specs['is_admin']:
+            self._log("Prompting for Administrator elevation (UAC)...")
+            relaunched = self.core.relaunch_as_admin()
+            if relaunched:
+                self._log("Relaunching application as Administrator...")
+                self.destroy()
+            else:
+                messagebox.showwarning("Elevation Failed", "Could not elevate process to Administrator privileges.")
+        else:
+            messagebox.showinfo("Administrator Privileges", "Application is already running with full Administrator privileges.")
+
     def _on_purge_standby(self):
+        if not self.specs['is_admin'] and self.specs['os_name'] == 'Windows':
+            res = messagebox.askyesno(
+                "Administrator Privileges Required",
+                "Flushing the Windows Standby Memory list requires Administrator privileges.\n\n"
+                "Would you like to restart the optimizer as Administrator now?"
+            )
+            if res:
+                self._on_click_elevate()
+                return
+
         def worker():
             self._log("Purging Standby RAM list...")
             success, msg = self.core.flush_standby_list()
