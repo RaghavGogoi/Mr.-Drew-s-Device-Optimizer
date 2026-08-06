@@ -221,27 +221,40 @@ class OptimizerCore:
         """Flushes system standby memory cache."""
         if self.os_type == "windows":
             try:
-                # Call undocumented NtSetSystemInformation (Class 80, Command 4: MemoryPurgeStandbyList)
-                SystemMemoryListInformation = 80
-                MemoryPurgeStandbyList = 4
+                # 1. If running as Admin, execute NtSetSystemInformation directly
+                if self.is_admin:
+                    SystemMemoryListInformation = 80
+                    MemoryPurgeStandbyList = 4
 
-                self.enable_windows_privilege("SeProfileSingleProcessPrivilege")
+                    self.enable_windows_privilege("SeProfileSingleProcessPrivilege")
 
-                ntdll = ctypes.windll.ntdll
-                cmd = ctypes.c_int(MemoryPurgeStandbyList)
-                status = ntdll.NtSetSystemInformation(
-                    SystemMemoryListInformation,
-                    ctypes.byref(cmd),
-                    ctypes.sizeof(cmd)
-                )
-                
-                unsigned_status = ctypes.c_ulong(status).value
-                if unsigned_status == 0:
-                    return True, "Standby RAM list successfully flushed via NT Kernel."
-                elif unsigned_status in (0xC0000061, 0xC0000022):
-                    return False, "Administrator privilege required to purge Windows Standby Memory."
-                else:
-                    return False, f"NtSetSystemInformation returned status code: {hex(unsigned_status)}"
+                    ntdll = ctypes.windll.ntdll
+                    cmd = ctypes.c_int(MemoryPurgeStandbyList)
+                    status = ntdll.NtSetSystemInformation(
+                        SystemMemoryListInformation,
+                        ctypes.byref(cmd),
+                        ctypes.sizeof(cmd)
+                    )
+                    
+                    unsigned_status = ctypes.c_ulong(status).value
+                    if unsigned_status == 0:
+                        return True, "Standby RAM list successfully flushed via NT Kernel."
+                    elif unsigned_status in (0xC0000061, 0xC0000022):
+                        return False, "Administrator privilege required to purge Windows Standby Memory."
+                    else:
+                        return False, f"NtSetSystemInformation returned status code: {hex(unsigned_status)}"
+
+                # 2. If in User Mode, invoke compiled DeviceOptimizer.exe via elevated UAC runas
+                exe_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "DeviceOptimizer.exe"))
+                if os.path.exists(exe_path):
+                    work_dir = os.path.dirname(exe_path)
+                    ret = ctypes.windll.shell32.ShellExecuteW(None, "runas", exe_path, "--flush-standby", work_dir, 0)
+                    if int(ret) > 32:
+                        return True, "Standby RAM list successfully flushed via Elevated Helper."
+                    else:
+                        return False, "Administrator elevation prompt was cancelled or denied."
+
+                return False, "Administrator privilege required to purge Windows Standby Memory."
             except Exception as e:
                 return False, f"Failed to flush Standby RAM: {str(e)}"
         elif self.os_type == "linux":

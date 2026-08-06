@@ -361,16 +361,6 @@ class DeviceOptimizerApp(tk.Tk):
             messagebox.showinfo("Administrator Privileges", "Application is already running with full Administrator privileges.")
 
     def _on_purge_standby(self):
-        if not self.specs['is_admin'] and self.specs['os_name'] == 'Windows':
-            res = messagebox.askyesno(
-                "Administrator Privileges Required",
-                "Flushing the Windows Standby Memory list requires Administrator privileges.\n\n"
-                "Would you like to restart the optimizer as Administrator now?"
-            )
-            if res:
-                self._on_click_elevate()
-                return
-
         def worker():
             self._log("Purging Standby RAM list...")
             success, msg = self.core.flush_standby_list()
