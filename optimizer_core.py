@@ -207,10 +207,12 @@ class OptimizerCore:
         """Relaunch the current script with Administrator privileges on Windows."""
         if self.os_type == "windows" and not self.is_admin:
             try:
-                args = " ".join([f'"{arg}"' for arg in sys.argv])
-                ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, args, None, 1)
-                return True
-            except Exception:
+                script_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "app.py"))
+                work_dir = os.path.dirname(script_path)
+                params = f'"{script_path}"'
+                ret = ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, params, work_dir, 1)
+                return int(ret) > 32
+            except Exception as e:
                 return False
         return False
 

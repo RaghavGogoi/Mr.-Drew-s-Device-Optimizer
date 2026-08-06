@@ -354,9 +354,9 @@ class DeviceOptimizerApp(tk.Tk):
             relaunched = self.core.relaunch_as_admin()
             if relaunched:
                 self._log("Relaunching application as Administrator...")
-                self.destroy()
+                self.after(800, self.destroy)
             else:
-                messagebox.showwarning("Elevation Failed", "Could not elevate process to Administrator privileges.")
+                messagebox.showwarning("Elevation Failed", "Administrator elevation was cancelled or denied.")
         else:
             messagebox.showinfo("Administrator Privileges", "Application is already running with full Administrator privileges.")
 
