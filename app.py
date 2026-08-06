@@ -71,7 +71,7 @@ class DeviceOptimizerApp(tk.Tk):
         self.style.configure('CardValue.TLabel', background=self.COLOR_CARD, foreground=self.COLOR_TEXT, font=('Segoe UI', 16, 'bold'))
 
     def _create_header(self):
-        header_frame = tk.Frame(self, bg=self.COLOR_BG, pady=15, px=20)
+        header_frame = tk.Frame(self, bg=self.COLOR_BG, pady=15, padx=20)
         header_frame.pack(fill='x', side='top')
 
         left_frame = tk.Frame(header_frame, bg=self.COLOR_BG)
