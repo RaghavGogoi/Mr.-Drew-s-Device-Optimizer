@@ -2,9 +2,9 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "⚡ Run Mr. Drew's Device Optimizer App",
+            "label": "🛡️ Run Mr. Drew's Device Optimizer App (Admin)",
             "type": "shell",
-            "command": "python app.py",
+            "command": ".\\run.bat",
             "problemMatcher": [],
             "group": {
                 "kind": "build",
@@ -16,7 +16,21 @@
                 "focus": false,
                 "panel": "shared"
             },
-            "detail": "Launches the Mr. Drew's Device Optimizer Desktop GUI Application automatically."
+            "detail": "Launches Mr. Drew's Device Optimizer Desktop GUI Application with Administrator elevation."
+        },
+        {
+            "label": "⚡ Run Mr. Drew's Device Optimizer App",
+            "type": "shell",
+            "command": "python app.py",
+            "problemMatcher": [],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "detail": "Launches Mr. Drew's Device Optimizer Desktop GUI Application in User mode."
         },
         {
             "label": "🔥 Run Monster Optimizer (CLI)",
@@ -25,26 +39,6 @@
             "problemMatcher": [],
             "group": "test",
             "detail": "Executes Monster RAM recovery directly via command line."
-        },
-        {
-            "label": "C/C++: Build Native Binary (g++)",
-            "type": "shell",
-            "command": "g++",
-            "args": [
-                "-O3",
-                "-std=c++17",
-                "main.cpp",
-                "-o",
-                "DeviceOptimizer.exe",
-                "-lpsapi"
-            ],
-            "options": {
-                "cwd": "${workspaceFolder}"
-            },
-            "problemMatcher": [
-                "$gcc"
-            ],
-            "detail": "Compiles high-performance C++ Windows kernel flusher binary."
         }
     ]
 }

@@ -162,6 +162,44 @@ class OptimizerCore:
 
         return int(target_gb * one_gb)
 
+    def get_top_ram_processes(self, count: int = 10) -> List[Dict[str, Any]]:
+        """Returns the top N processes using the most physical RAM."""
+        procs = []
+        if HAS_PSUTIL:
+            for proc in psutil.process_iter(['pid', 'name', 'memory_info']):
+                try:
+                    info = proc.info
+                    name = info['name'] or 'Unknown'
+                    mem_bytes = info['memory_info'].rss if info['memory_info'] else 0
+                    mem_mb = round(mem_bytes / (1024 * 1024), 1)
+                    procs.append({
+                        "pid": info['pid'],
+                        "name": name,
+                        "mem_bytes": mem_bytes,
+                        "mem_mb": mem_mb
+                    })
+                except (psutil.NoSuchProcess, psutil.AccessDenied, Exception):
+                    continue
+        else:
+            if self.os_type == "windows":
+                try:
+                    output = subprocess.check_output("tasklist /FO CSV /NH", shell=True, text=True)
+                    for line in output.strip().splitlines():
+                        parts = [p.strip('"') for p in line.split('","')]
+                        if len(parts) >= 5:
+                            name = parts[0]
+                            pid = int(parts[1]) if parts[1].isdigit() else 0
+                            mem_str = parts[4].replace(' K', '').replace(',', '').replace('.', '')
+                            mem_bytes = int(mem_str) * 1024 if mem_str.isdigit() else 0
+                            mem_mb = round(mem_bytes / (1024 * 1024), 1)
+                            procs.append({"pid": pid, "name": name, "mem_bytes": mem_bytes, "mem_mb": mem_mb})
+                except Exception:
+                    pass
+
+        procs.sort(key=lambda x: x['mem_bytes'], reverse=True)
+        return procs[:count]
+
+
     def enable_windows_privilege(self, privilege_name: str) -> bool:
         """Acquire Windows process privilege (e.g. SeProfileSingleProcessPrivilege)."""
         if self.os_type != "windows":
@@ -209,10 +247,8 @@ class OptimizerCore:
             try:
                 script_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "app.py"))
                 work_dir = os.path.dirname(script_path)
-                pythonw_path = os.path.join(os.path.dirname(sys.executable), "pythonw.exe")
-                exe_to_run = pythonw_path if os.path.exists(pythonw_path) else sys.executable
 
-                ret = ctypes.windll.shell32.ShellExecuteW(None, "runas", exe_to_run, f'"{script_path}"', work_dir, 1)
+                ret = ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, f'"{script_path}"', work_dir, 1)
                 return int(ret) > 32
             except Exception as e:
                 return False
