@@ -1,10 +1,27 @@
-# ⚡ Mr. Drew's Device Optimizer & Memory Manager
+# ⚡ Mr. Drew's Device & FPS Optimizer
 
-A modern, cross-platform Desktop GUI Application & system prep utility designed to intelligently optimize device performance, reclaim physical RAM, and purge background bloatware before running demanding workloads like **Unreal Engine**, **Roblox Studio**, **Unity**, or **AAA Games**.
+A modern, cross-platform Desktop GUI Application & system prep utility designed to intelligently optimize device performance, boost gaming FPS, lower input latency, reclaim physical RAM, and purge background bloatware before running demanding games and workloads like **Unreal Engine**, **Roblox Studio**, **Unity**, **Fortnite**, **Valorant**, or **AAA Games**.
 
 ![Python](https://img.shields.io/badge/Python-3.8%2B-blue.svg)
 ![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux%20%7C%20macOS-brightgreen.svg)
+![Gaming FPS](https://img.shields.io/badge/FPS-Booster%20%26%20Latency-orange.svg)
 ![License](https://img.shields.io/badge/License-MIT-purple.svg)
+
+---
+
+## 🎮 What's New: FPS Booster & 4GB Potato PC Presets!
+
+- 🚀 **High-FPS & Low Latency Gaming Engine**:
+  - **1ms High-Precision System Timer**: Locks system timer resolution to 1.0ms (`timeBeginPeriod`) to eliminate micro-stutters and input lag.
+  - **Ultimate / High Performance OS Power Scheme**: Forces Windows/Linux/macOS into maximum frequency state.
+  - **GPU Shader Cache Cleaner**: Flushes Nvidia (`DXCache`, `GLCache`), AMD (`DxCache`), Intel, and DirectX shader caches to stop frame dropping and hitches.
+  - **Game Process CPU Priority Booster**: Automatically boosts your active game process priority to `HIGH_PRIORITY_CLASS`.
+- 🥔 **4GB "Potato Device" Ultra-Light Preset**:
+  - Tailored low-RAM profile (targeting **1.5 GB - 2.0 GB free RAM** for 4GB machines).
+  - Performs aggressive working-set compaction, drops inactive page caches, and stops telemetry processes to allow smooth gaming even on low-end hardware.
+- 🖥️ **Super-Smart OS & GPU Detector**:
+  - Automatically detects your OS (Windows 10/11, Linux distributions/SteamOS, macOS Apple Silicon & Intel).
+  - Inspects physical/logical CPU cores and GPU vendor (Nvidia, AMD, Intel, Apple Metal) to apply custom hardware tweaks.
 
 ---
 
@@ -77,10 +94,20 @@ Once you have opened the project folder in VSCode (**File** -> **Open Folder** -
 
 ---
 
-## ✨ Features & Interactive Control Panel
+## ✨ Control Panel Features
 
+- 🎮 **RUN FPS & GAME BOOSTER**:
+  Runs the full gaming prep pipeline (1ms timer precision, Ultimate Power scheme, GPU shader cache clean, RAM recovery).
+- 🥔 **4GB Potato Mode**:
+  Triggers ultra-light 4GB RAM gaming preset tailored for budget/low-spec devices.
+- ⚡ **Ultimate Power Mode**:
+  Enables High/Ultimate performance OS power scheme.
+- 🧹 **Clean Shader Cache**:
+  Flushes DirectX, OpenGL, and Vulkan GPU shader caches.
+- 🎯 **Boost Game Process Priority**:
+  Select your active game process and elevate its CPU priority class to High.
 - 🔥 **Monster Optimizer Mode**:
-  High-yield multi-stage memory recovery. Compacts process working sets, flushes standby page cache, cleans temp files, and terminates bloatware in one click.
+  High-yield multi-stage RAM recovery mode that compacts process working sets and flushes standby list cache.
 - ✂️ **Trim App RAM**:
   Compacts active application working sets (`EmptyWorkingSet`), forcing unused cached memory back into free physical RAM without closing any apps.
 - 🛡️ **Purge Standby RAM**:
@@ -88,15 +115,11 @@ Once you have opened the project folder in VSCode (**File** -> **Open Folder** -
 - 🧹 **Clear Temp Files**:
   Safely sweeps system `%TEMP%` and `%SystemRoot%\Temp` directories while bypassing locked files.
 - 🚫 **End Bloatware**:
-  Terminates default background bloatware (`OneDrive.exe`, `Widgets.exe`, `Teams.exe`, `Cortana.exe`, etc.) while protecting critical system services.
+  Terminates default background bloatware (`OneDrive.exe`, `Widgets.exe`, `Teams.exe`, `Cortana.exe`, etc.).
 - 📊 **Top RAM Apps**:
   Displays a real-time list of top memory-consuming processes sorted by RAM usage.
 - ⚡ **Smart Auto-Guard (60s Loop)**:
   Continuous background monitoring thread that automatically triggers Standby List flushing and memory compaction whenever free RAM drops below your target threshold.
-- 🔄 **Refresh Stats**:
-  Instantly updates live RAM availability and CPU utilization metrics.
-- 🗑️ **Clear Console** & 📋 **Copy Log**:
-  Quick management controls to copy execution logs or clear the console widget.
 
 ---
 
@@ -104,13 +127,12 @@ Once you have opened the project folder in VSCode (**File** -> **Open Folder** -
 
 The application automatically detects your operating system and total physical RAM specs to dynamically compute optimal free memory targets:
 
-| Physical RAM | Smart Target Free RAM |
-| :--- | :--- |
-| **$\le$ 4 GB** | **$\ge$ 1.5 GB Free** |
-| **8 GB** | **$\ge$ 3.0 GB Free** |
-| **16 GB** | **$\ge$ 5.0 GB Free** *(Guaranteed!)* |
-| **32 GB** | **$\ge$ 10.0 GB Free** |
-| **64 GB+** | **$\ge$ 20.0 GB Free** |
+| Physical RAM | Device Profile | Smart Target Free RAM |
+| :--- | :--- | :--- |
+| **$\le$ 4 GB** | **🥔 Potato Device** | **$\ge$ 1.5 GB Free** |
+| **8 GB** | **⚡ Budget PC** | **$\ge$ 3.0 GB Free** |
+| **16 GB** | **🚀 Standard Rig** | **$\ge$ 5.0 GB Free** *(Guaranteed!)* |
+| **32 GB+** | **🔥 Gaming Rig** | **$\ge$ 10.0 GB Free** |
 
 ---
 
@@ -125,7 +147,7 @@ The optimizer incorporates a strict **System Process Whitelist** (`System`, `exp
 ```text
 Mr.-Drew-s-Device-Optimizer/
 ├── app.py                   # Main Desktop GUI Application (Tkinter, Glassmorphic UI)
-├── optimizer_core.py        # Cross-platform OS & RAM Smart Adaptation Engine
+├── optimizer_core.py        # Cross-platform OS, RAM & FPS Smart Adaptation Engine
 ├── main.cpp                 # C++ Windows NT kernel standby flusher binary source
 ├── DeviceOptimizer.exe      # Compiled native helper binary
 ├── run.bat                  # One-click Windows CMD & Administrator launcher

@@ -7,7 +7,7 @@ import subprocess
 import tkinter as tk
 from tkinter import ttk, messagebox, scrolledtext
 
-# Ensure working directory is set to script location (prevents UAC System32 dir reset)
+# Ensure working directory is set to script location
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 os.chdir(SCRIPT_DIR)
 if SCRIPT_DIR not in sys.path:
@@ -22,14 +22,15 @@ class DeviceOptimizerApp(tk.Tk):
 
         self.core = OptimizerCore()
         self.specs = self.core.get_system_specs()
+        self.hw = self.core.get_hardware_details()
         self.auto_guard_active = False
         self.auto_guard_thread = None
         self.action_in_progress = False
 
         # Configure Root Window
-        self.title("Mr. Drew's Device Optimizer & Memory Manager")
-        self.geometry("960x720")
-        self.minsize(850, 640)
+        self.title("Mr. Drew's Device & FPS Optimizer")
+        self.geometry("1000x760")
+        self.minsize(880, 680)
 
         # Apply Modern Dark Palette
         self.COLOR_BG = "#0F172A"       # Deep Slate
@@ -40,12 +41,11 @@ class DeviceOptimizerApp(tk.Tk):
         self.COLOR_CYAN = "#06B6D4"     # Bright Cyan Accent
         self.COLOR_CYAN_HOVER = "#0891B2"
         self.COLOR_GREEN = "#10B981"    # Emerald Success
-        self.COLOR_GREEN_HOVER = "#059669"
-        self.COLOR_AMBER = "#F59E0B"    # Amber Warning
+        self.COLOR_AMBER = "#F59E0B"    # Amber Warning (FPS / Game Mode)
+        self.COLOR_AMBER_HOVER = "#D97706"
         self.COLOR_PURPLE = "#8B5CF6"   # Electric Purple (Monster Mode)
         self.COLOR_PURPLE_HOVER = "#7C3AED"
         self.COLOR_RED = "#EF4444"      # Alert Red
-        self.COLOR_RED_HOVER = "#DC2626"
         self.COLOR_BORDER = "#334155"   # Subtle Card Border
 
         self.configure(bg=self.COLOR_BG)
@@ -70,7 +70,7 @@ class DeviceOptimizerApp(tk.Tk):
         self.style.configure('Card.TFrame', background=self.COLOR_CARD, relief='flat')
 
     def _create_header(self):
-        header_frame = tk.Frame(self, bg=self.COLOR_BG, pady=12, padx=24)
+        header_frame = tk.Frame(self, bg=self.COLOR_BG, pady=10, padx=24)
         header_frame.pack(fill='x', side='top')
 
         left_frame = tk.Frame(header_frame, bg=self.COLOR_BG)
@@ -78,16 +78,17 @@ class DeviceOptimizerApp(tk.Tk):
 
         title_lbl = tk.Label(
             left_frame,
-            text="⚡ MR. DREW'S DEVICE OPTIMIZER",
+            text="⚡ MR. DREW'S DEVICE & FPS OPTIMIZER",
             font=('Segoe UI', 17, 'bold'),
             fg=self.COLOR_TEXT,
             bg=self.COLOR_BG
         )
         title_lbl.pack(anchor='w')
 
+        subtitle_text = f"Smart OS Engine | {self.hw['device_profile']} | GPU: {self.hw['gpu_vendor']}"
         subtitle_lbl = tk.Label(
             left_frame,
-            text="Smart OS & Dynamic RAM Adaptability Engine | Cross-Platform Workload Prep",
+            text=subtitle_text,
             font=('Segoe UI', 9),
             fg=self.COLOR_MUTED,
             bg=self.COLOR_BG
@@ -98,15 +99,15 @@ class DeviceOptimizerApp(tk.Tk):
         right_frame = tk.Frame(header_frame, bg=self.COLOR_BG)
         right_frame.pack(side='right')
 
-        os_badge_text = f"💻 {self.specs['os_name']} {self.specs['os_release']}"
+        os_badge_text = f"💻 {self.specs['os_name']} ({self.hw['cpu_cores_logical']} Cores)"
         os_badge = tk.Label(
             right_frame,
             text=os_badge_text,
             font=('Segoe UI', 9, 'bold'),
             fg=self.COLOR_CYAN,
             bg=self.COLOR_CARD,
-            padx=12,
-            pady=6,
+            padx=10,
+            pady=5,
             relief='solid',
             bd=1,
             highlightthickness=0
@@ -125,8 +126,8 @@ class DeviceOptimizerApp(tk.Tk):
             activeforeground=admin_color,
             relief='flat',
             cursor='hand2',
-            padx=12,
-            pady=6,
+            padx=10,
+            pady=5,
             command=self._on_click_elevate
         )
         self.admin_badge.pack(side='left', padx=4)
@@ -150,7 +151,7 @@ class DeviceOptimizerApp(tk.Tk):
         self.card_cpu = self._build_card(cards_frame, 3, "CPU UTILIZATION", f"{self.specs['cpu_percent']}%", self.COLOR_AMBER)
 
     def _build_card(self, parent, col, title, value, accent_color):
-        card = tk.Frame(parent, bg=self.COLOR_CARD, padx=14, pady=10, highlightthickness=1, highlightbackground=self.COLOR_BORDER)
+        card = tk.Frame(parent, bg=self.COLOR_CARD, padx=14, pady=8, highlightthickness=1, highlightbackground=self.COLOR_BORDER)
         card.grid(row=0, column=col, padx=4, sticky='nsew')
 
         lbl_title = tk.Label(card, text=title, font=('Segoe UI', 8, 'bold'), fg=self.COLOR_MUTED, bg=self.COLOR_CARD)
@@ -162,7 +163,7 @@ class DeviceOptimizerApp(tk.Tk):
         return lbl_val
 
     def _create_ram_progress_bar(self):
-        prog_frame = tk.Frame(self, bg=self.COLOR_BG, padx=28, pady=8)
+        prog_frame = tk.Frame(self, bg=self.COLOR_BG, padx=28, pady=6)
         prog_frame.pack(fill='x')
 
         lbl_row = tk.Frame(prog_frame, bg=self.COLOR_BG)
@@ -187,36 +188,103 @@ class DeviceOptimizerApp(tk.Tk):
         self.ram_percent_lbl.pack(side='right')
 
         # Custom Canvas Progress Bar
-        self.progress_canvas = tk.Canvas(prog_frame, height=16, bg="#1E293B", highlightthickness=1, highlightbackground=self.COLOR_BORDER)
-        self.progress_canvas.pack(fill='x', pady=5)
+        self.progress_canvas = tk.Canvas(prog_frame, height=14, bg="#1E293B", highlightthickness=1, highlightbackground=self.COLOR_BORDER)
+        self.progress_canvas.pack(fill='x', pady=4)
 
     def _create_action_buttons(self):
-        actions_frame = tk.Frame(self, bg=self.COLOR_BG, padx=28, pady=4)
+        actions_frame = tk.Frame(self, bg=self.COLOR_BG, padx=28, pady=2)
         actions_frame.pack(fill='x')
 
-        # Main Row
-        top_actions = tk.Frame(actions_frame, bg=self.COLOR_BG)
-        top_actions.pack(fill='x', pady=(0, 6))
+        # ROW 1: GAMING & FPS BOOSTER ROW
+        row_fps = tk.Frame(actions_frame, bg=self.COLOR_BG)
+        row_fps.pack(fill='x', pady=(0, 4))
 
-        # Giant Monster Optimizer Button
-        self.btn_monster = tk.Button(
-            top_actions,
-            text="🔥 RUN MONSTER OPTIMIZER",
+        self.btn_fps = tk.Button(
+            row_fps,
+            text="🎮 RUN FPS & GAME BOOSTER",
             font=('Segoe UI', 11, 'bold'),
+            fg="#FFFFFF",
+            bg=self.COLOR_AMBER,
+            activebackground=self.COLOR_AMBER_HOVER,
+            activeforeground="#FFFFFF",
+            relief='flat',
+            cursor='hand2',
+            padx=16,
+            pady=8,
+            command=self._on_run_fps_booster
+        )
+        self.btn_fps.pack(side='left', padx=(0, 5))
+
+        self.btn_potato = tk.Button(
+            row_fps,
+            text="🥔 4GB Potato Mode",
+            font=('Segoe UI', 9, 'bold'),
+            fg=self.COLOR_TEXT,
+            bg=self.COLOR_CARD,
+            activebackground=self.COLOR_CARD_HOVER,
+            activeforeground=self.COLOR_TEXT,
+            relief='flat',
+            cursor='hand2',
+            padx=10,
+            pady=8,
+            command=self._on_run_potato_mode
+        )
+        self.btn_potato.pack(side='left', padx=(0, 5), fill='x', expand=True)
+
+        self.btn_power = tk.Button(
+            row_fps,
+            text="⚡ Ultimate Power Mode",
+            font=('Segoe UI', 9, 'bold'),
+            fg=self.COLOR_GREEN,
+            bg=self.COLOR_CARD,
+            activebackground=self.COLOR_CARD_HOVER,
+            activeforeground=self.COLOR_GREEN,
+            relief='flat',
+            cursor='hand2',
+            padx=10,
+            pady=8,
+            command=self._on_enable_power_plan
+        )
+        self.btn_power.pack(side='left', padx=(0, 5), fill='x', expand=True)
+
+        self.btn_shader = tk.Button(
+            row_fps,
+            text="🧹 Clean Shader Cache",
+            font=('Segoe UI', 9, 'bold'),
+            fg=self.COLOR_CYAN,
+            bg=self.COLOR_CARD,
+            activebackground=self.COLOR_CARD_HOVER,
+            activeforeground=self.COLOR_CYAN,
+            relief='flat',
+            cursor='hand2',
+            padx=10,
+            pady=8,
+            command=self._on_clean_shader_cache
+        )
+        self.btn_shader.pack(side='left', fill='x', expand=True)
+
+        # ROW 2: RAM & MONSTER OPTIMIZER ROW
+        row_ram = tk.Frame(actions_frame, bg=self.COLOR_BG)
+        row_ram.pack(fill='x', pady=(0, 4))
+
+        self.btn_monster = tk.Button(
+            row_ram,
+            text="🔥 RUN MONSTER OPTIMIZER",
+            font=('Segoe UI', 10, 'bold'),
             fg="#FFFFFF",
             bg=self.COLOR_PURPLE,
             activebackground=self.COLOR_PURPLE_HOVER,
             activeforeground="#FFFFFF",
             relief='flat',
             cursor='hand2',
-            padx=18,
-            pady=10,
+            padx=14,
+            pady=7,
             command=self._on_run_monster_optimizer
         )
-        self.btn_monster.pack(side='left', padx=(0, 6))
+        self.btn_monster.pack(side='left', padx=(0, 5))
 
         self.btn_trim = tk.Button(
-            top_actions,
+            row_ram,
             text="✂️ Trim App RAM",
             font=('Segoe UI', 9, 'bold'),
             fg=self.COLOR_TEXT,
@@ -225,14 +293,14 @@ class DeviceOptimizerApp(tk.Tk):
             activeforeground=self.COLOR_TEXT,
             relief='flat',
             cursor='hand2',
-            padx=12,
-            pady=10,
+            padx=10,
+            pady=7,
             command=self._on_trim_working_sets
         )
-        self.btn_trim.pack(side='left', padx=(0, 6), fill='x', expand=True)
+        self.btn_trim.pack(side='left', padx=(0, 5), fill='x', expand=True)
 
         self.btn_standby = tk.Button(
-            top_actions,
+            row_ram,
             text="🛡️ Purge Standby RAM",
             font=('Segoe UI', 9, 'bold'),
             fg=self.COLOR_TEXT,
@@ -241,14 +309,14 @@ class DeviceOptimizerApp(tk.Tk):
             activeforeground=self.COLOR_TEXT,
             relief='flat',
             cursor='hand2',
-            padx=12,
-            pady=10,
+            padx=10,
+            pady=7,
             command=self._on_purge_standby
         )
-        self.btn_standby.pack(side='left', padx=(0, 6), fill='x', expand=True)
+        self.btn_standby.pack(side='left', padx=(0, 5), fill='x', expand=True)
 
         self.btn_temp = tk.Button(
-            top_actions,
+            row_ram,
             text="🧹 Clear Temp Files",
             font=('Segoe UI', 9, 'bold'),
             fg=self.COLOR_TEXT,
@@ -257,19 +325,19 @@ class DeviceOptimizerApp(tk.Tk):
             activeforeground=self.COLOR_TEXT,
             relief='flat',
             cursor='hand2',
-            padx=12,
-            pady=10,
+            padx=10,
+            pady=7,
             command=self._on_clear_temp
         )
         self.btn_temp.pack(side='left', fill='x', expand=True)
 
-        # Secondary Row
-        bottom_actions = tk.Frame(actions_frame, bg=self.COLOR_BG)
-        bottom_actions.pack(fill='x')
+        # ROW 3: UTILITIES & SYSTEM GUARDS
+        row_utils = tk.Frame(actions_frame, bg=self.COLOR_BG)
+        row_utils.pack(fill='x')
 
-        self.btn_bloatware = tk.Button(
-            bottom_actions,
-            text="🚫 End Bloatware",
+        self.btn_game_picker = tk.Button(
+            row_utils,
+            text="🎯 Boost Game Process Priority",
             font=('Segoe UI', 9, 'bold'),
             fg=self.COLOR_AMBER,
             bg=self.COLOR_CARD,
@@ -277,14 +345,30 @@ class DeviceOptimizerApp(tk.Tk):
             activeforeground=self.COLOR_AMBER,
             relief='flat',
             cursor='hand2',
-            padx=12,
-            pady=8,
+            padx=10,
+            pady=6,
+            command=self._on_open_game_picker
+        )
+        self.btn_game_picker.pack(side='left', padx=(0, 5), fill='x', expand=True)
+
+        self.btn_bloatware = tk.Button(
+            row_utils,
+            text="🚫 End Bloatware",
+            font=('Segoe UI', 9, 'bold'),
+            fg=self.COLOR_TEXT,
+            bg=self.COLOR_CARD,
+            activebackground=self.COLOR_CARD_HOVER,
+            activeforeground=self.COLOR_TEXT,
+            relief='flat',
+            cursor='hand2',
+            padx=10,
+            pady=6,
             command=self._on_kill_bloatware
         )
-        self.btn_bloatware.pack(side='left', padx=(0, 6), fill='x', expand=True)
+        self.btn_bloatware.pack(side='left', padx=(0, 5), fill='x', expand=True)
 
         self.btn_top_procs = tk.Button(
-            bottom_actions,
+            row_utils,
             text="📊 Top RAM Apps",
             font=('Segoe UI', 9, 'bold'),
             fg=self.COLOR_CYAN,
@@ -293,14 +377,14 @@ class DeviceOptimizerApp(tk.Tk):
             activeforeground=self.COLOR_CYAN,
             relief='flat',
             cursor='hand2',
-            padx=12,
-            pady=8,
+            padx=10,
+            pady=6,
             command=self._on_view_top_processes
         )
-        self.btn_top_procs.pack(side='left', padx=(0, 6), fill='x', expand=True)
+        self.btn_top_procs.pack(side='left', padx=(0, 5), fill='x', expand=True)
 
         self.btn_autoguard = tk.Button(
-            bottom_actions,
+            row_utils,
             text="⚡ Enable Smart Auto-Guard (60s Loop)",
             font=('Segoe UI', 9, 'bold'),
             fg=self.COLOR_GREEN,
@@ -309,14 +393,14 @@ class DeviceOptimizerApp(tk.Tk):
             activeforeground=self.COLOR_GREEN,
             relief='flat',
             cursor='hand2',
-            padx=12,
-            pady=8,
+            padx=10,
+            pady=6,
             command=self._toggle_auto_guard
         )
-        self.btn_autoguard.pack(side='left', padx=(0, 6), fill='x', expand=True)
+        self.btn_autoguard.pack(side='left', padx=(0, 5), fill='x', expand=True)
 
         self.btn_refresh = tk.Button(
-            bottom_actions,
+            row_utils,
             text="🔄 Refresh Stats",
             font=('Segoe UI', 9, 'bold'),
             fg=self.COLOR_TEXT,
@@ -325,19 +409,20 @@ class DeviceOptimizerApp(tk.Tk):
             activeforeground=self.COLOR_TEXT,
             relief='flat',
             cursor='hand2',
-            padx=12,
-            pady=8,
+            padx=10,
+            pady=6,
             command=self._on_manual_refresh
         )
         self.btn_refresh.pack(side='left', fill='x', expand=True)
 
         self.action_buttons = [
+            self.btn_fps, self.btn_potato, self.btn_power, self.btn_shader,
             self.btn_monster, self.btn_trim, self.btn_standby, self.btn_temp,
-            self.btn_bloatware, self.btn_top_procs, self.btn_refresh
+            self.btn_game_picker, self.btn_bloatware, self.btn_top_procs, self.btn_refresh
         ]
 
     def _create_console_log(self):
-        console_frame = tk.Frame(self, bg=self.COLOR_BG, padx=28, pady=8)
+        console_frame = tk.Frame(self, bg=self.COLOR_BG, padx=28, pady=6)
         console_frame.pack(fill='both', expand=True)
 
         header_bar = tk.Frame(console_frame, bg=self.COLOR_BG)
@@ -345,7 +430,7 @@ class DeviceOptimizerApp(tk.Tk):
 
         lbl_console = tk.Label(
             header_bar,
-            text="Real-Time Optimizer Console & Output Log",
+            text="Real-Time Optimizer Console & FPS Performance Log",
             font=('Segoe UI', 9, 'bold'),
             fg=self.COLOR_MUTED,
             bg=self.COLOR_BG
@@ -395,14 +480,12 @@ class DeviceOptimizerApp(tk.Tk):
         )
         self.log_text.pack(fill='both', expand=True)
 
-        self._log("System initialized. Monster Optimizer ready.")
+        self._log("System & FPS Engine initialized.")
         self._log(f"Detected OS: {self.specs['os_name']} {self.specs['os_release']} ({self.specs['os_arch']})")
-        self._log(f"Total Physical RAM: {self.specs['total_ram_gb']} GB | Smart Free RAM Target: {self.specs['target_free_gb']} GB")
-        if not self.specs['is_admin']:
-            if self.specs['os_name'] == 'Windows':
-                self._log("Notice: Running in User mode. For kernel Standby RAM purge, click '⚠️ USER MODE' to elevate Administrator privileges.")
-            else:
-                self._log("Notice: Running as standard user. For elevated cache purging, launch app with sudo / root.")
+        self._log(f"Hardware Profile: {self.hw['device_profile']} | GPU: {self.hw['gpu_vendor']}")
+        self._log(f"Total Physical RAM: {self.specs['total_ram_gb']} GB | Smart Free Target: {self.specs['target_free_gb']} GB")
+        if self.specs['is_potato_pc']:
+            self._log("Notice: 4GB Potato Device detected! '🥔 4GB Potato Mode' preset is recommended for smooth gaming.")
 
     def _log(self, message: str):
         """Thread-safe logging helper."""
@@ -438,7 +521,6 @@ class DeviceOptimizerApp(tk.Tk):
                 pct = self.specs['percent_used']
                 self.ram_percent_lbl.config(text=f"{pct}% RAM Used ({self.specs['used_ram_gb']} GB / {self.specs['total_ram_gb']} GB)")
 
-                # Draw Canvas Progress Bar
                 self.progress_canvas.delete("all")
                 width = self.progress_canvas.winfo_width()
                 height = self.progress_canvas.winfo_height()
@@ -454,14 +536,186 @@ class DeviceOptimizerApp(tk.Tk):
 
     def _on_manual_refresh(self):
         self.specs = self.core.get_system_specs()
+        self.hw = self.core.get_hardware_details()
         self.card_total_ram.config(text=f"{self.specs['total_ram_gb']} GB")
         self.card_free_ram.config(text=f"{self.specs['avail_ram_gb']} GB")
         self.card_target_ram.config(text=f"≥ {self.specs['target_free_gb']} GB")
         self.card_cpu.config(text=f"{self.specs['cpu_percent']}%")
-        self._log(f"[REFRESH] Free RAM: {self.specs['avail_ram_gb']} GB / Total: {self.specs['total_ram_gb']} GB | CPU: {self.specs['cpu_percent']}%")
+        self._log(f"[REFRESH] Free RAM: {self.specs['avail_ram_gb']} GB / Total: {self.specs['total_ram_gb']} GB | Profile: {self.hw['device_profile']}")
+
+    def _on_run_fps_booster(self):
+        """Handler for 🎮 FPS & Game Booster button."""
+        if self.action_in_progress:
+            return
+        self.action_in_progress = True
+        self._set_buttons_state('disabled')
+
+        def worker():
+            try:
+                self._log("=========================================")
+                self._log("🎮 STARTING FPS & GAME BOOSTER ENGINE...")
+                res = self.core.run_fps_booster()
+                for line in res['logs']:
+                    self._log(line)
+                self._log("=========================================")
+                self._safe_info("FPS Booster Active", f"FPS Optimization Complete!\n\nReclaimed {res['reclaimed_gb']} GB RAM.\n1ms timer locked & GPU shader cache flushed!")
+            finally:
+                self.action_in_progress = False
+                self._set_buttons_state('normal')
+
+        threading.Thread(target=worker, daemon=True).start()
+
+    def _on_run_potato_mode(self):
+        """Handler for 🥔 4GB Potato Mode button."""
+        if self.action_in_progress:
+            return
+        self.action_in_progress = True
+        self._set_buttons_state('disabled')
+
+        def worker():
+            try:
+                self._log("=========================================")
+                self._log("🥔 STARTING 4GB POTATO DEVICE OPTIMIZER...")
+                res = self.core.run_potato_device_optimizer()
+                for line in res['logs']:
+                    self._log(line)
+                self._log("=========================================")
+                self._safe_info("Potato PC Optimizer Complete", f"Successfully reclaimed {res['reclaimed_gb']} GB ({res['reclaimed_mb']} MB) RAM!\nPotato Device optimization complete.")
+            finally:
+                self.action_in_progress = False
+                self._set_buttons_state('normal')
+
+        threading.Thread(target=worker, daemon=True).start()
+
+    def _on_enable_power_plan(self):
+        if self.action_in_progress:
+            return
+        self.action_in_progress = True
+        self._set_buttons_state('disabled')
+
+        def worker():
+            try:
+                self._log("Configuring High Performance Power Plan...")
+                ok, msg = self.core.enable_high_performance_power_plan()
+                self._log(f"[POWER PLAN] {msg}")
+                self._safe_info("Power Plan Status", msg)
+            finally:
+                self.action_in_progress = False
+                self._set_buttons_state('normal')
+
+        threading.Thread(target=worker, daemon=True).start()
+
+    def _on_clean_shader_cache(self):
+        if self.action_in_progress:
+            return
+        self.action_in_progress = True
+        self._set_buttons_state('disabled')
+
+        def worker():
+            try:
+                self._log("Flushing GPU DirectX, OpenGL & Vulkan shader caches...")
+                bytes_cleaned, msg = self.core.clean_gpu_shader_cache()
+                self._log(f"[GPU SHADER CLEANER] {msg}")
+                self._safe_info("Shader Cache Flushed", msg)
+            finally:
+                self.action_in_progress = False
+                self._set_buttons_state('normal')
+
+        threading.Thread(target=worker, daemon=True).start()
+
+    def _on_open_game_picker(self):
+        procs = self.core.get_top_ram_processes(25)
+
+        dlg = tk.Toplevel(self)
+        dlg.title("Select Active Game / App to Boost")
+        dlg.geometry("540x420")
+        dlg.configure(bg=self.COLOR_BG)
+        dlg.transient(self)
+        dlg.grab_set()
+
+        lbl_header = tk.Label(
+            dlg,
+            text="🎯 Select Active Game / Application to Boost Priority",
+            font=('Segoe UI', 11, 'bold'),
+            fg=self.COLOR_AMBER,
+            bg=self.COLOR_BG,
+            pady=10
+        )
+        lbl_header.pack()
+
+        frame_list = tk.Frame(dlg, bg=self.COLOR_BG, padx=15, pady=5)
+        frame_list.pack(fill='both', expand=True)
+
+        listbox = tk.Listbox(
+            frame_list,
+            bg="#020617",
+            fg="#F8FAFC",
+            selectbackground=self.COLOR_AMBER,
+            selectforeground="#000000",
+            font=('Consolas', 10),
+            relief='flat',
+            highlightthickness=1,
+            highlightbackground=self.COLOR_BORDER
+        )
+        listbox.pack(fill='both', expand=True)
+
+        proc_map = {}
+        for idx, p in enumerate(procs):
+            display_str = f"PID: {p['pid']:<6} | RAM: {p['mem_mb']:<6.1f} MB | {p['name']}"
+            listbox.insert(tk.END, display_str)
+            proc_map[idx] = p
+
+        def apply_boost():
+            sel = listbox.curselection()
+            if not sel:
+                messagebox.showwarning("No Selection", "Please select a process from the list.")
+                return
+            proc_info = proc_map[sel[0]]
+            ok, msg = self.core.boost_game_process(proc_info['pid'], "high")
+            if ok:
+                self._log(f"[GAME BOOST SUCCESS] {msg}")
+                messagebox.showinfo("Game Priority Boosted", msg)
+            else:
+                self._log(f"[GAME BOOST WARNING] {msg}")
+                messagebox.showwarning("Boost Notice", msg)
+            dlg.destroy()
+
+        btn_box = tk.Frame(dlg, bg=self.COLOR_BG, pady=10)
+        btn_box.pack()
+
+        btn_boost = tk.Button(
+            btn_box,
+            text="🚀 Boost Selected Process Priority",
+            font=('Segoe UI', 10, 'bold'),
+            fg="#FFFFFF",
+            bg=self.COLOR_AMBER,
+            activebackground=self.COLOR_AMBER_HOVER,
+            activeforeground="#FFFFFF",
+            relief='flat',
+            cursor='hand2',
+            padx=16,
+            pady=6,
+            command=apply_boost
+        )
+        btn_boost.pack(side='left', padx=5)
+
+        btn_close = tk.Button(
+            btn_box,
+            text="Cancel",
+            font=('Segoe UI', 9, 'bold'),
+            fg=self.COLOR_TEXT,
+            bg=self.COLOR_CARD,
+            activebackground=self.COLOR_CARD_HOVER,
+            activeforeground=self.COLOR_TEXT,
+            relief='flat',
+            cursor='hand2',
+            padx=14,
+            pady=6,
+            command=dlg.destroy
+        )
+        btn_close.pack(side='left', padx=5)
 
     def _on_run_monster_optimizer(self):
-        """Handler for Monster Optimizer button."""
         if self.action_in_progress:
             return
         self.action_in_progress = True
