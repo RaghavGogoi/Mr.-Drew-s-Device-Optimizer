@@ -562,13 +562,14 @@ class OptimizerCore:
         """Relaunch the current script with Administrator privileges on Windows."""
         if self.os_type == "windows" and not self.is_admin:
             try:
-                script_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "app.py"))
-                work_dir = os.path.dirname(script_path)
-                params = f'"{script_path}" --elevated'
+                main_script = os.path.abspath(os.path.join(os.path.dirname(__file__), "app.py"))
+                work_dir = os.path.dirname(main_script)
+                python_exe = sys.executable
+                params = f'"{main_script}" --elevated'
 
-                ret = ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, params, work_dir, 1)
+                ret = ctypes.windll.shell32.ShellExecuteW(None, "runas", python_exe, params, work_dir, 1)
                 return int(ret) > 32
-            except Exception as e:
+            except Exception:
                 return False
         return False
 
@@ -602,22 +603,7 @@ class OptimizerCore:
                     else:
                         return False, f"NtSetSystemInformation returned status code: {hex(unsigned_status)}"
 
-                # Avoid repeating UAC popups if user denied elevation once
-                if self.uac_denied:
-                    return False, "Administrator elevation skipped (User mode active)."
-
-                exe_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "DeviceOptimizer.exe"))
-                if os.path.exists(exe_path):
-                    self.uac_prompted = True
-                    work_dir = os.path.dirname(exe_path)
-                    ret = ctypes.windll.shell32.ShellExecuteW(None, "runas", exe_path, "--flush-standby", work_dir, 0)
-                    if int(ret) > 32:
-                        return True, "Standby RAM list successfully flushed via Elevated Helper."
-                    else:
-                        self.uac_denied = True
-                        return False, "Administrator elevation prompt was cancelled or denied (Won't prompt again)."
-
-                return False, "Administrator privilege required to purge Windows Standby Memory."
+                return False, "Administrator privilege required to purge Standby RAM. Click '⚠️ USER MODE' badge to elevate."
             except Exception as e:
                 return False, f"Failed to flush Standby RAM: {str(e)}"
         elif self.os_type == "linux":

@@ -20,17 +20,10 @@ if %errorlevel% neq 0 (
 echo [INFO] Verifying Python dependencies...
 python -m pip install -r requirements.txt --quiet >nul 2>&1
 
-:: Check for Administrator Privileges
-net session >nul 2>&1
-if %errorlevel% neq 0 (
-    echo [INFO] Requesting Administrator Privileges (UAC)...
-    powershell -Command "Start-Process '%~f0' -Verb RunAs"
-    exit /b 0
-)
-
-echo Starting Device Optimizer Desktop GUI Application as Administrator...
+echo Starting Device Optimizer Desktop GUI Application...
 python app.py %*
 if %errorlevel% neq 0 (
+    echo.
     echo [ERROR] Application exited with code %errorlevel%.
     pause
 )
