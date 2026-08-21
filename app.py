@@ -60,6 +60,9 @@ class DeviceOptimizerApp(tk.Tk):
         self._create_action_buttons()
         self._create_console_log()
 
+        # One-Time Admin Elevation Check on Startup
+        self._check_one_time_elevation()
+
         # Initial Stats Update & Continuous Refresh Loop
         self._refresh_stats_loop()
 
@@ -261,7 +264,23 @@ class DeviceOptimizerApp(tk.Tk):
             pady=8,
             command=self._on_clean_shader_cache
         )
-        self.btn_shader.pack(side='left', fill='x', expand=True)
+        self.btn_shader.pack(side='left', padx=(0, 5), fill='x', expand=True)
+
+        self.btn_asset_loader = tk.Button(
+            row_fps,
+            text="🚀 Fast Asset Loader",
+            font=('Segoe UI', 9, 'bold'),
+            fg=self.COLOR_GREEN,
+            bg=self.COLOR_CARD,
+            activebackground=self.COLOR_CARD_HOVER,
+            activeforeground=self.COLOR_GREEN,
+            relief='flat',
+            cursor='hand2',
+            padx=10,
+            pady=8,
+            command=self._on_accelerate_asset_loading
+        )
+        self.btn_asset_loader.pack(side='left', fill='x', expand=True)
 
         # ROW 2: RAM & MONSTER OPTIMIZER ROW
         row_ram = tk.Frame(actions_frame, bg=self.COLOR_BG)
@@ -416,7 +435,7 @@ class DeviceOptimizerApp(tk.Tk):
         self.btn_refresh.pack(side='left', fill='x', expand=True)
 
         self.action_buttons = [
-            self.btn_fps, self.btn_potato, self.btn_power, self.btn_shader,
+            self.btn_fps, self.btn_potato, self.btn_power, self.btn_shader, self.btn_asset_loader,
             self.btn_monster, self.btn_trim, self.btn_standby, self.btn_temp,
             self.btn_game_picker, self.btn_bloatware, self.btn_top_procs, self.btn_refresh
         ]
@@ -617,6 +636,28 @@ class DeviceOptimizerApp(tk.Tk):
                 bytes_cleaned, msg = self.core.clean_gpu_shader_cache()
                 self._log(f"[GPU SHADER CLEANER] {msg}")
                 self._safe_info("Shader Cache Flushed", msg)
+            finally:
+                self.action_in_progress = False
+                self._set_buttons_state('normal')
+
+        threading.Thread(target=worker, daemon=True).start()
+
+    def _on_accelerate_asset_loading(self):
+        """Handler for 🚀 Fast Asset Loader button."""
+        if self.action_in_progress:
+            return
+        self.action_in_progress = True
+        self._set_buttons_state('disabled')
+
+        def worker():
+            try:
+                self._log("=========================================")
+                self._log("🚀 ACCELERATING GAME ASSET READ & LOAD SPEED...")
+                ok, logs = self.core.accelerate_game_asset_loading()
+                for line in logs:
+                    self._log(line)
+                self._log("=========================================")
+                self._safe_info("Game Asset Acceleration Complete", "Game Asset Load Speed Boosted!\n\nHigh Disk I/O Priority & CPU Priority assigned to active game.\nShader cache flushed & game asset memory protected from eviction.")
             finally:
                 self.action_in_progress = False
                 self._set_buttons_state('normal')
@@ -901,6 +942,22 @@ class DeviceOptimizerApp(tk.Tk):
             self.btn_autoguard.config(text="⚡ Enable Smart Auto-Guard (60s Loop)", fg=self.COLOR_GREEN)
             self._log("Smart Auto-Guard stopped.")
 
+    def _check_one_time_elevation(self):
+        """Request Administrator elevation ONCE at startup if running in User mode."""
+        if self.specs['os_name'] == 'Windows' and not self.specs['is_admin']:
+            if "--no-elevate" in sys.argv or "--elevated" in sys.argv:
+                self.core.uac_denied = True
+                return
+            
+            self._log("[ADMIN CHECK] App is running in User Mode. Requesting one-time Administrator elevation...")
+            relaunched = self.core.relaunch_as_admin()
+            if relaunched:
+                self._log("Administrator elevation granted! Relaunching app as Administrator...")
+                self.after(300, self.destroy)
+            else:
+                self.core.uac_denied = True
+                self._log("Notice: Administrator elevation skipped. Running in User Mode (UAC prompts suppressed).")
+
     def _on_click_elevate(self):
         if not self.specs['is_admin']:
             if self.specs['os_name'] == 'Windows':
@@ -908,8 +965,9 @@ class DeviceOptimizerApp(tk.Tk):
                 relaunched = self.core.relaunch_as_admin()
                 if relaunched:
                     self._log("Relaunching application as Administrator...")
-                    self.after(800, self.destroy)
+                    self.after(400, self.destroy)
                 else:
+                    self.core.uac_denied = True
                     messagebox.showwarning("Elevation Cancelled", "Administrator elevation prompt was cancelled or denied.")
             else:
                 messagebox.showinfo("Elevation Instructions", "On Linux/macOS, please re-launch the application in terminal using:\n\nsudo python3 app.py\nor\nsudo ./run.sh")

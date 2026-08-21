@@ -97,9 +97,13 @@ Once you have opened the project folder in VSCode (**File** -> **Open Folder** -
 ## ✨ Control Panel Features
 
 - 🎮 **RUN FPS & GAME BOOSTER**:
-  Runs the full gaming prep pipeline (1ms timer precision, Ultimate Power scheme, GPU shader cache clean, RAM recovery).
+  Runs the full gaming prep pipeline (1ms timer precision, Ultimate Power scheme, GPU shader cache clean, RAM recovery, and Game Asset Read Acceleration).
+- 🚀 **Fast Asset Loader**:
+  Elevates Disk I/O read priority (`ProcessIoPriorityHigh`) and CPU priority for active games while protecting loaded game assets and file caches from RAM eviction.
 - 🥔 **4GB Potato Mode**:
   Triggers ultra-light 4GB RAM gaming preset tailored for budget/low-spec devices.
+- 🛡️ **One-Time Administrator Elevation**:
+  Requests UAC elevation once on app startup or first action. Once granted, all RAM flushing, priority boosting, and background Auto-Guard loops run seamlessly in-process without ever prompting UAC again.
 - ⚡ **Ultimate Power Mode**:
   Enables High/Ultimate performance OS power scheme.
 - 🧹 **Clean Shader Cache**:
