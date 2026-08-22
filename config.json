@@ -1,0 +1,8 @@
+{
+    "first_run_completed": false,
+    "auto_guard_enabled": false,
+    "auto_guard_interval_sec": 60,
+    "theme": "obsidian",
+    "sound_effects": true,
+    "high_priority_game": ""
+}

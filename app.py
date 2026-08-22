@@ -704,6 +704,11 @@ class DeviceOptimizerApp(tk.Tk):
         _, msg = self.core.clear_temp_files()
         self._log(f"[TEMP CLEANER] {msg}")
 
+    def _on_clean_shader_cache(self):
+        cleaned_bytes, msg = self.core.clean_gpu_shader_cache()
+        self._log(f"[GPU SHADER CLEANER] {msg}")
+        messagebox.showinfo("Shader Cache Cleaned", msg)
+
     def _on_kill_bloatware(self):
         killed = self.core.terminate_bloatware()
         if killed:
