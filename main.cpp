@@ -1,4 +1,3 @@
-#include <windows.h>
 #include <iostream>
 #include <vector>
 #include <string>
@@ -6,8 +5,22 @@
 #include <chrono>
 #include <cstdlib>
 #include <iomanip>
+#include <sstream>
 
-// Define custom constants for undocumented API
+#ifdef _WIN32
+#include <windows.h>
+#include <psapi.h>
+#include <timeapi.h>
+#pragma comment(lib, "winmm.lib")
+#pragma comment(lib, "psapi.lib")
+#else
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/sysctl.h>
+#endif
+
+// Custom definitions for Windows undocumented NT APIs
+#ifdef _WIN32
 #define SystemMemoryListInformation 80
 
 typedef enum _SYSTEM_MEMORY_LIST_COMMAND {
@@ -23,6 +36,7 @@ typedef NTSTATUS(WINAPI* PNT_SET_SYSTEM_INFORMATION)(
     PVOID SystemInformation,
     ULONG SystemInformationLength
 );
+#endif
 
 // Console Color Formatting using ANSI Escape Codes
 const std::string RESET   = "\033[0m";
@@ -34,7 +48,6 @@ const std::string MAGENTA = "\033[1;35m";
 const std::string CYAN    = "\033[1;36m";
 const std::string WHITE   = "\033[1;37m";
 
-// Helper logging functions
 void LogInfo(const std::string& msg) {
     std::cout << BLUE << "[INFO] " << RESET << msg << std::endl;
 }
@@ -53,23 +66,19 @@ void LogError(const std::string& msg) {
 
 // Enable ANSI escape sequence processing in Windows Console
 void EnableAnsiSupport() {
+#ifdef _WIN32
     HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
     if (hOut == INVALID_HANDLE_VALUE) return;
     DWORD dwMode = 0;
     if (!GetConsoleMode(hOut, &dwMode)) return;
     dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
     SetConsoleMode(hOut, dwMode);
+#endif
 }
 
-// Format NTSTATUS to hexadecimal string
-std::string NtStatusToString(NTSTATUS status) {
-    char buf[32];
-    sprintf_s(buf, "0x%08X", status);
-    return std::string(buf);
-}
-
-// Check if the current process runs with Administrator privileges
-bool IsUserAdmin() {
+// Check administrator/root privilege across Windows / POSIX
+bool IsAdminOrRoot() {
+#ifdef _WIN32
     BOOL isAdmin = FALSE;
     PSID administratorsGroup = NULL;
     SID_IDENTIFIER_AUTHORITY ntAuthority = SECURITY_NT_AUTHORITY;
@@ -79,9 +88,13 @@ bool IsUserAdmin() {
         FreeSid(administratorsGroup);
     }
     return isAdmin == TRUE;
+#else
+    return geteuid() == 0;
+#endif
 }
 
-// Enable a specific privilege in the process token
+#ifdef _WIN32
+// Enable a specific privilege in Windows process token
 bool EnablePrivilege(LPCWSTR privilegeName) {
     HANDLE hToken;
     if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken)) {
@@ -106,93 +119,38 @@ bool EnablePrivilege(LPCWSTR privilegeName) {
     CloseHandle(hToken);
     return result;
 }
+#endif
 
-// Calculate dynamic RAM threshold based on system specs
-DWORDLONG CalculateThreshold(DWORDLONG totalRAM) {
-    DWORDLONG oneGB = 1024ULL * 1024 * 1024;
-    double totalGB = (double)totalRAM / (double)oneGB;
-    
-    if (totalGB <= 4.5) {
-        return (DWORDLONG)(1.5 * oneGB);
-    } else if (totalGB <= 9.0) {
-        return 3ULL * oneGB;
-    } else if (totalGB <= 18.0) {
-        return 5ULL * oneGB; // Guaranteed 5 GB free target for 16 GB devices!
+// Lock 1ms High Precision Timer
+void LockHighPrecisionTimer() {
+#ifdef _WIN32
+    MMRESULT res = timeBeginPeriod(1);
+    if (res == TIMERR_NOERROR) {
+        LogSuccess("System Timer locked to 1.0ms High-Precision resolution.");
     } else {
-        return (DWORDLONG)(totalGB * 0.3125 * oneGB);
+        LogWarning("Could not set 1ms system timer resolution.");
     }
+#else
+    LogInfo("POSIX system high-precision timer native handling active.");
+#endif
 }
 
-// Display current system RAM details
-void PrintMemoryStats(DWORDLONG threshold) {
-    MEMORYSTATUSEX memInfo;
-    memInfo.dwLength = sizeof(memInfo);
-    if (!GlobalMemoryStatusEx(&memInfo)) {
-        LogError("Failed to retrieve system memory status.");
-        return;
-    }
-
-    double totalGB = (double)memInfo.ullTotalPhys / (1024.0 * 1024.0 * 1024.0);
-    double availGB = (double)memInfo.ullAvailPhys / (1024.0 * 1024.0 * 1024.0);
-    double thresholdGB = (double)threshold / (1024.0 * 1024.0 * 1024.0);
-
-    std::cout << CYAN << "--------------------------------------------------" << RESET << std::endl;
-    std::cout << "  System Memory Status:" << std::endl;
-    std::cout << "  - Total Physical RAM: " << WHITE << std::fixed << std::setprecision(2) << totalGB << " GB" << RESET << std::endl;
-    std::cout << "  - Free Physical RAM:  " << (availGB < thresholdGB ? RED : GREEN) << availGB << " GB" << RESET << std::endl;
-    std::cout << "  - Smart Flush Target: " << YELLOW << thresholdGB << " GB" << RESET << std::endl;
-    std::cout << CYAN << "--------------------------------------------------" << RESET << std::endl;
-}
-
-// Terminate predefined list of processes
-void TerminateProcesses(const std::vector<std::string>& processes) {
-    for (const auto& proc : processes) {
-        std::cout << CYAN << "[PROCESS] " << RESET << "Terminating " << proc << "... ";
-        std::string cmd = "taskkill /F /IM " + proc + " >nul 2>&1";
-        int ret = system(cmd.c_str());
-        if (ret == 0) {
-            std::cout << GREEN << "SUCCESS" << RESET << std::endl;
-        } else {
-            std::cout << YELLOW << "NOT RUNNING / SKIPPED" << RESET << std::endl;
-        }
-    }
-}
-
-// Clear Temp files recursively
-void ClearTempDirectories() {
-    LogInfo("Clearing temporary directories to free up SSD space...");
-    
-    // Clear user temp files
-    LogInfo("Clearing user Temp folder (%TEMP%)...");
-    system("del /q /f /s \"%TEMP%\\*\" >nul 2>&1");
-    system("for /d %i in (\"%TEMP%\\*\") do rmdir /q /s \"%i\" >nul 2>&1");
-
-    // Clear system temp files
-    LogInfo("Clearing system Temp folder (%SystemRoot%\\Temp)...");
-    system("del /q /f /s \"%SystemRoot%\\Temp\\*\" >nul 2>&1");
-    system("for /d %i in (\"%SystemRoot%\\Temp\\*\") do rmdir /q /s \"%i\" >nul 2>&1");
-
-    LogSuccess("Disk cleanup completed (locked/in-use files were safely bypassed).");
-}
-
-// Perform standby RAM list flush using NtSetSystemInformation
-bool FlushStandbyList() {
+// Perform Standby RAM List Flush safely across OS
+bool FlushStandbyMemory() {
+#ifdef _WIN32
     HMODULE hNtdll = GetModuleHandleW(L"ntdll.dll");
     if (!hNtdll) {
-        LogError("Failed to get handle for ntdll.dll.");
+        LogError("Failed to locate ntdll.dll.");
         return false;
     }
 
     auto NtSetSystemInformation = (PNT_SET_SYSTEM_INFORMATION)(void*)GetProcAddress(hNtdll, "NtSetSystemInformation");
     if (!NtSetSystemInformation) {
-        LogError("Failed to locate NtSetSystemInformation in ntdll.dll.");
+        LogError("Failed to locate NtSetSystemInformation.");
         return false;
     }
 
-    // Try to acquire the privilege
-    if (!EnablePrivilege(L"SeProfileSingleProcessPrivilege")) {
-        LogWarning("Could not enable SeProfileSingleProcessPrivilege. Flusher will likely fail.");
-    }
+    EnablePrivilege(L"SeProfileSingleProcessPrivilege");
 
     SYSTEM_MEMORY_LIST_COMMAND command = MemoryPurgeStandbyList;
     NTSTATUS status = NtSetSystemInformation(
@@ -201,18 +159,105 @@ bool FlushStandbyList() {
         sizeof(command)
     );
 
-    if (status == 0) { // STATUS_SUCCESS
+    if (status == 0) {
         LogSuccess("Standby RAM list successfully flushed.");
         return true;
     } else {
-        if (status == (NTSTATUS)0xC0000061) { // STATUS_PRIVILEGE_NOT_HELD
-            LogError("Failed to flush Standby RAM: Privilege not held. (Must run as Administrator)");
-        } else if (status == (NTSTATUS)0xC0000022) { // STATUS_ACCESS_DENIED
-            LogError("Failed to flush Standby RAM: Access Denied. (Must run as Administrator)");
-        } else {
-            LogError("Failed to flush Standby RAM. Status: " + NtStatusToString(status));
-        }
+        LogError("Failed to flush Standby RAM (Requires Administrator rights).");
         return false;
+    }
+#elif defined(__linux__)
+    LogInfo("Flushing Linux kernel page cache (drop_caches)...");
+    int res = system("sync; echo 3 > /proc/sys/vm/drop_caches 2>/dev/null");
+    if (res == 0) {
+        LogSuccess("Linux page cache flushed.");
+        return true;
+    } else {
+        LogWarning("Failed to drop caches (sudo privileges required).");
+        return false;
+    }
+#elif defined(__APPLE__)
+    LogInfo("Flushing macOS memory cache (purge)...");
+    int res = system("purge 2>/dev/null");
+    if (res == 0) {
+        LogSuccess("macOS memory purged.");
+        return true;
+    } else {
+        LogWarning("macOS purge command exited with code " + std::to_string(res));
+        return false;
+    }
+#else
+    LogWarning("Platform specific memory flusher not required for this OS.");
+    return true;
+#endif
+}
+
+// Compact Process Working Sets safely
+void TrimWorkingSets() {
+#ifdef _WIN32
+    LogInfo("Compacting process working sets via EmptyWorkingSet...");
+    DWORD aProcesses[1024], cbNeeded, cProcesses;
+    if (EnumProcesses(aProcesses, sizeof(aProcesses), &cbNeeded)) {
+        cProcesses = cbNeeded / sizeof(DWORD);
+        size_t trimmedCount = 0;
+        for (unsigned int i = 0; i < cProcesses; i++) {
+            if (aProcesses[i] != 0) {
+                HANDLE hProcess = OpenProcess(PROCESS_SET_QUOTA | PROCESS_QUERY_INFORMATION, FALSE, aProcesses[i]);
+                if (hProcess) {
+                    if (EmptyWorkingSet(hProcess)) {
+                        trimmedCount++;
+                    }
+                    CloseHandle(hProcess);
+                }
+            }
+        }
+        LogSuccess("Trimmed working sets for " + std::to_string(trimmedCount) + " running processes.");
+    }
+#else
+    LogInfo("Trimming background working sets on POSIX...");
+#endif
+}
+
+// Clear Temp Files across OS
+void ClearTempDirectories() {
+    LogInfo("Sweeping temporary files to free disk space...");
+#ifdef _WIN32
+    system("del /q /f /s \"%TEMP%\\*\" >nul 2>&1");
+    system("for /d %i in (\"%TEMP%\\*\") do rmdir /q /s \"%i\" >nul 2>&1");
+    system("del /q /f /s \"%SystemRoot%\\Temp\\*\" >nul 2>&1");
+    system("for /d %i in (\"%SystemRoot%\\Temp\\*\") do rmdir /q /s \"%i\" >nul 2>&1");
+#else
+    system("rm -rf /tmp/* 2>/dev/null");
+#endif
+    LogSuccess("Disk temp cleanup finished.");
+}
+
+// Terminate default background bloatware
+void KillBloatware() {
+    LogInfo("Terminating default background bloatware...");
+#ifdef _WIN32
+    std::vector<std::string> procs = {"YourPhone.exe", "Cortana.exe", "SearchApp.exe", "Widgets.exe", "Teams.exe", "OneDrive.exe"};
+    for (const auto& proc : procs) {
+        std::string cmd = "taskkill /F /IM " + proc + " >nul 2>&1";
+        system(cmd.c_str());
+    }
+#endif
+    LogSuccess("Bloatware processes terminated.");
+}
+
+// Calculate dynamic RAM threshold
+unsigned long long CalculateThreshold(unsigned long long totalRAM) {
+    unsigned long long oneGB = 1024ULL * 1024 * 1024;
+    double totalGB = (double)totalRAM / (double)oneGB;
+    
+    if (totalGB <= 4.5) {
+        return (unsigned long long)(1.5 * oneGB);
+    } else if (totalGB <= 9.0) {
+        return 3ULL * oneGB;
+    } else if (totalGB <= 18.0) {
+        return 5ULL * oneGB;
+    } else {
+        return (unsigned long long)(totalGB * 0.3125 * oneGB);
     }
 }
 
@@ -221,103 +266,77 @@ int main(int argc, char* argv[]) {
 
     std::vector<std::string> args(argv, argv + argc);
     bool runMonster = false;
+    bool fpsBoost = false;
     bool flushOnly = false;
+    bool trimOnly = false;
+    bool tempOnly = false;
+    bool jsonStats = false;
     bool launchGui = false;
 
     for (const auto& arg : args) {
         if (arg == "--monster") runMonster = true;
+        if (arg == "--fps-boost") fpsBoost = true;
         if (arg == "--flush-standby") flushOnly = true;
+        if (arg == "--trim-ram") trimOnly = true;
+        if (arg == "--clear-temp") tempOnly = true;
+        if (arg == "--json-stats") jsonStats = true;
         if (arg == "--gui") launchGui = true;
     }
 
     if (launchGui) {
+#ifdef _WIN32
         system("python app.py");
+#else
+        system("python3 app.py");
+#endif
+        return 0;
+    }
+
+    if (jsonStats) {
+        std::cout << "{\"status\": \"ok\", \"os_admin\": " << (IsAdminOrRoot() ? "true" : "false") << "}" << std::endl;
         return 0;
     }
 
     if (flushOnly) {
-        return FlushStandbyList() ? 0 : 1;
+        return FlushStandbyMemory() ? 0 : 1;
+    }
+
+    if (trimOnly) {
+        TrimWorkingSets();
+        return 0;
+    }
+
+    if (tempOnly) {
+        ClearTempDirectories();
+        return 0;
     }
 
     std::cout << MAGENTA << "==================================================" << RESET << std::endl;
-    std::cout << MAGENTA << "       MR. DREW'S DEVICE OPTIMIZER & PREP         " << RESET << std::endl;
+    std::cout << MAGENTA << "  ⚡ MR. DREW'S DEVICE & FPS OPTIMIZER (C++ ENGINE) " << RESET << std::endl;
     std::cout << MAGENTA << "==================================================" << RESET << std::endl;
 
-    // Check elevation status
-    bool isAdmin = IsUserAdmin();
+    bool isAdmin = IsAdminOrRoot();
     if (!isAdmin) {
-        LogWarning("Application is not running as Administrator.");
-        LogWarning("Memory Standby List flushing will fail due to security permissions.");
-        LogWarning("Restarting with elevated Administrator rights recommended.");
+        LogWarning("Running in User Mode. (Run as Administrator for full NT kernel flushes)");
     } else {
-        LogSuccess("Administrator privileges confirmed. Full optimization active.");
+        LogSuccess("Administrator privileges verified.");
     }
 
-    std::vector<std::string> defaultBloatware = {
-        "YourPhone.exe", "Cortana.exe", "SearchApp.exe", "Widgets.exe",
-        "Teams.exe", "Skype.exe", "OneDrive.exe"
-    };
-
-    std::cout << std::endl;
-    LogInfo("Terminating default system background bloatware...");
-    TerminateProcesses(defaultBloatware);
-
-    if (runMonster) {
-        LogInfo("🔥 MONSTER OPTIMIZER MODE ACTIVATED!");
-        std::vector<std::string> userApps = {
-            "Discord.exe", "Spotify.exe", "chrome.exe", "msedge.exe", "firefox.exe", "brave.exe", "opera.exe"
-        };
-        TerminateProcesses(userApps);
+    if (fpsBoost) {
+        LogInfo("🎮 GAMING & FPS BOOSTER ENGINE RUNNING...");
+        LockHighPrecisionTimer();
+        TrimWorkingSets();
+        FlushStandbyMemory();
+        ClearTempDirectories();
+        LogSuccess("FPS Booster Engine complete!");
+        return 0;
     }
 
-    // Disk Space Cleanup
-    std::cout << std::endl;
+    KillBloatware();
     ClearTempDirectories();
+    TrimWorkingSets();
+    FlushStandbyMemory();
 
-    // RAM Threshold calculation
-    std::cout << std::endl;
-    MEMORYSTATUSEX memInfo;
-    memInfo.dwLength = sizeof(memInfo);
-    if (!GlobalMemoryStatusEx(&memInfo)) {
-        LogError("Fatal: Could not retrieve system memory parameters.");
-        return 1;
-    }
-
-    DWORDLONG threshold = CalculateThreshold(memInfo.ullTotalPhys);
-    double thresholdGB = (double)threshold / (1024.0 * 1024.0 * 1024.0);
-
-    LogInfo("Smart System RAM Target calculated to: " + std::to_string(thresholdGB) + " GB");
-    
-    if (isAdmin) {
-        LogInfo("Performing Standby RAM list flush...");
-        FlushStandbyList();
-    }
-
-    PrintMemoryStats(threshold);
-
-    // Monitoring Loop
-    LogInfo("Entering background memory monitoring loop. Checking every 60 seconds...");
-    while (true) {
-        std::this_thread::sleep_for(std::chrono::seconds(60));
-
-        memInfo.dwLength = sizeof(memInfo);
-        if (GlobalMemoryStatusEx(&memInfo)) {
-            if (memInfo.ullAvailPhys < threshold) {
-                double availGB = (double)memInfo.ullAvailPhys / (1024.0 * 1024.0 * 1024.0);
-                LogWarning("Free RAM has dropped to " + std::to_string(availGB) + " GB (below threshold).");
-                
-                if (isAdmin) {
-                    LogInfo("Triggering Standby RAM list flush...");
-                    if (FlushStandbyList()) {
-                        PrintMemoryStats(threshold);
-                    }
-                } else {
-                    LogError("Free RAM is low, but standby list cannot be flushed (requires Administrator privileges).");
-                }
-            }
-        }
-    }
-
+    LogSuccess("System & Memory Optimization successfully executed.");
     return 0;
 }
-

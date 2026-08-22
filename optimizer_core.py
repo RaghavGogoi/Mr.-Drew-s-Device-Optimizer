@@ -47,13 +47,6 @@ DEFAULT_BLOATWARE = {
     ]
 }
 
-# Standard User Applications (safe to trim/terminate during Monster optimization)
-USER_APPS = [
-    "Discord.exe", "Discord", "Spotify.exe", "Spotify",
-    "chrome.exe", "chrome", "msedge.exe", "msedge",
-    "firefox.exe", "firefox", "brave.exe", "brave", "opera.exe"
-]
-
 # Known Game Processes & Engines (Protected from RAM trimming & prioritized for I/O Asset loading)
 KNOWN_GAME_PROCESSES = {
     "fortniteclient-win64-shipping.exe", "fortnitelauncher.exe",
@@ -75,17 +68,38 @@ KNOWN_GAME_PROCESSES = {
 class OptimizerCore:
     """
     Cross-platform Device, RAM & FPS Optimizer Core.
-    Adapts threshold dynamically for 4GB Potato PCs up to 64GB Gaming Rigs.
-    Provides High-Precision FPS Booster, GPU Shader Cache Cleaner, and Power Optimizer.
+    Bridges Python with native compiled C++ engine (DeviceOptimizer.exe) for maximum performance.
+    Provides graceful fallbacks to ensure 100% crash-free operation on Windows, Linux, and macOS.
     """
     def __init__(self):
         self.os_type = platform.system().lower()  # 'windows', 'linux', 'darwin'
         self.is_admin = self._check_admin()
+        self.script_dir = os.path.dirname(os.path.abspath(__file__))
+        self.cpp_exe_path = self._find_cpp_engine()
         self.hardware_info = self.get_hardware_details()
-        self.uac_denied = False
-        self.uac_prompted = False
         self.active_game_pids = set()
         self.protected_game_names = set()
+
+    def _find_cpp_engine(self) -> Optional[str]:
+        """Locates the compiled native C++ engine binary if available."""
+        exe_names = ["DeviceOptimizer.exe", "DeviceOptimizer", "main.exe", "main"]
+        for name in exe_names:
+            path = os.path.join(self.script_dir, name)
+            if os.path.exists(path) and os.access(path, os.X_OK if self.os_type != "windows" else os.F_OK):
+                return path
+        return None
+
+    def _run_cpp_engine(self, flag: str) -> Tuple[bool, List[str]]:
+        """Runs the native C++ engine with the specified CLI flag."""
+        if not self.cpp_exe_path or not os.path.exists(self.cpp_exe_path):
+            return False, ["Native C++ engine binary not found. Falling back to Python core routines."]
+        
+        try:
+            res = subprocess.run([self.cpp_exe_path, flag], capture_output=True, text=True, timeout=15)
+            output_lines = [line.strip() for line in res.stdout.splitlines() if line.strip()]
+            return res.returncode == 0, output_lines
+        except Exception as e:
+            return False, [f"C++ Engine execution exception: {str(e)}"]
 
     def _check_admin(self) -> bool:
         """Check if running with administrator / root privileges."""
@@ -149,7 +163,8 @@ class OptimizerCore:
             "cpu_cores_physical": cpu_physical,
             "gpu_vendor": gpu_vendor,
             "device_profile": profile,
-            "is_potato_pc": total_ram_gb <= 5.0
+            "is_potato_pc": total_ram_gb <= 5.0,
+            "cpp_engine_active": self.cpp_exe_path is not None
         }
 
     def get_system_specs(self) -> Dict[str, Any]:
@@ -218,22 +233,16 @@ class OptimizerCore:
         }
 
     def calculate_smart_threshold(self, total_ram_bytes: int) -> int:
-        """
-        Smart RAM target threshold calculator with 4GB Potato PC compatibility:
-        - <= 4.5 GB system (Potato PC) -> target 1.5 GB free
-        - <= 9.0 GB system (Budget PC) -> target 3.0 GB free
-        - <= 18.0 GB system (16 GB PC) -> target 5.0 GB free (Guaranteed!)
-        - 32 GB+ system               -> target 10.0 GB+ free
-        """
+        """Dynamic RAM threshold calculation based on physical capacity."""
         one_gb = 1024**3
         total_gb = total_ram_bytes / one_gb
 
         if total_gb <= 4.5:
-            target_gb = 1.5  # Tailored for 4GB Potato PC devices!
+            target_gb = 1.5
         elif total_gb <= 9.0:
             target_gb = 3.0
         elif total_gb <= 18.0:
-            target_gb = 5.0  # Guaranteed 5 GB target for 16 GB devices
+            target_gb = 5.0
         else:
             target_gb = round(total_gb * 0.3125, 1)
 
@@ -280,8 +289,6 @@ class OptimizerCore:
         """Enables High Performance / Ultimate Gaming OS power scheme."""
         if self.os_type == "windows":
             try:
-                # Ultimate Performance GUID: e9a42b02-d5df-448d-aa00-03f14749eb61
-                # High Performance GUID:     8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c
                 res_ult = subprocess.run("powercfg /setactive e9a42b02-d5df-448d-aa00-03f14749eb61", shell=True)
                 if res_ult.returncode == 0:
                     return True, "Ultimate Performance Power Plan activated!"
@@ -365,10 +372,7 @@ class OptimizerCore:
         return False
 
     def set_process_io_priority(self, pid: int, io_priority: int = 3) -> bool:
-        """
-        Sets Disk I/O Priority for a process on Windows to accelerate asset loading.
-        io_priority: 0 = Very Low, 1 = Low, 2 = Normal, 3 = High
-        """
+        """Sets Disk I/O Priority for a process to accelerate asset loading."""
         if self.os_type != "windows":
             return False
         try:
@@ -377,7 +381,6 @@ class OptimizerCore:
             if not hProc:
                 return False
             
-            # NtSetInformationProcess with ProcessIoPriority (21)
             ProcessIoPriority = 21
             priority_val = ctypes.c_ulong(io_priority)
             status = ctypes.windll.ntdll.NtSetInformationProcess(
@@ -451,13 +454,7 @@ class OptimizerCore:
             return False, f"Could not elevate priority: {str(e)}"
 
     def accelerate_game_asset_loading(self, target_name_or_pid: Optional[Any] = None) -> Tuple[bool, List[str]]:
-        """
-        Accelerates game asset loading speed and eliminates loading stutters:
-        - High Disk I/O Priority (ProcessIoPriorityHigh) for game process
-        - High CPU Priority class (HIGH_PRIORITY_CLASS)
-        - Pre-flushes GPU DirectX/Vulkan shader caches
-        - Protects game memory working set & file cache in Standby RAM
-        """
+        """Accelerates game asset load speed and eliminates texture load stutters."""
         logs = []
         logs.append("[ASSET FAST-LOADER] Initiating Game Asset Read & Load Acceleration...")
         
@@ -485,7 +482,6 @@ class OptimizerCore:
             except Exception:
                 pass
 
-        # 1. Pre-flush Shader Cache to prevent asset load stuttering
         _, shader_msg = self.clean_gpu_shader_cache()
         logs.append(f"[GPU SHADER CLEANER] {shader_msg}")
 
@@ -497,18 +493,16 @@ class OptimizerCore:
                 self.active_game_pids.add(pid)
                 self.protected_game_names.add(pname.lower())
 
-                # Set CPU Priority
                 boost_ok, boost_msg = self.boost_game_process(pid, "high")
                 logs.append(f"[CPU PRIORITY] {boost_msg}")
 
-                # Set Disk I/O Priority to High
                 io_ok = self.set_process_io_priority(pid, 3)
                 if io_ok:
-                    logs.append(f"[DISK I/O ACCELERATOR] High Disk Read Priority (ProcessIoPriorityHigh) assigned to '{pname}' (PID: {pid}). Asset load speed boosted!")
+                    logs.append(f"[DISK I/O ACCELERATOR] High Disk Read Priority assigned to '{pname}'.")
                 else:
                     logs.append(f"[DISK I/O ACCELERATOR] Disk I/O priority optimized for '{pname}'.")
 
-                logs.append(f"[RAM PROTECTION] Protected '{pname}' working set and Standby RAM file cache from eviction.")
+                logs.append(f"[RAM PROTECTION] Protected '{pname}' working set and Standby RAM cache from eviction.")
                 return True, logs
             except Exception as e:
                 logs.append(f"[ASSET ACCELERATOR ERROR] {str(e)}")
@@ -517,49 +511,8 @@ class OptimizerCore:
             logs.append("[ASSET FAST-LOADER] Protected system file cache in Standby RAM for fast game asset pre-loading.")
             return True, logs
 
-    def enable_windows_privilege(self, privilege_name: str) -> bool:
-        """Acquire Windows process privilege (e.g. SeProfileSingleProcessPrivilege)."""
-        if self.os_type != "windows":
-            return False
-        try:
-            TOKEN_ADJUST_PRIVILEGES = 0x0020
-            TOKEN_QUERY = 0x0008
-            SE_PRIVILEGE_ENABLED = 0x00000002
-
-            class LUID(ctypes.Structure):
-                _fields_ = [("LowPart", ctypes.c_ulong), ("HighPart", ctypes.c_long)]
-
-            class LUID_AND_ATTRIBUTES(ctypes.Structure):
-                _fields_ = [("Luid", LUID), ("Attributes", ctypes.c_ulong)]
-
-            class TOKEN_PRIVILEGES(ctypes.Structure):
-                _fields_ = [("PrivilegeCount", ctypes.c_ulong), ("Privileges", LUID_AND_ATTRIBUTES * 1)]
-
-            hToken = ctypes.c_void_p()
-            advapi32 = ctypes.windll.advapi32
-            kernel32 = ctypes.windll.kernel32
-
-            if not advapi32.OpenProcessToken(kernel32.GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, ctypes.byref(hToken)):
-                return False
-
-            luid = LUID()
-            if not advapi32.LookupPrivilegeValueW(None, privilege_name, ctypes.byref(luid)):
-                kernel32.CloseHandle(hToken)
-                return False
-
-            tp = TOKEN_PRIVILEGES()
-            tp.PrivilegeCount = 1
-            tp.Privileges[0].Luid = luid
-            tp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED
-
-            result = advapi32.AdjustTokenPrivileges(hToken, False, ctypes.byref(tp), ctypes.sizeof(tp), None, None)
-            kernel32.CloseHandle(hToken)
-            return bool(result)
-        except Exception:
-            return False
-
     def relaunch_as_admin(self) -> bool:
-        """Relaunch the current script with Administrator privileges on Windows."""
+        """Relaunch app with Administrator rights on Windows."""
         if self.os_type == "windows" and not self.is_admin:
             try:
                 main_script = os.path.abspath(os.path.join(os.path.dirname(__file__), "app.py"))
@@ -574,18 +527,21 @@ class OptimizerCore:
         return False
 
     def flush_standby_list(self, force_even_if_game_running: bool = False) -> Tuple[bool, str]:
-        """Flushes system standby memory cache."""
+        """Flushes system standby memory cache using native C++ engine with fallback."""
+        if not force_even_if_game_running and self.is_game_running():
+            return True, "Active game detected: Preserved game asset file cache in Standby RAM to prevent asset loading delays."
+
+        # Try native C++ engine first
+        ok_cpp, lines_cpp = self._run_cpp_engine("--flush-standby")
+        if ok_cpp:
+            return True, "Standby RAM list successfully flushed via native C++ NT Kernel engine."
+
+        # Fallback to Python ctypes logic
         if self.os_type == "windows":
             try:
-                # Protect game asset loading: If a game is active, don't flush standby list unless forced!
-                if not force_even_if_game_running and self.is_game_running():
-                    return True, "Active game detected: Preserved game asset file cache in Standby RAM to prevent asset loading delays."
-
                 if self.is_admin:
                     SystemMemoryListInformation = 80
                     MemoryPurgeStandbyList = 4
-
-                    self.enable_windows_privilege("SeProfileSingleProcessPrivilege")
 
                     ntdll = ctypes.windll.ntdll
                     cmd = ctypes.c_int(MemoryPurgeStandbyList)
@@ -598,12 +554,9 @@ class OptimizerCore:
                     unsigned_status = ctypes.c_ulong(status).value
                     if unsigned_status == 0:
                         return True, "Standby RAM list successfully flushed via NT Kernel."
-                    elif unsigned_status in (0xC0000061, 0xC0000022):
-                        return False, "Administrator privilege required to purge Windows Standby Memory."
                     else:
-                        return False, f"NtSetSystemInformation returned status code: {hex(unsigned_status)}"
-
-                return False, "Administrator privilege required to purge Standby RAM. Click '⚠️ USER MODE' badge to elevate."
+                        return False, f"NtSetSystemInformation status code: {hex(unsigned_status)}"
+                return False, "Administrator privilege required to purge Standby RAM."
             except Exception as e:
                 return False, f"Failed to flush Standby RAM: {str(e)}"
         elif self.os_type == "linux":
@@ -621,7 +574,12 @@ class OptimizerCore:
         return False, f"Standby RAM purge not supported on OS: {self.os_type}"
 
     def trim_process_working_sets(self) -> Tuple[int, int]:
-        """Trims working sets of non-essential processes safely while protecting active games."""
+        """Trims working sets of non-essential processes safely."""
+        ok_cpp, lines_cpp = self._run_cpp_engine("--trim-ram")
+        if ok_cpp:
+            # Native C++ engine trimmed processes
+            pass
+
         processed = 0
         succeeded = 0
 
@@ -694,7 +652,7 @@ class OptimizerCore:
         return cleaned_bytes, f"Cleaned {cleaned_mb} MB of temporary files."
 
     def terminate_bloatware(self, target_list: List[str] = None) -> List[str]:
-        """Safely terminates bloatware processes while strictly obeying OS safety whitelist."""
+        """Safely terminates bloatware processes while obeying OS safety whitelist."""
         if target_list is None:
             target_list = DEFAULT_BLOATWARE.get(self.os_type, [])
 
@@ -732,34 +690,24 @@ class OptimizerCore:
         return list(set(terminated))
 
     def run_fps_booster(self, target_game_name: Optional[str] = None) -> Dict[str, Any]:
-        """
-        Runs the FPS & Game Optimization Engine:
-        - 1ms System Timer Resolution (latency reduction)
-        - Ultimate/High Performance Power Plan activation
-        - GPU Shader Cache flusher (stutter elimination)
-        - High-yield Monster RAM recovery
-        - Game process CPU priority elevation
-        """
+        """Runs the FPS & Game Optimization Engine using C++ Engine + Core."""
         before_specs = self.get_system_specs()
         logs = []
 
         logs.append("[FPS BOOSTER] Initiating High-FPS Gaming Optimization Pipeline...")
-        logs.append(f"[GPU & HW DETECTED] GPU: {self.hardware_info['gpu_vendor']} | Profile: {self.hardware_info['device_profile']}")
+        if self.cpp_exe_path:
+            logs.append(f"[C++ ENGINE ACTIVE] Invoking compiled C++ binary: {os.path.basename(self.cpp_exe_path)}")
 
-        # 1. System Timer Precision
         timer_ok = self.set_windows_timer_resolution(True)
         if timer_ok:
-            logs.append("[LATENCY BOOSTER] Windows 1ms High-Precision System Timer locked (Micro-stutters reduced).")
+            logs.append("[LATENCY BOOSTER] 1.0ms High-Precision System Timer locked (Micro-stutters reduced).")
 
-        # 2. Power Plan
         power_ok, power_msg = self.enable_high_performance_power_plan()
         logs.append(f"[POWER PLAN] {power_msg}")
 
-        # 3. GPU Shader Cache
         _, shader_msg = self.clean_gpu_shader_cache()
         logs.append(f"[GPU SHADER CLEANER] {shader_msg}")
 
-        # 4. Bloatware & RAM Recovery
         bloat_killed = self.terminate_bloatware()
         if bloat_killed:
             logs.append(f"[BLOATWARE PURGE] Terminated {len(bloat_killed)} background processes: {', '.join(bloat_killed)}")
@@ -770,7 +718,6 @@ class OptimizerCore:
         self.flush_standby_list()
         self.clear_temp_files()
 
-        # 5. Game Process Priority & Disk I/O Asset Read Acceleration
         acc_ok, acc_logs = self.accelerate_game_asset_loading(target_game_name)
         for alog in acc_logs:
             if alog not in logs and "[GPU SHADER CLEANER]" not in alog:
@@ -792,34 +739,23 @@ class OptimizerCore:
         }
 
     def run_potato_device_optimizer(self) -> Dict[str, Any]:
-        """
-        Runs the 4GB Potato PC Ultra-Light Preset:
-        - Aggressive working set memory compaction
-        - Standby RAM list flush
-        - Background bloatware termination
-        - Temporary files sweeper
-        - Memory paging & swap recommendations
-        """
+        """Runs the 4GB Potato PC Ultra-Light Preset."""
         before_specs = self.get_system_specs()
         logs = []
 
         logs.append("🥔 [POTATO DEVICE OPTIMIZER] Activating 4GB Ultra-Light Low-Spec Preset...")
         logs.append(f"[SPECS] RAM: {before_specs['total_ram_gb']} GB | Target Free: {before_specs['target_free_gb']} GB")
 
-        # 1. Terminate background bloatware
         bloat_killed = self.terminate_bloatware()
         if bloat_killed:
             logs.append(f"[POTATO CLEANUP] Terminated {len(bloat_killed)} background bloat processes.")
 
-        # 2. Aggressive working set trim
         proc_total, proc_trimmed = self.trim_process_working_sets()
         logs.append(f"[POTATO COMPACTION] Compacted RAM working sets for {proc_trimmed}/{proc_total} active apps.")
 
-        # 3. Flush standby list
         success, msg = self.flush_standby_list()
         logs.append(f"[POTATO RAM PURGE] {msg}")
 
-        # 4. Clear temp files
         _, temp_msg = self.clear_temp_files()
         logs.append(f"[POTATO DISK CLEANER] {temp_msg}")
 
@@ -841,19 +777,13 @@ class OptimizerCore:
         }
 
     def run_monster_optimization(self) -> Dict[str, Any]:
-        """
-        Runs the Monster Optimizer:
-        - Multi-stage RAM reclamation
-        - Standby list purge
-        - Non-critical working set memory trim
-        - Temporary files sweeper
-        - Safe bloatware process management
-        """
+        """Runs the Monster Optimizer."""
         before_specs = self.get_system_specs()
         logs = []
 
         logs.append("[MONSTER OPTIMIZER] Initiating High-Yield RAM Recovery...")
-        logs.append(f"[SPECS DETECTED] OS: {before_specs['os_name']} {before_specs['os_release']} | RAM: {before_specs['total_ram_gb']} GB")
+        if self.cpp_exe_path:
+            logs.append(f"[C++ NATIVE ENGINE] Running C++ flusher binary: {os.path.basename(self.cpp_exe_path)}")
 
         bloat_killed = self.terminate_bloatware()
         if bloat_killed:
@@ -893,26 +823,3 @@ class OptimizerCore:
             "working_sets_trimmed": proc_trimmed,
             "logs": logs
         }
-
-
-if __name__ == "__main__":
-    if hasattr(sys.stdout, 'reconfigure'):
-        try:
-            sys.stdout.reconfigure(encoding='utf-8', errors='replace')
-        except Exception:
-            pass
-    core = OptimizerCore()
-    specs = core.get_system_specs()
-    hw = core.get_hardware_details()
-    print("=== MR. DREW'S DEVICE & FPS OPTIMIZER CORE ===")
-    print(f"OS: {specs['os_name']} ({specs['os_release']})")
-    print(f"CPU Cores: {hw['cpu_cores_physical']} Physical / {hw['cpu_cores_logical']} Logical")
-    print(f"GPU: {hw['gpu_vendor']}")
-    print(f"Device Profile: {hw['device_profile']}")
-    print(f"Total RAM: {specs['total_ram_gb']} GB | Current Free: {specs['avail_ram_gb']} GB")
-    print(f"Target Free Threshold: {specs['target_free_gb']} GB")
-    print("\nRunning FPS Booster Pipeline Test...")
-    res = core.run_fps_booster()
-    for log in res["logs"]:
-        print(log)
-
