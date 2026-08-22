@@ -135,6 +135,55 @@ class Api:
         return {"logs": [f"Unknown action: {action_id}"]}
 
 
+def set_windows_app_icon(icon_ico_path):
+    """Sets Win32 HWND icons (WM_SETICON) for top-left title bar corner and taskbar icon."""
+    if platform.system().lower() != "windows" or not os.path.exists(icon_ico_path):
+        return
+    try:
+        import ctypes
+        from ctypes import wintypes
+        
+        # Register AppUserModelID so Windows Taskbar displays custom app icon
+        myappid = "mrdrew.deviceoptimizer.app.1.0"
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+
+        WM_SETICON = 0x0080
+        ICON_SMALL = 0
+        ICON_BIG = 1
+        IMAGE_ICON = 1
+        LR_LOADFROMFILE = 0x0010
+
+        h_icon_big = ctypes.windll.user32.LoadImageW(
+            None, icon_ico_path, IMAGE_ICON, 0, 0, LR_LOADFROMFILE
+        )
+        h_icon_small = ctypes.windll.user32.LoadImageW(
+            None, icon_ico_path, IMAGE_ICON, 16, 16, LR_LOADFROMFILE
+        )
+
+        def enum_windows_callback(hwnd, lParam):
+            length = ctypes.windll.user32.GetWindowTextLengthW(hwnd)
+            if length > 0:
+                buff = ctypes.create_unicode_buffer(length + 1)
+                ctypes.windll.user32.GetWindowTextW(hwnd, buff, length + 1)
+                if "Mr. Drew's Device & FPS Optimizer" in buff.value:
+                    if h_icon_big:
+                        ctypes.windll.user32.SendMessageW(hwnd, WM_SETICON, ICON_BIG, h_icon_big)
+                    if h_icon_small:
+                        ctypes.windll.user32.SendMessageW(hwnd, WM_SETICON, ICON_SMALL, h_icon_small)
+            return True
+
+        WNDENUMPROC = ctypes.WINFUNCTYPE(wintypes.BOOL, wintypes.HWND, wintypes.LPARAM)
+        
+        def apply_loop():
+            for _ in range(12):
+                time.sleep(0.4)
+                ctypes.windll.user32.EnumWindows(WNDENUMPROC(enum_windows_callback), 0)
+
+        threading.Thread(target=apply_loop, daemon=True).start()
+    except Exception:
+        pass
+
+
 def start_local_http_server(port=8080):
     """Fallback local HTTP server if PyWebView runs in headless/browser mode."""
     import http.server
@@ -154,13 +203,15 @@ def start_local_http_server(port=8080):
 def main():
     api = Api()
     html_path = os.path.join(SCRIPT_DIR, "gui", "index.html")
+    icon_ico = os.path.join(SCRIPT_DIR, "gui", "assets", "logo.ico")
 
     print("⚡ Starting Mr. Drew's Device & FPS Optimizer (HTML5/CSS3/JS Web UI)...")
+    set_windows_app_icon(icon_ico)
 
     if HAS_WEBVIEW:
         try:
             window = webview.create_window(
-                "⚡ Mr. Drew's Device & FPS Optimizer",
+                "Mr. Drew's Device & FPS Optimizer",
                 url=html_path,
                 js_api=api,
                 width=1160,
