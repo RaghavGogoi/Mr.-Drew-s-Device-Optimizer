@@ -1,5 +1,5 @@
 {
-    "first_run_completed": false,
+    "first_run_completed": true,
     "auto_guard_enabled": false,
     "auto_guard_interval_sec": 60,
     "theme": "obsidian",
