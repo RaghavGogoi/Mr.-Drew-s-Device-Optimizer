@@ -1,7 +1,7 @@
 @echo off
-title Mr. Drew's Device Optimizer & Memory Manager (Obsidian Suite)
+title Mr. Drew's Device Optimizer & Memory Manager
 echo ========================================================
-echo   MR. DREW'S DEVICE OPTIMIZER - OBSIDIAN SUITE LAUNCHER
+echo   MR. DREW'S DEVICE OPTIMIZER LAUNCHER
 echo ========================================================
 
 :: Ensure working directory is directory of this script
@@ -32,7 +32,7 @@ if %errorlevel% equ 0 (
     )
 )
 
-echo [INFO] Launching Device Optimizer Obsidian Suite...
+echo [INFO] Launching Device Optimizer...
 python app.py %*
 if %errorlevel% neq 0 (
     echo.

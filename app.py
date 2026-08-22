@@ -160,7 +160,7 @@ def main():
     if HAS_WEBVIEW:
         try:
             window = webview.create_window(
-                "⚡ Mr. Drew's Device & FPS Optimizer - Obsidian Suite",
+                "⚡ Mr. Drew's Device & FPS Optimizer",
                 url=html_path,
                 js_api=api,
                 width=1160,

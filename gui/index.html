@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>⚡ Mr. Drew's Device & FPS Optimizer - Obsidian Suite</title>
+    <title>Mr. Drew's Device & FPS Optimizer</title>
+    <link rel="icon" type="image/png" href="assets/logo.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
@@ -14,7 +15,7 @@
         <!-- Top App Header -->
         <header class="app-header">
             <div class="header-brand">
-                <div class="brand-logo">⚡</div>
+                <img src="assets/logo.png" alt="Logo" class="brand-logo-img">
                 <div class="brand-text">
                     <h1>MR. DREW'S DEVICE & FPS OPTIMIZER</h1>
                     <div class="brand-subtitle" id="engine-subtitle">⚡ C++ ENGINE ACTIVE | Smart Hardware Engine</div>
@@ -302,6 +303,22 @@
                     </div>
 
                     <div class="glass-card settings-card">
+                        <div class="settings-banner">
+                            <img src="assets/logo2.jpeg" alt="Mr. Drew's Device Optimizer Badge" class="settings-logo-img">
+                            <div>
+                                <h3>Mr. Drew's Device & FPS Optimizer</h3>
+                                <p class="text-muted">Smart OS & Gaming Latency Optimization Engine</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="glass-card settings-card">
+                        <h3>🎓 Interactive Tutorial Controls</h3>
+                        <p class="text-muted">Reset the first-run flag to auto-play the interactive tutorial on next app startup:</p>
+                        <button class="btn btn-purple" onclick="triggerAction('reset_tutorial')">🔄 Reset First-Run Tutorial State</button>
+                    </div>
+
+                    <div class="glass-card settings-card">
                         <h3>💻 Detected Hardware & Operating System Specs</h3>
                         <ul class="specs-list" id="settings-specs-list">
                             <li>Loading hardware specs...</li>
@@ -320,7 +337,7 @@
                     <button class="btn btn-sm btn-surface" onclick="clearConsoleLog()">🗑️ Clear</button>
                 </div>
             </div>
-            <textarea id="console-output" readonly>[00:00:00] System & FPS Engine initialized [OBSIDIAN WEB SUITE].</textarea>
+            <textarea id="console-output" readonly>[00:00:00] System & FPS Engine initialized.</textarea>
         </footer>
     </div>
 
