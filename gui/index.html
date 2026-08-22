@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚡ Mr. Drew's Device & FPS Optimizer - Obsidian Suite</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Top App Header -->
+        <header class="app-header">
+            <div class="header-brand">
+                <div class="brand-logo">⚡</div>
+                <div class="brand-text">
+                    <h1>MR. DREW'S DEVICE & FPS OPTIMIZER</h1>
+                    <div class="brand-subtitle" id="engine-subtitle">⚡ C++ ENGINE ACTIVE | Smart Hardware Engine</div>
+                </div>
+            </div>
+            <div class="header-badges">
+                <button class="btn btn-purple btn-glow" id="btn-header-tutorial" onclick="openTutorialModal()">🎓 Interactive Tutorial</button>
+                <div class="badge badge-cyan" id="badge-os">💻 Windows 11</div>
+                <button class="badge badge-amber" id="badge-admin" onclick="triggerAdminElevation()">⚠️ USER MODE (Elevate)</button>
+            </div>
+        </header>
+
+        <!-- Main Body Shell (Sidebar + Content View) -->
+        <div class="app-body">
+            <!-- Sidebar Navigation -->
+            <nav class="sidebar">
+                <div class="nav-section-label">MAIN MENU</div>
+                <ul class="nav-list">
+                    <li class="nav-item active" data-page="page-dashboard" onclick="switchPage('page-dashboard')">
+                        <span class="nav-icon">🏠</span>
+                        <span class="nav-title">Dashboard</span>
+                    </li>
+                    <li class="nav-item" data-page="page-fps" onclick="switchPage('page-fps')">
+                        <span class="nav-icon">🎮</span>
+                        <span class="nav-title">FPS & Gaming</span>
+                    </li>
+                    <li class="nav-item" data-page="page-ram" onclick="switchPage('page-ram')">
+                        <span class="nav-icon">🧠</span>
+                        <span class="nav-title">RAM & Memory</span>
+                    </li>
+                    <li class="nav-item" data-page="page-tools" onclick="switchPage('page-tools')">
+                        <span class="nav-icon">🧹</span>
+                        <span class="nav-title">System Tools</span>
+                    </li>
+                    <li class="nav-item" data-page="page-tutorial" onclick="switchPage('page-tutorial')">
+                        <span class="nav-icon">🎓</span>
+                        <span class="nav-title">Tutorial & Guide</span>
+                    </li>
+                    <li class="nav-item" data-page="page-settings" onclick="switchPage('page-settings')">
+                        <span class="nav-icon">⚙️</span>
+                        <span class="nav-title">Settings & Specs</span>
+                    </li>
+                </ul>
+            </nav>
+
+            <!-- Main Content Page Container -->
+            <main class="content-area">
+                <!-- Page 1: Dashboard -->
+                <section class="page active" id="page-dashboard">
+                    <div class="metrics-grid">
+                        <div class="metric-card glass-card">
+                            <div class="metric-title">TOTAL PHYSICAL RAM</div>
+                            <div class="metric-value text-cyan" id="dash-total-ram">-- GB</div>
+                        </div>
+                        <div class="metric-card glass-card">
+                            <div class="metric-title">CURRENT FREE RAM</div>
+                            <div class="metric-value text-green" id="dash-free-ram">-- GB</div>
+                        </div>
+                        <div class="metric-card glass-card">
+                            <div class="metric-title">SMART TARGET FREE</div>
+                            <div class="metric-value text-purple" id="dash-target-ram">≥ -- GB</div>
+                        </div>
+                        <div class="metric-card glass-card">
+                            <div class="metric-title">CPU UTILIZATION</div>
+                            <div class="metric-value text-amber" id="dash-cpu-percent">--%</div>
+                        </div>
+                    </div>
+
+                    <!-- SVG Circular Gauge & Memory Allocation Bar -->
+                    <div class="glass-card gauge-section">
+                        <div class="gauge-header">
+                            <h2>Real-Time Physical Memory Allocation Gauge</h2>
+                            <span class="ram-pct-badge text-cyan" id="dash-ram-percent">0% RAM Used</span>
+                        </div>
+
+                        <div class="gauge-body">
+                            <!-- Circular SVG Gauge -->
+                            <div class="svg-gauge-wrapper">
+                                <svg class="svg-gauge" viewBox="0 0 120 120">
+                                    <circle class="gauge-bg" cx="60" cy="60" r="50"></circle>
+                                    <circle class="gauge-fill" id="svg-gauge-circle" cx="60" cy="60" r="50" stroke-dasharray="314.15" stroke-dashoffset="314.15"></circle>
+                                </svg>
+                                <div class="gauge-center-text">
+                                    <span class="gauge-num text-cyan" id="gauge-center-num">0%</span>
+                                    <span class="gauge-label">Used</span>
+                                </div>
+                            </div>
+
+                            <!-- Linear Progress Bar -->
+                            <div class="linear-gauge-container">
+                                <div class="progress-bar-track">
+                                    <div class="progress-bar-fill" id="ram-progress-fill"></div>
+                                </div>
+                                <div class="progress-labels">
+                                    <span id="ram-used-detail">0.0 GB Used</span>
+                                    <span id="ram-avail-detail">0.0 GB Available</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Master Action Buttons -->
+                    <div class="quick-actions-bar">
+                        <button class="btn btn-amber btn-lg" onclick="triggerAction('run_fps_booster')">🎮 RUN FPS BOOSTER</button>
+                        <button class="btn btn-purple btn-lg" onclick="triggerAction('run_monster_optimizer')">🔥 RUN MONSTER OPTIMIZER</button>
+                        <button class="btn btn-surface btn-lg" onclick="triggerAction('run_potato_mode')">🥔 4GB Potato Mode</button>
+                        <button class="btn btn-cyan btn-lg" onclick="refreshSystemStats()">🔄 Refresh Stats</button>
+                    </div>
+                </section>
+
+                <!-- Page 2: FPS & Gaming Engine -->
+                <section class="page" id="page-fps">
+                    <div class="page-title">
+                        <h2>🎮 High-FPS & Gaming Latency Engine</h2>
+                    </div>
+
+                    <!-- Verified Performance Status Panel -->
+                    <div class="glass-card status-panel">
+                        <div class="status-panel-title">⚡ Verified Gaming Performance Status</div>
+                        <div class="status-panel-grid">
+                            <div class="status-item">
+                                <span class="status-dot green-dot"></span>
+                                <span>Timer Precision: <strong class="text-green" id="fps-status-timer">1.0 ms (Locked)</strong></span>
+                            </div>
+                            <div class="status-item">
+                                <span class="status-dot cyan-dot"></span>
+                                <span>Game Priority Boost: <strong class="text-cyan" id="fps-status-game">Standby Ready</strong></span>
+                            </div>
+                            <div class="status-item">
+                                <span class="status-dot purple-dot"></span>
+                                <span>OS Power Plan: <strong class="text-purple" id="fps-status-power">High Performance</strong></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Feature Cards Grid -->
+                    <div class="cards-grid">
+                        <div class="glass-card feature-card">
+                            <div class="card-icon">🎮</div>
+                            <h3>RUN FPS & GAME BOOSTER</h3>
+                            <p>Locks 1.0ms timer, clears GPU shader cache, and boosts active game CPU priority.</p>
+                            <button class="btn btn-amber" onclick="triggerAction('run_fps_booster')">RUN BOOSTER</button>
+                        </div>
+                        <div class="glass-card feature-card">
+                            <div class="card-icon">🚀</div>
+                            <h3>Fast Asset Loader</h3>
+                            <p>Sets High Disk I/O priority for fast map, texture, and 3D asset read speed.</p>
+                            <button class="btn btn-green" onclick="triggerAction('accelerate_asset_loading')">ACCELERATE READS</button>
+                        </div>
+                        <div class="glass-card feature-card">
+                            <div class="card-icon">🥔</div>
+                            <h3>4GB Potato Mode</h3>
+                            <p>Aggressive low-RAM preset for budget PCs with 4GB physical RAM.</p>
+                            <button class="btn btn-surface" onclick="triggerAction('run_potato_mode')">ENABLE POTATO PRESET</button>
+                        </div>
+                        <div class="glass-card feature-card">
+                            <div class="card-icon">⚡</div>
+                            <h3>Ultimate Power Mode</h3>
+                            <p>Forces OS power plan into maximum clock speed state without CPU throttle.</p>
+                            <button class="btn btn-green" onclick="triggerAction('enable_power_plan')">FORCE ULTIMATE POWER</button>
+                        </div>
+                        <div class="glass-card feature-card">
+                            <div class="card-icon">🎯</div>
+                            <h3>Boost Game Priority</h3>
+                            <p>Set high scheduling priority for your active game executable.</p>
+                            <button class="btn btn-amber" onclick="triggerAction('open_game_picker')">SELECT & BOOST GAME</button>
+                        </div>
+                        <div class="glass-card feature-card">
+                            <div class="card-icon">🧹</div>
+                            <h3>Clean Shader Cache</h3>
+                            <p>Flushes DirectX, OpenGL, Vulkan, Nvidia & AMD shader caches to fix stutters.</p>
+                            <button class="btn btn-cyan" onclick="triggerAction('clean_shader_cache')">CLEAN SHADERS</button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Page 3: RAM & Memory Manager -->
+                <section class="page" id="page-ram">
+                    <div class="page-title">
+                        <h2>🧠 RAM & Memory Management Engine</h2>
+                    </div>
+
+                    <div class="cards-grid">
+                        <div class="glass-card feature-card">
+                            <div class="card-icon">🔥</div>
+                            <h3>MONSTER OPTIMIZER</h3>
+                            <p>Multi-stage RAM recovery: compacts working sets & purges standby RAM.</p>
+                            <button class="btn btn-purple" onclick="triggerAction('run_monster_optimizer')">RUN MONSTER PURGE</button>
+                        </div>
+                        <div class="glass-card feature-card">
+                            <div class="card-icon">✂️</div>
+                            <h3>Trim App RAM</h3>
+                            <p>Compacts working set memory of running background applications into free RAM.</p>
+                            <button class="btn btn-cyan" onclick="triggerAction('trim_working_sets')">TRIM WORKING SETS</button>
+                        </div>
+                        <div class="glass-card feature-card">
+                            <div class="card-icon">🛡️</div>
+                            <h3>Purge Standby RAM</h3>
+                            <p>Calls NT Kernel to flush Standby cached page list memory.</p>
+                            <button class="btn btn-surface" onclick="triggerAction('purge_standby')">PURGE STANDBY LIST</button>
+                        </div>
+                        <div class="glass-card feature-card">
+                            <div class="card-icon">⚡</div>
+                            <h3>Smart Auto-Guard (60s Loop)</h3>
+                            <p>Continuous background daemon checking memory threshold automatically.</p>
+                            <button class="btn btn-green" id="btn-toggle-autoguard" onclick="triggerAction('toggle_auto_guard')">TOGGLE AUTO-GUARD</button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Page 4: System Tools -->
+                <section class="page" id="page-tools">
+                    <div class="page-title">
+                        <h2>🧹 System Tools & Process Manager</h2>
+                    </div>
+
+                    <div class="tools-actions-bar">
+                        <button class="btn btn-surface" onclick="triggerAction('clear_temp')">🧹 Clear Temp Files</button>
+                        <button class="btn btn-red" onclick="triggerAction('kill_bloatware')">🚫 End Bloatware</button>
+                        <button class="btn btn-cyan" onclick="triggerAction('view_top_processes')">📊 Refresh Top RAM Apps</button>
+                    </div>
+
+                    <!-- Data Table -->
+                    <div class="table-card glass-card">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>PID</th>
+                                    <th>Application / Process Name</th>
+                                    <th>Physical RAM (MB)</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="top-procs-tbody">
+                                <tr>
+                                    <td colspan="4" class="text-muted" style="text-align: center;">Click 'Refresh Top RAM Apps' to load live process list.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Page 5: Tutorial & Guide Hub -->
+                <section class="page" id="page-tutorial">
+                    <div class="page-title">
+                        <h2>🎓 Interactive Tutorial & Feature Guide Hub</h2>
+                    </div>
+
+                    <div class="glass-card tut-header-card">
+                        <div>
+                            <h3>Learn How, Why, and When to Use Every Button</h3>
+                            <p class="text-muted">Launch the step-by-step interactive tour or test features by category below:</p>
+                        </div>
+                        <button class="btn btn-purple btn-glow" onclick="openTutorialModal()">▶ Launch Guided Tour</button>
+                    </div>
+
+                    <!-- Category Tabs -->
+                    <div class="tab-buttons">
+                        <button class="tab-btn active" data-tab="tab-gaming" onclick="switchCategoryTab('tab-gaming')">🎮 Gaming Engine</button>
+                        <button class="tab-btn" data-tab="tab-memory" onclick="switchCategoryTab('tab-memory')">🧠 RAM & Memory</button>
+                        <button class="tab-btn" data-tab="tab-tools" onclick="switchCategoryTab('tab-tools')">🧹 Cleaning & Tools</button>
+                    </div>
+
+                    <div class="tab-content active" id="tab-gaming">
+                        <div class="tut-cards-list" id="tut-list-gaming"></div>
+                    </div>
+                    <div class="tab-content" id="tab-memory">
+                        <div class="tut-cards-list" id="tut-list-memory"></div>
+                    </div>
+                    <div class="tab-content" id="tab-tools">
+                        <div class="tut-cards-list" id="tut-list-tools"></div>
+                    </div>
+                </section>
+
+                <!-- Page 6: Settings & Specs -->
+                <section class="page" id="page-settings">
+                    <div class="page-title">
+                        <h2>⚙️ Settings & System Specifications</h2>
+                    </div>
+
+                    <div class="glass-card settings-card">
+                        <h3>🎓 Interactive Tutorial Controls</h3>
+                        <p class="text-muted">Reset the first-run flag to auto-play the interactive tutorial on next app startup:</p>
+                        <button class="btn btn-purple" onclick="triggerAction('reset_tutorial')">🔄 Reset First-Run Tutorial State</button>
+                    </div>
+
+                    <div class="glass-card settings-card">
+                        <h3>💻 Detected Hardware & Operating System Specs</h3>
+                        <ul class="specs-list" id="settings-specs-list">
+                            <li>Loading hardware specs...</li>
+                        </ul>
+                    </div>
+                </section>
+            </main>
+        </div>
+
+        <!-- Bottom Console Log Area -->
+        <footer class="app-console">
+            <div class="console-header">
+                <span class="console-title">Real-Time Optimizer Console & FPS Performance Log</span>
+                <div class="console-actions">
+                    <button class="btn btn-sm btn-surface" onclick="copyConsoleLog()">📋 Copy Log</button>
+                    <button class="btn btn-sm btn-surface" onclick="clearConsoleLog()">🗑️ Clear</button>
+                </div>
+            </div>
+            <textarea id="console-output" readonly>[00:00:00] System & FPS Engine initialized [OBSIDIAN WEB SUITE].</textarea>
+        </footer>
+    </div>
+
+    <!-- Interactive Tutorial Modal Dialog -->
+    <div class="modal-overlay" id="tutorial-modal">
+        <div class="modal-card glass-card">
+            <div class="modal-header">
+                <h2>🎓 INTERACTIVE GUIDED TUTORIAL</h2>
+                <div class="jump-container">
+                    <label for="step-jump-select">Jump to Topic:</label>
+                    <select id="step-jump-select" onchange="jumpToTutorialStep(this.value)">
+                        <!-- Populated by main.js -->
+                    </select>
+                </div>
+            </div>
+
+            <div class="modal-progress-bar">
+                <div class="modal-progress-fill" id="modal-prog-fill"></div>
+            </div>
+
+            <div class="modal-body">
+                <div class="step-badge" id="modal-cat-badge">STEP 1 OF 14 • CATEGORY</div>
+                <h2 class="step-title" id="modal-title">Step Title</h2>
+
+                <div class="info-block block-cyan">
+                    <div class="block-title">🛠️ HOW IT WORKS (Technical Engine):</div>
+                    <div class="block-text" id="modal-how">How details...</div>
+                </div>
+
+                <div class="info-block block-green">
+                    <div class="block-title">💡 WHY USE IT (Performance Benefit):</div>
+                    <div class="block-text" id="modal-why">Why details...</div>
+                </div>
+
+                <div class="info-block block-amber">
+                    <div class="block-title">⏱️ WHEN TO USE IT (Best Scenario):</div>
+                    <div class="block-text" id="modal-when">When details...</div>
+                </div>
+
+                <!-- Interactive Action Test Button -->
+                <div class="modal-action-wrapper" id="modal-action-wrapper">
+                    <button class="btn btn-green btn-glow" id="btn-modal-try-action" onclick="executeModalStepAction()">🧪 Try Feature Now</button>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-red" onclick="closeTutorialModal(true)">⏭️ Skip Tutorial</button>
+                <div class="modal-nav-btns">
+                    <button class="btn btn-surface" id="btn-modal-prev" onclick="prevTutorialStep()">◀ Previous</button>
+                    <button class="btn btn-cyan" id="btn-modal-next" onclick="nextTutorialStep()">Next Step ▶</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="main.js"></script>
+</body>
+</html>

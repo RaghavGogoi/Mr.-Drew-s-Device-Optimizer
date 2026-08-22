@@ -1,29 +1,22 @@
-# Mr. Drew's Device & FPS Optimizer
+# Mr. Drew's Device & FPS Optimizer - HTML5/CSS3/JS Web UI Edition
 
-Mr. Drew's Device & FPS Optimizer is a simple, fast desktop application designed to speed up your computer, free up system memory (RAM), stop game lag, and clean background junk.
+Mr. Drew's Device & FPS Optimizer is a modern, high-performance desktop web application designed to speed up your computer, free up physical system memory (RAM), stop game lag, and clean background junk.
+
+It features a custom **HTML5, CSS3, and JavaScript Glassmorphism User Interface** powered by a native **PyWebView** window and high-speed **C++ Engine (`DeviceOptimizer.exe`)** backend.
 
 It works on **Windows**, **Linux**, and **macOS**. It helps your games (like Fortnite, Valorant, Roblox, Minecraft, or Unreal Engine) run smoother with fewer stutters.
 
 ---
 
-## Key Features
+## 🎨 Why HTML5/CSS3/JS Design?
 
-1. **Interactive Guided Tutorial**:
-   - When you launch the app for the first time, a step-by-step tutorial pops up automatically.
-   - It explains in simple words what every button does, why it helps, and when to click it.
-   - You can skip it anytime or open it again later by clicking the **Interactive Tutorial** button at the top of the app.
-
-2. **Super Fast C++ Performance Engine**:
-   - Runs on a high-speed C++ engine so memory cleaning happens instantly without slowing down your PC.
-   - Built to run safely across different operating systems without crashing.
-
-3. **Clean & Easy Multi-Page Design**:
-   - **Dashboard**: Shows your total RAM, free RAM, and CPU usage.
-   - **FPS & Gaming**: Boost game speeds, fix lag, speed up game loading, and set high graphics power.
-   - **RAM & Memory**: Clean up unused memory with one click.
-   - **System Tools**: Clear temporary junk files, close unwanted background apps, and see which apps use the most memory.
-   - **Tutorial & Guide**: Learn how to use all features with simple step-by-step explanations.
-   - **Settings & Specs**: View your computer details or reset the tutorial.
+1. **Unlimited UI Design Possibilities**:
+   - Built with modern CSS glassmorphism, flexbox/grid layout, smooth backdrop blur, glowing neon glints, and custom Google Fonts (Inter & JetBrains Mono).
+   - Real-time animated **SVG Circular RAM Gauge** and CPU utilization visualizer.
+2. **Interactive Guided Tutorial Modal**:
+   - Step-by-step guided tour with topic dropdown selector, category tabs (**🎮 Gaming Engine**, **🧠 RAM & Memory**, **🧹 Cleaning & Tools**), and **🧪 Try Feature Now** live action buttons directly inside each tutorial step!
+3. **Super Fast C++ Performance Engine**:
+   - Powered by native C++ (`DeviceOptimizer.exe`) for instant memory flushes and 1.0ms high-precision system timer locking.
 
 ---
 
@@ -37,7 +30,7 @@ It works on **Windows**, **Linux**, and **macOS**. It helps your games (like For
    cd "Mr.-Drew-s-Device-Optimizer"
    run.bat
    ```
-3. Double-clicking `run.bat` will automatically check requirements and start the application.
+3. Running `run.bat` automatically verifies Python, compiles `main.cpp` into `DeviceOptimizer.exe` if `g++` is installed, installs dependencies (`pywebview`, `psutil`), and launches the desktop app.
 
 ---
 
@@ -75,7 +68,7 @@ It works on **Windows**, **Linux**, and **macOS**. It helps your games (like For
 
 ## Safe System Protection
 
-The app includes a built-in **Safety Protection Whitelist**. Important Windows/Linux system files (like `explorer.exe`, `systemd`, `svchost.exe`) are protected so your computer will stay 100% stable and never crash.
+The app includes a built-in **Safety Protection Whitelist**. Important system files (like `explorer.exe`, `systemd`, `svchost.exe`) are protected so your computer will stay 100% stable and never crash.
 
 ---
 
