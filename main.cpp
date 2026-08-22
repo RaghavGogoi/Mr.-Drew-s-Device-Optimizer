@@ -36,6 +36,12 @@ typedef NTSTATUS(WINAPI* PNT_SET_SYSTEM_INFORMATION)(
     PVOID SystemInformation,
     ULONG SystemInformationLength
 );
+
+typedef NTSTATUS(WINAPI* PNT_QUERY_TIMER_RESOLUTION)(
+    PULONG MinimumResolution,
+    PULONG MaximumResolution,
+    PULONG CurrentResolution
+);
 #endif
 
 // Console Color Formatting using ANSI Escape Codes
@@ -121,10 +127,32 @@ bool EnablePrivilege(LPCWSTR privilegeName) {
 }
 #endif
 
-// Lock 1ms High Precision Timer
+// Lock 1ms High Precision Timer with Exact Resolution Measurement
 void LockHighPrecisionTimer() {
 #ifdef _WIN32
     MMRESULT res = timeBeginPeriod(1);
+    
+    // Read exact timer resolution via NtQueryTimerResolution
+    HMODULE hNtdll = GetModuleHandleW(L"ntdll.dll");
+    if (hNtdll) {
+        auto NtQueryTimerResolution = (PNT_QUERY_TIMER_RESOLUTION)(void*)GetProcAddress(hNtdll, "NtQueryTimerResolution");
+        if (NtQueryTimerResolution) {
+            ULONG minRes = 0, maxRes = 0, curRes = 0;
+            if (NtQueryTimerResolution(&minRes, &maxRes, &curRes) == 0) {
+                double curMs = (double)curRes / 10000.0;
+                double minMs = (double)minRes / 10000.0;
+                std::stringstream ss;
+                ss << std::fixed << std::setprecision(3) << curMs;
+                if (res == TIMERR_NOERROR) {
+                    LogSuccess("System Timer locked to " + ss.str() + " ms (Default was " + std::to_string(minMs) + " ms). Input latency minimized!");
+                } else {
+                    LogInfo("Current System Timer resolution: " + ss.str() + " ms.");
+                }
+                return;
+            }
+        }
+    }
+    
     if (res == TIMERR_NOERROR) {
         LogSuccess("System Timer locked to 1.0ms High-Precision resolution.");
     } else {
@@ -160,7 +188,7 @@ bool FlushStandbyMemory() {
     );
 
     if (status == 0) {
-        LogSuccess("Standby RAM list successfully flushed.");
+        LogSuccess("Standby RAM list successfully flushed via NT Kernel.");
         return true;
     } else {
         LogError("Failed to flush Standby RAM (Requires Administrator rights).");
@@ -243,22 +271,6 @@ void KillBloatware() {
     }
 #endif
     LogSuccess("Bloatware processes terminated.");
-}
-
-// Calculate dynamic RAM threshold
-unsigned long long CalculateThreshold(unsigned long long totalRAM) {
-    unsigned long long oneGB = 1024ULL * 1024 * 1024;
-    double totalGB = (double)totalRAM / (double)oneGB;
-    
-    if (totalGB <= 4.5) {
-        return (unsigned long long)(1.5 * oneGB);
-    } else if (totalGB <= 9.0) {
-        return 3ULL * oneGB;
-    } else if (totalGB <= 18.0) {
-        return 5ULL * oneGB;
-    } else {
-        return (unsigned long long)(totalGB * 0.3125 * oneGB);
-    }
 }
 
 int main(int argc, char* argv[]) {
