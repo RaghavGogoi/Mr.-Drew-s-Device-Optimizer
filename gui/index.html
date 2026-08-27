@@ -260,37 +260,37 @@
 
                     <!-- Feature Cards Grid -->
                     <div class="cards-grid">
-                        <div class="glass-card feature-card">
+                        <div class="glass-card feature-card" id="target-fps-booster-card">
                             <div class="card-icon">🎮</div>
                             <h3>RUN FPS & GAME BOOSTER</h3>
                             <p>Locks system timer to 1.0ms, flushes GPU shader caches, and elevates game CPU priority to High.</p>
                             <button class="btn btn-amber btn-block" onclick="triggerAction('run_fps_booster')">RUN BOOSTER NOW</button>
                         </div>
-                        <div class="glass-card feature-card">
+                        <div class="glass-card feature-card" id="target-asset-loader">
                             <div class="card-icon">🚀</div>
                             <h3>Fast Asset Loader</h3>
                             <p>Sets Disk I/O priority to High (ProcessIoPriorityHigh) for game processes to stop texture pop-in.</p>
                             <button class="btn btn-green btn-block" onclick="triggerAction('accelerate_asset_loading')">ACCELERATE ASSETS</button>
                         </div>
-                        <div class="glass-card feature-card">
+                        <div class="glass-card feature-card" id="target-potato-card">
                             <div class="card-icon">🥔</div>
                             <h3>4GB Potato Mode</h3>
                             <p>Aggressive low-RAM preset for budget PCs & laptops with 4GB to 8GB physical memory.</p>
                             <button class="btn btn-surface btn-block" onclick="triggerAction('run_potato_mode')">ENABLE POTATO PRESET</button>
                         </div>
-                        <div class="glass-card feature-card">
+                        <div class="glass-card feature-card" id="target-power-plan">
                             <div class="card-icon">⚡</div>
                             <h3>Ultimate Power Mode</h3>
                             <p>Forces OS power plan into maximum clock speed state, disabling CPU core parking & throttling.</p>
                             <button class="btn btn-green btn-block" onclick="triggerAction('enable_power_plan')">FORCE ULTIMATE POWER</button>
                         </div>
-                        <div class="glass-card feature-card">
+                        <div class="glass-card feature-card" id="target-game-picker">
                             <div class="card-icon">🎯</div>
                             <h3>Boost Game Priority</h3>
                             <p>Set OS scheduling priority class to High for active multiplayer or AAA game executables.</p>
                             <button class="btn btn-amber btn-block" onclick="triggerAction('open_game_picker')">SELECT & BOOST GAME</button>
                         </div>
-                        <div class="glass-card feature-card">
+                        <div class="glass-card feature-card" id="target-shader-cleaner">
                             <div class="card-icon">🧹</div>
                             <h3>Clean Shader Cache</h3>
                             <p>Cleans DirectX, OpenGL, Vulkan, Nvidia (DXCache/GLCache) & AMD compiled GPU shader files.</p>
@@ -307,19 +307,19 @@
                     </div>
 
                     <div class="cards-grid">
-                        <div class="glass-card feature-card">
+                        <div class="glass-card feature-card" id="target-monster-card">
                             <div class="card-icon">🔥</div>
                             <h3>MONSTER OPTIMIZER</h3>
                             <p>Multi-stage deep RAM recovery: compacts app working sets, purges standby memory & sweeps temp caches.</p>
                             <button class="btn btn-purple btn-block" onclick="triggerAction('run_monster_optimizer')">RUN MONSTER PURGE</button>
                         </div>
-                        <div class="glass-card feature-card">
+                        <div class="glass-card feature-card" id="target-trim-ram">
                             <div class="card-icon">✂️</div>
                             <h3>Trim App RAM</h3>
                             <p>Iterates active user applications (Chrome, Discord, Spotify) and compacts their RAM footprint into free physical RAM.</p>
                             <button class="btn btn-cyan btn-block" onclick="triggerAction('trim_working_sets')">TRIM WORKING SETS</button>
                         </div>
-                        <div class="glass-card feature-card">
+                        <div class="glass-card feature-card" id="target-purge-standby">
                             <div class="card-icon">🛡️</div>
                             <h3>Purge Standby RAM</h3>
                             <p>Calls C++ NtSetSystemInformation kernel APIs to drop standby cached pages and fix memory hitching.</p>
@@ -347,8 +347,8 @@
                             <span class="search-icon">🔍</span>
                             <input type="text" id="proc-search-input" placeholder="Search processes by name or PID..." onkeyup="filterProcessTable()">
                         </div>
-                        <button class="btn btn-surface" onclick="triggerAction('clear_temp')">🧹 Clear Temp Files</button>
-                        <button class="btn btn-red" onclick="triggerAction('kill_bloatware')">🚫 End Bloatware</button>
+                        <button class="btn btn-surface" id="target-clear-temp" onclick="triggerAction('clear_temp')">🧹 Clear Temp Files</button>
+                        <button class="btn btn-red" id="target-kill-bloatware" onclick="triggerAction('kill_bloatware')">🚫 End Bloatware</button>
                         <button class="btn btn-cyan" onclick="refreshTopProcesses()">📊 Refresh Processes</button>
                     </div>
 
@@ -650,7 +650,7 @@
                     <rect id="spotlight-cutout" x="0" y="0" width="0" height="0" rx="12" fill="black" />
                 </mask>
             </defs>
-            <rect width="100%" height="100%" fill="rgba(3, 7, 18, 0.82)" mask="url(#spotlight-mask)" />
+            <rect width="100%" height="100%" fill="rgba(3, 7, 18, 0.85)" mask="url(#spotlight-mask)" />
         </svg>
 
         <!-- Pulsing Focus Beacon Outline around highlighted UI element -->

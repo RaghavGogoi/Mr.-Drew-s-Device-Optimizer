@@ -13,7 +13,7 @@ const TUTORIAL_STEPS = [
         when: "Run before gaming sessions (Fortnite, Valorant, Roblox, Unreal Engine), or leave Smart Auto-Guard active in background.",
         action_id: null,
         action_label: null,
-        target_id: "page-dashboard"
+        target_id: "btn-header-tutorial"
     },
     {
         id: "ram_gauge",
@@ -78,7 +78,7 @@ const TUTORIAL_STEPS = [
         when: "Use when loading open-world games, map transitions, or heavy Roblox / Unreal Engine projects.",
         action_id: "accelerate_asset_loading",
         action_label: "🧪 Test Asset Loader",
-        target_id: "page-fps"
+        target_id: "target-asset-loader"
     },
     {
         id: "ultimate_power",
@@ -91,7 +91,7 @@ const TUTORIAL_STEPS = [
         when: "Enable when gaming, video editing, or rendering on desktop or plugged-in laptops.",
         action_id: "enable_power_plan",
         action_label: "🧪 Enable Ultimate Power",
-        target_id: "page-fps"
+        target_id: "target-power-plan"
     },
     {
         id: "trim_ram",
@@ -104,7 +104,7 @@ const TUTORIAL_STEPS = [
         when: "Use while multitasking when you want to free RAM without quitting open applications.",
         action_id: "trim_working_sets",
         action_label: "🧪 Trim App RAM Now",
-        target_id: "page-ram"
+        target_id: "target-trim-ram"
     },
     {
         id: "purge_standby",
@@ -117,7 +117,7 @@ const TUTORIAL_STEPS = [
         when: "Use when Standby cached memory is high and free memory is low.",
         action_id: "purge_standby",
         action_label: "🧪 Purge Standby RAM",
-        target_id: "page-ram"
+        target_id: "target-purge-standby"
     },
     {
         id: "auto_guard",
@@ -156,7 +156,7 @@ const TUTORIAL_STEPS = [
         when: "Run after updating graphics drivers, installing game updates, or experiencing graphical stutters.",
         action_id: "clean_shader_cache",
         action_label: "🧪 Clean Shader Cache",
-        target_id: "page-fps"
+        target_id: "target-shader-cleaner"
     },
     {
         id: "end_bloatware",
@@ -169,7 +169,7 @@ const TUTORIAL_STEPS = [
         when: "Run on computer startup or before launching games.",
         action_id: "kill_bloatware",
         action_label: "🧪 Terminate Bloatware",
-        target_id: "page-tools"
+        target_id: "target-kill-bloatware"
     },
     {
         id: "theme_settings",
@@ -213,6 +213,7 @@ document.addEventListener("DOMContentLoaded", () => {
     initPyWebViewBridge();
     populateSpotlightJumpSelect();
     populateTutorialHub();
+    setupSpotlightResizeListeners();
     
     // Poll stats every 2 seconds
     setInterval(refreshSystemStats, 2000);
@@ -619,6 +620,26 @@ async function checkFirstRunStatus() {
     } catch (e) {}
 }
 
+function setupSpotlightResizeListeners() {
+    // Dynamic recalculation of spotlight cutout on window resize or container scroll
+    window.addEventListener('resize', () => {
+        if (document.getElementById("spotlight-overlay").classList.contains("active")) {
+            const step = TUTORIAL_STEPS[currentSpotlightStep];
+            if (step) positionSpotlightTarget(step.target_id);
+        }
+    });
+
+    const contentArea = document.querySelector('.content-area');
+    if (contentArea) {
+        contentArea.addEventListener('scroll', () => {
+            if (document.getElementById("spotlight-overlay").classList.contains("active")) {
+                const step = TUTORIAL_STEPS[currentSpotlightStep];
+                if (step) positionSpotlightTarget(step.target_id);
+            }
+        });
+    }
+}
+
 function startSpotlightTutorial() {
     currentSpotlightStep = 0;
     playAudioFX("action");
@@ -654,18 +675,21 @@ function jumpToSpotlightStep(idx) {
 function updateSpotlightDisplay() {
     const step = TUTORIAL_STEPS[currentSpotlightStep];
 
-    // Ensure user is on the right page for target element
+    // Determine target page and switch automatically
+    let targetPage = "page-dashboard";
     if (step.target_id) {
-        if (step.target_id.startsWith("target-") || step.target_id.startsWith("page-")) {
-            let targetPage = "page-dashboard";
-            if (step.target_id.includes("fps")) targetPage = "page-fps";
-            if (step.target_id.includes("ram") || step.target_id.includes("autoguard")) targetPage = "page-ram";
-            if (step.target_id.includes("tools") || step.target_id.includes("process")) targetPage = "page-tools";
-            if (step.target_id.includes("theme")) targetPage = "page-settings";
-
-            switchPage(targetPage);
+        if (step.target_id.includes("fps") || step.target_id.includes("asset") || step.target_id.includes("power") || step.target_id.includes("game-picker") || step.target_id.includes("shader")) {
+            targetPage = "page-fps";
+        } else if (step.target_id.includes("ram") || step.target_id.includes("monster") || step.target_id.includes("trim") || step.target_id.includes("purge") || step.target_id.includes("autoguard")) {
+            targetPage = "page-ram";
+        } else if (step.target_id.includes("tools") || step.target_id.includes("process") || step.target_id.includes("clear-temp") || step.target_id.includes("bloatware")) {
+            targetPage = "page-tools";
+        } else if (step.target_id.includes("theme") || step.target_id.includes("settings")) {
+            targetPage = "page-settings";
         }
     }
+
+    switchPage(targetPage);
 
     document.getElementById("spotlight-jump-select").value = currentSpotlightStep;
     document.getElementById("spotlight-cat-badge").innerText = `STEP ${currentSpotlightStep + 1} OF ${TUTORIAL_STEPS.length} • ${step.category}`;
@@ -676,10 +700,11 @@ function updateSpotlightDisplay() {
     document.getElementById("spotlight-why").innerText = step.why;
     document.getElementById("spotlight-when").innerText = step.when;
 
-    // Action Try Button
+    // Reset Action Try Button text & state
     const btnAction = document.getElementById("btn-spotlight-try");
     if (step.action_id && step.action_label) {
         btnAction.innerText = step.action_label;
+        btnAction.className = "btn btn-green btn-glow btn-block";
         document.getElementById("spotlight-action-wrapper").style.display = "block";
     } else {
         document.getElementById("spotlight-action-wrapper").style.display = "none";
@@ -705,7 +730,7 @@ function updateSpotlightDisplay() {
     // Position Spotlight Mask Cutout & Focus Ring over Target Element
     setTimeout(() => {
         positionSpotlightTarget(step.target_id);
-    }, 100);
+    }, 80);
 }
 
 function positionSpotlightTarget(targetId) {
@@ -714,10 +739,27 @@ function positionSpotlightTarget(targetId) {
     const card = document.getElementById("spotlight-card");
 
     let targetEl = document.getElementById(targetId);
-    if (!targetEl) targetEl = document.getElementById("page-dashboard");
+    
+    if (!targetEl) {
+        // Fallback: center card, hide focus cutout
+        cutout.setAttribute("width", "0");
+        cutout.setAttribute("height", "0");
+        ring.style.display = "none";
+        
+        card.style.left = `${(window.innerWidth - 460) / 2}px`;
+        card.style.top = `${(window.innerHeight - 380) / 2}px`;
+        return;
+    }
+
+    ring.style.display = "block";
+
+    // Scroll element into view if not visible
+    try {
+        targetEl.scrollIntoView({ behavior: 'auto', block: 'nearest' });
+    } catch (e) {}
 
     const rect = targetEl.getBoundingClientRect();
-    const pad = 10;
+    const pad = 8;
 
     const x = Math.max(0, rect.left - pad);
     const y = Math.max(0, rect.top - pad);
@@ -726,26 +768,32 @@ function positionSpotlightTarget(targetId) {
 
     cutout.setAttribute("x", x);
     cutout.setAttribute("y", y);
-    cutout.setAttribute("width", w);
-    cutout.setAttribute("height", h);
+    cutout.setAttribute("width", Math.max(0, w));
+    cutout.setAttribute("height", Math.max(0, h));
 
     ring.style.left = `${x}px`;
     ring.style.top = `${y}px`;
     ring.style.width = `${w}px`;
     ring.style.height = `${h}px`;
 
-    // Position Card relative to target box
+    // Calculate smart positioning for spotlight card so it remains within viewport
     const windowW = window.innerWidth;
     const windowH = window.innerHeight;
+    const cardW = 460;
+    const cardH = 400;
 
-    let cardX = x + w + 20;
+    let cardX = x + w + 16;
     let cardY = y;
 
-    if (cardX + 500 > windowW) {
-        cardX = Math.max(20, x - 500);
+    if (cardX + cardW > windowW - 20) {
+        cardX = Math.max(20, x - cardW - 16);
     }
-    if (cardY + 380 > windowH) {
-        cardY = Math.max(20, windowH - 420);
+    if (cardX < 20 || cardX + cardW > windowW - 20) {
+        cardX = Math.max(20, (windowW - cardW) / 2);
+    }
+
+    if (cardY + cardH > windowH - 20) {
+        cardY = Math.max(20, windowH - cardH - 20);
     }
 
     card.style.left = `${cardX}px`;
@@ -770,10 +818,26 @@ function nextSpotlightStep() {
     }
 }
 
-function executeSpotlightStepAction() {
+async function executeSpotlightStepAction() {
     const step = TUTORIAL_STEPS[currentSpotlightStep];
+    const btnAction = document.getElementById("btn-spotlight-try");
+
     if (step.action_id) {
-        triggerAction(step.action_id);
+        btnAction.innerText = "⚡ Executing Action...";
+        btnAction.className = "btn btn-amber btn-block";
+        
+        await triggerAction(step.action_id);
+        
+        btnAction.innerText = "✅ Action Executed Successfully!";
+        btnAction.className = "btn btn-green btn-block";
+        playAudioFX("success");
+
+        setTimeout(() => {
+            if (step.action_label) {
+                btnAction.innerText = step.action_label;
+                btnAction.className = "btn btn-green btn-glow btn-block";
+            }
+        }, 2200);
     }
 }
 
@@ -821,14 +885,14 @@ function switchCategoryTab(tabId) {
     if (activeBtn) activeBtn.classList.add("active");
 
     document.querySelectorAll(".tut-card-item").forEach(card => {
-        const cat = card.getAttribute("data-category");
+        const cat = (card.getAttribute("data-category") || "").toUpperCase();
         if (tabId === "tab-all") {
             card.style.display = "";
-        } else if (tabId === "tab-gaming" && (cat.includes("GAMING") || cat.includes("POWER") || cat.includes("GRAPHICS"))) {
+        } else if (tabId === "tab-gaming" && (cat.includes("GAMING") || cat.includes("POWER") || cat.includes("GRAPHICS") || cat.includes("ENGINE"))) {
             card.style.display = "";
-        } else if (tabId === "tab-memory" && cat.includes("MEMORY")) {
+        } else if (tabId === "tab-memory" && (cat.includes("MEMORY") || cat.includes("TELEMETRY") || cat.includes("AUTOMATION"))) {
             card.style.display = "";
-        } else if (tabId === "tab-tools" && (cat.includes("TOOLS") || cat.includes("CLEANING") || cat.includes("SETTINGS"))) {
+        } else if (tabId === "tab-tools" && (cat.includes("TOOLS") || cat.includes("CLEANING") || cat.includes("SECURITY") || cat.includes("SETTINGS"))) {
             card.style.display = "";
         } else {
             card.style.display = "none";
