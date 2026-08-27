@@ -57,6 +57,19 @@ class Api:
     def reset_first_run(self) -> bool:
         return config.reset_first_run()
 
+    def get_config(self) -> dict:
+        return config.load_config()
+
+    def save_config(self, config_dict: dict) -> bool:
+        return config.save_config(config_dict)
+
+    def update_setting(self, key: str, value: any) -> bool:
+        return config.update_setting(key, value)
+
+    def reset_config(self) -> dict:
+        return config.reset_to_defaults()
+
+
     def execute_action(self, action_id: str, extra_arg: any = None) -> dict:
         """Executes system actions and returns structured log response to JS UI."""
         if action_id == "run_fps_booster":
