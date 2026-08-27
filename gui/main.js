@@ -1,9 +1,11 @@
 // Comprehensive Interactive Engine for Mr. Drew's Device & FPS Optimizer
 
-// Database of Tutorial Steps & Live UI Target Element Anchors
+// Database of Tutorial Steps & Explicit Target Anchors
 const TUTORIAL_STEPS = [
     {
         id: "welcome",
+        page_id: "page-dashboard",
+        target_id: "btn-header-tutorial",
         category: "🚀 GETTING STARTED",
         title: "Welcome to Mr. Drew's Device & FPS Optimizer",
         icon: "⚡",
@@ -12,11 +14,12 @@ const TUTORIAL_STEPS = [
         why: "Eliminates game micro-stutters, reclaims 2 to 5 GB physical RAM, lowers input lag, and prevents texture pop-in.",
         when: "Run before gaming sessions (Fortnite, Valorant, Roblox, Unreal Engine), or leave Smart Auto-Guard active in background.",
         action_id: null,
-        action_label: null,
-        target_id: "btn-header-tutorial"
+        action_label: null
     },
     {
         id: "ram_gauge",
+        page_id: "page-dashboard",
+        target_id: "target-ram-gauge",
         category: "📊 TELEMETRY ENGINE",
         title: "Real-Time Physical Memory Gauge",
         icon: "🧠",
@@ -25,11 +28,12 @@ const TUTORIAL_STEPS = [
         why: "Provides instant visibility into Active Apps, Standby Cache, and Free Memory headroom.",
         when: "Monitor this gauge before launching heavy games to ensure at least 4GB free RAM buffer.",
         action_id: null,
-        action_label: null,
-        target_id: "target-ram-gauge"
+        action_label: null
     },
     {
         id: "fps_booster",
+        page_id: "page-dashboard",
+        target_id: "target-fps-booster",
         category: "🎮 GAMING ENGINE",
         title: "RUN FPS & GAME BOOSTER",
         icon: "🎮",
@@ -38,11 +42,12 @@ const TUTORIAL_STEPS = [
         why: "Fixes frame drops, removes micro-stutters, and lowers input latency in competitive games.",
         when: "Click right before launching your game or whenever you notice stutters during gameplay.",
         action_id: "run_fps_booster",
-        action_label: "🧪 Test FPS Booster Now",
-        target_id: "target-fps-booster"
+        action_label: "🧪 Test FPS Booster Now"
     },
     {
         id: "monster_optimizer",
+        page_id: "page-dashboard",
+        target_id: "target-monster-optimizer",
         category: "🧠 MEMORY ENGINE",
         title: "RUN MONSTER OPTIMIZER",
         icon: "🔥",
@@ -51,11 +56,12 @@ const TUTORIAL_STEPS = [
         why: "Recovers the maximum possible physical memory (up to 3-6 GB RAM) in one click without closing critical system apps.",
         when: "Use when overall RAM usage exceeds 80%, or before running memory-heavy applications.",
         action_id: "run_monster_optimizer",
-        action_label: "🧪 Run Monster Optimizer",
-        target_id: "target-monster-optimizer"
+        action_label: "🧪 Run Monster Optimizer"
     },
     {
         id: "potato_mode",
+        page_id: "page-dashboard",
+        target_id: "target-potato-mode",
         category: "🥔 LOW-SPEC ENGINE",
         title: "4GB Potato Mode Preset",
         icon: "🥔",
@@ -64,11 +70,12 @@ const TUTORIAL_STEPS = [
         why: "Enables smooth gaming and app performance on budget/low-spec devices with 4GB to 8GB physical RAM without paging stutters.",
         when: "Activate on low-end laptops or budget PCs before launching any game.",
         action_id: "run_potato_mode",
-        action_label: "🧪 Test Potato Mode",
-        target_id: "target-potato-mode"
+        action_label: "🧪 Test Potato Mode"
     },
     {
         id: "asset_loader",
+        page_id: "page-fps",
+        target_id: "target-asset-loader",
         category: "🎮 GAMING ENGINE",
         title: "Fast Asset Loader",
         icon: "🚀",
@@ -77,11 +84,12 @@ const TUTORIAL_STEPS = [
         why: "Accelerates map loading, texture streaming, and 3D asset rendering; stops texture pop-in.",
         when: "Use when loading open-world games, map transitions, or heavy Roblox / Unreal Engine projects.",
         action_id: "accelerate_asset_loading",
-        action_label: "🧪 Test Asset Loader",
-        target_id: "target-asset-loader"
+        action_label: "🧪 Test Asset Loader"
     },
     {
         id: "ultimate_power",
+        page_id: "page-fps",
+        target_id: "target-power-plan",
         category: "⚡ POWER ENGINE",
         title: "Ultimate Power Mode",
         icon: "⚡",
@@ -90,24 +98,26 @@ const TUTORIAL_STEPS = [
         why: "Ensures CPU cores run at peak clock speeds without sudden frequency drops during demanding scenes.",
         when: "Enable when gaming, video editing, or rendering on desktop or plugged-in laptops.",
         action_id: "enable_power_plan",
-        action_label: "🧪 Enable Ultimate Power",
-        target_id: "target-power-plan"
+        action_label: "🧪 Enable Ultimate Power"
     },
     {
         id: "trim_ram",
+        page_id: "page-ram",
+        target_id: "target-trim-ram",
         category: "🧠 MEMORY ENGINE",
         title: "Trim App RAM",
         icon: "✂️",
         color: "#00F0FF",
         how: "Iterates through non-critical user applications and compacts their active working set memory into physical free RAM.",
-        why: "Instantly reclaims RAM held hostage by web browsers (Chrome, Edge) and background software (Discord, Spotify).",
+        why: "Instantly reclaims RAM held hostage by web browsers (Chrome, Discord, Spotify).",
         when: "Use while multitasking when you want to free RAM without quitting open applications.",
         action_id: "trim_working_sets",
-        action_label: "🧪 Trim App RAM Now",
-        target_id: "target-trim-ram"
+        action_label: "🧪 Trim App RAM Now"
     },
     {
         id: "purge_standby",
+        page_id: "page-ram",
+        target_id: "target-purge-standby",
         category: "🧠 MEMORY ENGINE",
         title: "Purge Standby RAM",
         icon: "🛡️",
@@ -116,11 +126,12 @@ const TUTORIAL_STEPS = [
         why: "Fixes Windows Standby RAM bugs that cause game crashes and hitching when free RAM drops to zero.",
         when: "Use when Standby cached memory is high and free memory is low.",
         action_id: "purge_standby",
-        action_label: "🧪 Purge Standby RAM",
-        target_id: "target-purge-standby"
+        action_label: "🧪 Purge Standby RAM"
     },
     {
         id: "auto_guard",
+        page_id: "page-ram",
+        target_id: "target-autoguard",
         category: "⚡ AUTOMATION ENGINE",
         title: "Smart Auto-Guard Loop",
         icon: "⚡",
@@ -129,11 +140,12 @@ const TUTORIAL_STEPS = [
         why: "Provides automatic, set-and-forget 24/7 protection against memory leaks and RAM exhaustion stutters.",
         when: "Turn on for long gaming sessions or background server operations.",
         action_id: "toggle_auto_guard",
-        action_label: "🧪 Toggle Auto-Guard",
-        target_id: "target-autoguard"
+        action_label: "🧪 Toggle Auto-Guard"
     },
     {
         id: "process_manager",
+        page_id: "page-tools",
+        target_id: "target-process-table",
         category: "🧹 SYSTEM TOOLS",
         title: "Top RAM Applications Manager",
         icon: "📊",
@@ -142,11 +154,12 @@ const TUTORIAL_STEPS = [
         why: "Provides full visibility into what applications are consuming system resources.",
         when: "Use to inspect system memory distribution or terminate unresponsive memory hogs.",
         action_id: "view_top_processes",
-        action_label: "🧪 Refresh Process List",
-        target_id: "target-process-table"
+        action_label: "🧪 Refresh Process List"
     },
     {
         id: "shader_cleaner",
+        page_id: "page-fps",
+        target_id: "target-shader-cleaner",
         category: "🎨 GRAPHICS TUNER",
         title: "Clean GPU Shader Cache",
         icon: "🧹",
@@ -155,11 +168,12 @@ const TUTORIAL_STEPS = [
         why: "Fixes corrupted shader stuttering, visual artifacts, and frame drops caused by stale shader caches.",
         when: "Run after updating graphics drivers, installing game updates, or experiencing graphical stutters.",
         action_id: "clean_shader_cache",
-        action_label: "🧪 Clean Shader Cache",
-        target_id: "target-shader-cleaner"
+        action_label: "🧪 Clean Shader Cache"
     },
     {
         id: "end_bloatware",
+        page_id: "page-tools",
+        target_id: "target-kill-bloatware",
         category: "🛡️ SECURITY & CLEANING",
         title: "End Bloatware",
         icon: "🚫",
@@ -168,11 +182,12 @@ const TUTORIAL_STEPS = [
         why: "Stops unwanted background telemetry, reduces background CPU usage, and saves memory.",
         when: "Run on computer startup or before launching games.",
         action_id: "kill_bloatware",
-        action_label: "🧪 Terminate Bloatware",
-        target_id: "target-kill-bloatware"
+        action_label: "🧪 Terminate Bloatware"
     },
     {
         id: "theme_settings",
+        page_id: "page-settings",
+        target_id: "target-theme-section",
         category: "⚙️ APP SETTINGS",
         title: "App Themes & Aesthetic Customization",
         icon: "🎨",
@@ -181,8 +196,7 @@ const TUTORIAL_STEPS = [
         why: "Personalizes your experience to match your gaming rig, workspace ambient light, or aesthetic preference.",
         when: "Customize anytime in the Settings & Themes tab.",
         action_id: null,
-        action_label: null,
-        target_id: "target-theme-section"
+        action_label: null
     }
 ];
 
@@ -191,6 +205,12 @@ let currentSpotlightStep = 0;
 let isPyWebViewReady = false;
 let isAudioMuted = false;
 let audioCtx = null;
+
+let isDraggingCard = false;
+let dragOffsetX = 0;
+let dragOffsetY = 0;
+let userHasDraggedCard = false;
+let isSpotlightMinimized = false;
 
 let appConfig = {
     theme: "obsidian",
@@ -205,7 +225,8 @@ let appConfig = {
     auto_guard_interval_sec: 60,
     game_boost_priority: "high",
     auto_clean_on_launch: false,
-    first_run_completed: false
+    first_run_completed: false,
+    tos_accepted: false
 };
 
 // Application Initialization
@@ -214,6 +235,7 @@ document.addEventListener("DOMContentLoaded", () => {
     populateSpotlightJumpSelect();
     populateTutorialHub();
     setupSpotlightResizeListeners();
+    setupDraggableSpotlightCard();
     
     // Poll stats every 2 seconds
     setInterval(refreshSystemStats, 2000);
@@ -225,6 +247,7 @@ function initPyWebViewBridge() {
         logToConsole("PyWebView Native Python Bridge Connected!", "success");
         await loadAppConfig();
         refreshSystemStats();
+        checkTosAcceptance();
         checkFirstRunStatus();
     });
 
@@ -234,6 +257,7 @@ function initPyWebViewBridge() {
             logToConsole("Running in Web Preview Mode (Bridge via Local Server).", "info");
             await loadAppConfig();
             refreshSystemStats();
+            checkTosAcceptance();
             checkFirstRunStatus();
         }
     }, 600);
@@ -305,6 +329,58 @@ function applyConfigToUI() {
 
     const intervalSelect = document.getElementById("setting-autoguard-interval");
     if (intervalSelect) intervalSelect.value = appConfig.auto_guard_interval_sec || 60;
+}
+
+// Terms of Service (ToS) & EULA Modal Engine
+function checkTosAcceptance() {
+    if (!appConfig.tos_accepted) {
+        openTermsOfServiceModal();
+    }
+}
+
+function openTermsOfServiceModal() {
+    playAudioFX("action");
+    const overlay = document.getElementById("tos-modal-overlay");
+    if (overlay) {
+        overlay.classList.add("active");
+        
+        const checkbox = document.getElementById("tos-agree-checkbox");
+        const btnAccept = document.getElementById("btn-tos-accept");
+        if (checkbox) checkbox.checked = appConfig.tos_accepted || false;
+        if (btnAccept) btnAccept.disabled = !checkbox.checked;
+    }
+}
+
+function toggleTosAcceptBtn() {
+    const checkbox = document.getElementById("tos-agree-checkbox");
+    const btnAccept = document.getElementById("btn-tos-accept");
+    if (checkbox && btnAccept) {
+        btnAccept.disabled = !checkbox.checked;
+        playAudioFX("click");
+    }
+}
+
+async function acceptTermsOfService() {
+    playAudioFX("success");
+    appConfig.tos_accepted = true;
+    
+    const overlay = document.getElementById("tos-modal-overlay");
+    if (overlay) overlay.classList.remove("active");
+
+    logToConsole("[ToS] Terms of Service & EULA v1.0 accepted by user.", "success");
+
+    if (window.pywebview && window.pywebview.api && window.pywebview.api.update_setting) {
+        try {
+            await window.pywebview.api.update_setting("tos_accepted", true);
+        } catch (e) {}
+    }
+}
+
+function declineTermsOfService() {
+    playAudioFX("warning");
+    const overlay = document.getElementById("tos-modal-overlay");
+    if (overlay) overlay.classList.remove("active");
+    logToConsole("[ToS WARNING] Terms of Service declined by user.", "warning");
 }
 
 async function updateAppSetting(key, value) {
@@ -404,9 +480,9 @@ function playAudioFX(type) {
             osc.stop(now + 0.12);
         } else if (type === 'success') {
             osc.type = 'sine';
-            osc.frequency.setValueAtTime(523.25, now); // C5
-            osc.frequency.setValueAtTime(659.25, now + 0.08); // E5
-            osc.frequency.setValueAtTime(783.99, now + 0.16); // G5
+            osc.frequency.setValueAtTime(523.25, now);
+            osc.frequency.setValueAtTime(659.25, now + 0.08);
+            osc.frequency.setValueAtTime(783.99, now + 0.16);
             gain.gain.setValueAtTime(0.2, now);
             gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
             osc.start(now);
@@ -457,7 +533,6 @@ async function refreshSystemStats() {
             specs = await window.pywebview.api.get_system_specs();
             hw = await window.pywebview.api.get_hardware_details();
         } else {
-            // Mock specs for browser testing
             specs = { total_ram_gb: 16.0, avail_ram_gb: 9.2, used_ram_gb: 6.8, target_free_gb: appConfig.target_free_ram_gb || 4.0, percent_used: 42.5, cpu_percent: 14.8, os_name: "Windows 11 (64-bit)", timer_res_ms: 1.0 };
             hw = { device_profile: "🚀 Standard Gaming Rig (16GB)", gpu_vendor: "NVIDIA GeForce RTX 3060", cpu_cores_logical: 16, cpp_engine_active: true };
         }
@@ -613,15 +688,74 @@ async function checkFirstRunStatus() {
     try {
         if (window.pywebview && window.pywebview.api) {
             const firstRun = await window.pywebview.api.is_first_run();
-            if (firstRun) {
+            if (firstRun && appConfig.tos_accepted) {
                 startSpotlightTutorial();
             }
         }
     } catch (e) {}
 }
 
+function setupDraggableSpotlightCard() {
+    const card = document.getElementById("spotlight-card");
+    const header = document.querySelector(".spotlight-card-header");
+
+    if (!header || !card) return;
+
+    header.addEventListener("mousedown", (e) => {
+        if (e.target.tagName === "SELECT" || e.target.tagName === "BUTTON" || e.target.closest("button") || e.target.closest("select")) {
+            return;
+        }
+        isDraggingCard = true;
+        userHasDraggedCard = true;
+        const rect = card.getBoundingClientRect();
+        dragOffsetX = e.clientX - rect.left;
+        dragOffsetY = e.clientY - rect.top;
+    });
+
+    window.addEventListener("mousemove", (e) => {
+        if (!isDraggingCard) return;
+        let newX = e.clientX - dragOffsetX;
+        let newY = e.clientY - dragOffsetY;
+
+        newX = Math.max(10, Math.min(window.innerWidth - card.offsetWidth - 10, newX));
+        newY = Math.max(10, Math.min(window.innerHeight - card.offsetHeight - 10, newY));
+
+        card.style.left = `${newX}px`;
+        card.style.top = `${newY}px`;
+    });
+
+    window.addEventListener("mouseup", () => {
+        isDraggingCard = false;
+    });
+}
+
+function toggleSpotlightMinimize() {
+    isSpotlightMinimized = !isSpotlightMinimized;
+    const card = document.getElementById("spotlight-card");
+    const cardBody = document.getElementById("spotlight-card-body");
+    const minBody = document.getElementById("spotlight-min-body");
+    const btnMin = document.getElementById("btn-spotlight-min");
+
+    if (isSpotlightMinimized) {
+        card.classList.add("minimized");
+        if (cardBody) cardBody.style.display = "none";
+        if (minBody) minBody.style.display = "flex";
+        if (btnMin) btnMin.innerText = "🗖";
+        
+        const step = TUTORIAL_STEPS[currentSpotlightStep];
+        document.getElementById("min-step-num").innerText = currentSpotlightStep + 1;
+        document.getElementById("min-step-title").innerText = step ? step.title : "";
+    } else {
+        card.classList.remove("minimized");
+        if (cardBody) cardBody.style.display = "block";
+        if (minBody) minBody.style.display = "none";
+        if (btnMin) btnMin.innerText = "🗕";
+        const step = TUTORIAL_STEPS[currentSpotlightStep];
+        if (step) positionSpotlightTarget(step.target_id);
+    }
+}
+
 function setupSpotlightResizeListeners() {
-    // Dynamic recalculation of spotlight cutout on window resize or container scroll
     window.addEventListener('resize', () => {
         if (document.getElementById("spotlight-overlay").classList.contains("active")) {
             const step = TUTORIAL_STEPS[currentSpotlightStep];
@@ -642,6 +776,15 @@ function setupSpotlightResizeListeners() {
 
 function startSpotlightTutorial() {
     currentSpotlightStep = 0;
+    userHasDraggedCard = false;
+    isSpotlightMinimized = false;
+    
+    const card = document.getElementById("spotlight-card");
+    card.classList.remove("minimized");
+    document.getElementById("spotlight-card-body").style.display = "block";
+    document.getElementById("spotlight-min-body").style.display = "none";
+    document.getElementById("btn-spotlight-min").innerText = "🗕";
+
     playAudioFX("action");
     document.getElementById("spotlight-overlay").classList.add("active");
     updateSpotlightDisplay();
@@ -675,21 +818,8 @@ function jumpToSpotlightStep(idx) {
 function updateSpotlightDisplay() {
     const step = TUTORIAL_STEPS[currentSpotlightStep];
 
-    // Determine target page and switch automatically
-    let targetPage = "page-dashboard";
-    if (step.target_id) {
-        if (step.target_id.includes("fps") || step.target_id.includes("asset") || step.target_id.includes("power") || step.target_id.includes("game-picker") || step.target_id.includes("shader")) {
-            targetPage = "page-fps";
-        } else if (step.target_id.includes("ram") || step.target_id.includes("monster") || step.target_id.includes("trim") || step.target_id.includes("purge") || step.target_id.includes("autoguard")) {
-            targetPage = "page-ram";
-        } else if (step.target_id.includes("tools") || step.target_id.includes("process") || step.target_id.includes("clear-temp") || step.target_id.includes("bloatware")) {
-            targetPage = "page-tools";
-        } else if (step.target_id.includes("theme") || step.target_id.includes("settings")) {
-            targetPage = "page-settings";
-        }
-    }
-
-    switchPage(targetPage);
+    // Explicitly switch to the exact page where step target element is located
+    switchPage(step.page_id || "page-dashboard");
 
     document.getElementById("spotlight-jump-select").value = currentSpotlightStep;
     document.getElementById("spotlight-cat-badge").innerText = `STEP ${currentSpotlightStep + 1} OF ${TUTORIAL_STEPS.length} • ${step.category}`;
@@ -727,10 +857,20 @@ function updateSpotlightDisplay() {
         btnNext.className = "btn btn-cyan btn-sm";
     }
 
-    // Position Spotlight Mask Cutout & Focus Ring over Target Element
-    setTimeout(() => {
+    // Update minimized pill step text if minimized
+    if (isSpotlightMinimized) {
+        document.getElementById("min-step-num").innerText = currentSpotlightStep + 1;
+        document.getElementById("min-step-title").innerText = step.title;
+    }
+
+    // Multi-stage layout recalculation sequence to guarantee 100% pixel-perfect alignment
+    positionSpotlightTarget(step.target_id);
+    requestAnimationFrame(() => {
         positionSpotlightTarget(step.target_id);
-    }, 80);
+        setTimeout(() => positionSpotlightTarget(step.target_id), 60);
+        setTimeout(() => positionSpotlightTarget(step.target_id), 180);
+        setTimeout(() => positionSpotlightTarget(step.target_id), 350);
+    });
 }
 
 function positionSpotlightTarget(targetId) {
@@ -738,36 +878,45 @@ function positionSpotlightTarget(targetId) {
     const ring = document.getElementById("spotlight-focus-ring");
     const card = document.getElementById("spotlight-card");
 
+    if (isSpotlightMinimized) {
+        cutout.setAttribute("width", "0");
+        cutout.setAttribute("height", "0");
+        ring.style.display = "none";
+        return;
+    }
+
     let targetEl = document.getElementById(targetId);
     
     if (!targetEl) {
-        // Fallback: center card, hide focus cutout
         cutout.setAttribute("width", "0");
         cutout.setAttribute("height", "0");
         ring.style.display = "none";
         
-        card.style.left = `${(window.innerWidth - 460) / 2}px`;
-        card.style.top = `${(window.innerHeight - 380) / 2}px`;
+        if (!userHasDraggedCard) {
+            card.style.left = `${(window.innerWidth - 480) / 2}px`;
+            card.style.top = `${(window.innerHeight - 380) / 2}px`;
+        }
         return;
     }
 
     ring.style.display = "block";
 
-    // Scroll element into view if not visible
+    // Instant scroll to element
     try {
         targetEl.scrollIntoView({ behavior: 'auto', block: 'nearest' });
     } catch (e) {}
 
+    // Precise Bounding Box Calculation
     const rect = targetEl.getBoundingClientRect();
-    const pad = 8;
+    const pad = 6;
 
-    const x = Math.max(0, rect.left - pad);
-    const y = Math.max(0, rect.top - pad);
-    const w = rect.width + pad * 2;
-    const h = rect.height + pad * 2;
+    const x = Math.round(rect.left - pad);
+    const y = Math.round(rect.top - pad);
+    const w = Math.round(rect.width + pad * 2);
+    const h = Math.round(rect.height + pad * 2);
 
-    cutout.setAttribute("x", x);
-    cutout.setAttribute("y", y);
+    cutout.setAttribute("x", Math.max(0, x));
+    cutout.setAttribute("y", Math.max(0, y));
     cutout.setAttribute("width", Math.max(0, w));
     cutout.setAttribute("height", Math.max(0, h));
 
@@ -776,25 +925,52 @@ function positionSpotlightTarget(targetId) {
     ring.style.width = `${w}px`;
     ring.style.height = `${h}px`;
 
-    // Calculate smart positioning for spotlight card so it remains within viewport
-    const windowW = window.innerWidth;
-    const windowH = window.innerHeight;
-    const cardW = 460;
-    const cardH = 400;
-
-    let cardX = x + w + 16;
-    let cardY = y;
-
-    if (cardX + cardW > windowW - 20) {
-        cardX = Math.max(20, x - cardW - 16);
-    }
-    if (cardX < 20 || cardX + cardW > windowW - 20) {
-        cardX = Math.max(20, (windowW - cardW) / 2);
+    // If user manually dragged card, preserve custom coordinates while checking bounds
+    if (userHasDraggedCard) {
+        let curLeft = parseInt(card.style.left) || 20;
+        let curTop = parseInt(card.style.top) || 20;
+        curLeft = Math.max(10, Math.min(window.innerWidth - card.offsetWidth - 10, curLeft));
+        curTop = Math.max(10, Math.min(window.innerHeight - card.offsetHeight - 10, curTop));
+        card.style.left = `${curLeft}px`;
+        card.style.top = `${curTop}px`;
+        return;
     }
 
-    if (cardY + cardH > windowH - 20) {
-        cardY = Math.max(20, windowH - cardH - 20);
+    // Smart positioning so card NEVER overlaps highlighted target element
+    const winW = window.innerWidth;
+    const winH = window.innerHeight;
+    const cardW = Math.min(480, winW - 32);
+    const cardH = Math.min(380, winH - 32);
+
+    const spaceRight = winW - (x + w);
+    const spaceLeft = x;
+    const spaceBottom = winH - (y + h);
+    const spaceTop = y;
+
+    let cardX = 20;
+    let cardY = 20;
+
+    if (spaceRight >= cardW + 20) {
+        cardX = x + w + 16;
+        cardY = Math.max(16, Math.min(winH - cardH - 16, y));
+    } else if (spaceLeft >= cardW + 20) {
+        cardX = x - cardW - 16;
+        cardY = Math.max(16, Math.min(winH - cardH - 16, y));
+    } else if (spaceBottom >= cardH + 20) {
+        cardX = Math.max(16, Math.min(winW - cardW - 16, x));
+        cardY = y + h + 16;
+    } else if (spaceTop >= cardH + 20) {
+        cardX = Math.max(16, Math.min(winW - cardW - 16, x));
+        cardY = y - cardH - 16;
+    } else {
+        // Compact viewport: position anchored cleanly inside bounds
+        cardX = Math.max(12, winW - cardW - 12);
+        cardY = Math.max(12, winH - cardH - 12);
     }
+
+    // Strict boundary enforcement
+    cardX = Math.max(12, Math.min(winW - cardW - 12, cardX));
+    cardY = Math.max(12, Math.min(winH - cardH - 12, cardY));
 
     card.style.left = `${cardX}px`;
     card.style.top = `${cardY}px`;

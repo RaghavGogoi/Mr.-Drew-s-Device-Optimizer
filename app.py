@@ -167,11 +167,12 @@ def set_windows_app_icon(icon_ico_path):
         LR_LOADFROMFILE = 0x0010
 
         h_icon_big = ctypes.windll.user32.LoadImageW(
-            None, icon_ico_path, IMAGE_ICON, 0, 0, LR_LOADFROMFILE
+            None, icon_ico_path, IMAGE_ICON, 64, 64, LR_LOADFROMFILE
         )
         h_icon_small = ctypes.windll.user32.LoadImageW(
-            None, icon_ico_path, IMAGE_ICON, 16, 16, LR_LOADFROMFILE
+            None, icon_ico_path, IMAGE_ICON, 32, 32, LR_LOADFROMFILE
         )
+
 
         def enum_windows_callback(hwnd, lParam):
             length = ctypes.windll.user32.GetWindowTextLengthW(hwnd)

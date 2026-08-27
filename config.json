@@ -1,5 +1,6 @@
 {
     "first_run_completed": true,
+    "tos_accepted": true,
     "auto_guard_enabled": false,
     "auto_guard_interval_sec": 60,
     "theme": "oled",

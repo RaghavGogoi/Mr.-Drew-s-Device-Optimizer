@@ -605,8 +605,9 @@
                         </ul>
                     </div>
 
-                    <!-- System State Control Buttons -->
+                    <!-- System Legal & Terms of Service Control -->
                     <div class="glass-card settings-card settings-actions-row">
+                        <button class="btn btn-cyan" onclick="openTermsOfServiceModal()">📜 Review Terms of Service (ToS)</button>
                         <button class="btn btn-purple" onclick="triggerAction('reset_tutorial')">🔄 Reset Tutorial First-Run State</button>
                         <button class="btn btn-surface" onclick="resetConfigDefaults()">⏪ Restore Default App Settings</button>
                     </div>
@@ -631,6 +632,7 @@
                             <option value="warning">Warnings</option>
                         </select>
                     </div>
+                    <button class="btn btn-xs btn-surface" onclick="openTermsOfServiceModal()">📜 ToS</button>
                     <button class="btn btn-xs btn-surface" onclick="copyConsoleLog()">📋 Copy Log</button>
                     <button class="btn btn-xs btn-surface" onclick="clearConsoleLog()">🗑️ Clear</button>
                 </div>
@@ -656,51 +658,108 @@
         <!-- Pulsing Focus Beacon Outline around highlighted UI element -->
         <div class="spotlight-focus-ring" id="spotlight-focus-ring"></div>
 
-        <!-- Floating Spotlight Step Card -->
+        <!-- Floating & Draggable Spotlight Step Card -->
         <div class="spotlight-card glass-card" id="spotlight-card">
             <div class="spotlight-card-header">
-                <div class="spotlight-step-badge" id="spotlight-cat-badge">STEP 1 OF 14 • CATEGORY</div>
+                <div class="spotlight-header-left">
+                    <span class="drag-handle-icon" title="Drag card to move anywhere">⣿</span>
+                    <div class="spotlight-step-badge" id="spotlight-cat-badge">STEP 1 OF 14 • CATEGORY</div>
+                </div>
+
                 <div class="spotlight-jump">
                     <select id="spotlight-jump-select" onchange="jumpToSpotlightStep(this.value)">
                         <!-- Populated dynamically -->
                     </select>
-                    <button class="btn-close-spotlight" onclick="closeSpotlightTutorial(true)">✕</button>
+                    <div class="spotlight-win-ctrls">
+                        <button class="btn-min-spotlight" id="btn-spotlight-min" onclick="toggleSpotlightMinimize()" title="Minimize / Expand Card">🗕</button>
+                        <button class="btn-close-spotlight" onclick="closeSpotlightTutorial(true)" title="Close Tutorial">✕</button>
+                    </div>
                 </div>
             </div>
 
-            <div class="spotlight-progress-bar">
-                <div class="spotlight-progress-fill" id="spotlight-prog-fill"></div>
-            </div>
-
-            <h2 class="spotlight-title" id="spotlight-title">Step Title</h2>
-
-            <div class="info-block block-cyan">
-                <div class="block-title">🛠️ HOW IT WORKS (Technical Engine):</div>
-                <div class="block-text" id="spotlight-how">How text...</div>
-            </div>
-
-            <div class="info-block block-green">
-                <div class="block-title">💡 WHY USE IT (Performance Benefit):</div>
-                <div class="block-text" id="spotlight-why">Why text...</div>
-            </div>
-
-            <div class="info-block block-amber">
-                <div class="block-title">⏱️ WHEN TO USE IT (Best Scenario):</div>
-                <div class="block-text" id="spotlight-when">When text...</div>
-            </div>
-
-            <div class="spotlight-action-wrapper" id="spotlight-action-wrapper">
-                <button class="btn btn-green btn-glow btn-block" id="btn-spotlight-try" onclick="executeSpotlightStepAction()">
-                    🧪 Try Feature Now
-                </button>
-            </div>
-
-            <div class="spotlight-footer">
-                <button class="btn btn-red btn-sm" onclick="closeSpotlightTutorial(true)">⏭️ Skip Tutorial</button>
-                <div class="spotlight-nav-btns">
-                    <button class="btn btn-surface btn-sm" id="btn-spotlight-prev" onclick="prevSpotlightStep()">◀ Previous</button>
-                    <button class="btn btn-cyan btn-sm" id="btn-spotlight-next" onclick="nextSpotlightStep()">Next Step ▶</button>
+            <div class="spotlight-card-body" id="spotlight-card-body">
+                <div class="spotlight-progress-bar">
+                    <div class="spotlight-progress-fill" id="spotlight-prog-fill"></div>
                 </div>
+
+                <h2 class="spotlight-title" id="spotlight-title">Step Title</h2>
+
+                <div class="info-block block-cyan">
+                    <div class="block-title">🛠️ HOW IT WORKS (Technical Engine):</div>
+                    <div class="block-text" id="spotlight-how">How text...</div>
+                </div>
+
+                <div class="info-block block-green">
+                    <div class="block-title">💡 WHY USE IT (Performance Benefit):</div>
+                    <div class="block-text" id="spotlight-why">Why text...</div>
+                </div>
+
+                <div class="info-block block-amber">
+                    <div class="block-title">⏱️ WHEN TO USE IT (Best Scenario):</div>
+                    <div class="block-text" id="spotlight-when">When text...</div>
+                </div>
+
+                <div class="spotlight-action-wrapper" id="spotlight-action-wrapper">
+                    <button class="btn btn-green btn-glow btn-block" id="btn-spotlight-try" onclick="executeSpotlightStepAction()">
+                        🧪 Try Feature Now
+                    </button>
+                </div>
+
+                <div class="spotlight-footer">
+                    <button class="btn btn-red btn-sm" onclick="closeSpotlightTutorial(true)">⏭️ Skip Tutorial</button>
+                    <div class="spotlight-nav-btns">
+                        <button class="btn btn-surface btn-sm" id="btn-spotlight-prev" onclick="prevSpotlightStep()">◀ Previous</button>
+                        <button class="btn btn-cyan btn-sm" id="btn-spotlight-next" onclick="nextSpotlightStep()">Next Step ▶</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Minimized Compact Pill Body -->
+            <div class="spotlight-min-body" id="spotlight-min-body" style="display:none;" onclick="toggleSpotlightMinimize()">
+                <span class="text-cyan">🎓 Step <span id="min-step-num">1</span>/14: <strong id="min-step-title">Welcome</strong></span>
+                <span class="min-expand-text">Click to Expand 🗖</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- In-Built Terms of Service (ToS) & EULA Modal Overlay System -->
+    <div class="tos-modal-overlay" id="tos-modal-overlay">
+        <div class="tos-modal-card glass-card">
+            <div class="tos-card-header">
+                <div class="tos-header-title">
+                    <span class="tos-icon">📜</span>
+                    <h3>End User Terms of Service & License Agreement</h3>
+                </div>
+                <span class="tos-badge">Official EULA v1.0</span>
+            </div>
+
+            <div class="tos-scroll-box" id="tos-scroll-box" onscroll="handleTosScroll()">
+                <h4>1. SCOPE OF USE & SYSTEM MODIFICATIONS</h4>
+                <p>Mr. Drew's Device & FPS Optimizer operates low-level Win32 kernel API invocations, process priority adjustments, system timer resolution modifications, and physical RAM working set compactions. By running this software, you grant explicit permission for the application to modify thread priorities and perform memory management tasks.</p>
+
+                <h4>2. MEMORY COMPACTION & SAFETY GUARANTEE</h4>
+                <p>The application includes an immutable System Safety Whitelist (protecting core processes such as <code>explorer.exe</code>, <code>lsass.exe</code>, <code>svchost.exe</code>, <code>csrss.exe</code>). While kernel working set compactions and standby page list flushes are non-destructive and conform strictly to Microsoft Win32 API contracts, operations are performed at the user's discretion.</p>
+
+                <h4>3. DISCLAIMER OF WARRANTY & LIMITATION OF LIABILITY</h4>
+                <p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
+
+                <h4>4. USER PRIVACY & DATA TELEMETRY</h4>
+                <p>Mr. Drew's Device & FPS Optimizer operates 100% locally on your computer. It does NOT collect, transmit, or store any personal data, telemetry, analytics, internet logs, or private user files to any external remote servers.</p>
+
+                <h4>5. MIT LICENSE & OWNERSHIP</h4>
+                <p>Distributed under the MIT License. Copyright (c) 2026 Raghav Gogoi / Mr. Drew's Device Optimizer Team. All rights reserved.</p>
+            </div>
+
+            <div class="tos-agree-row">
+                <label class="tos-checkbox-label">
+                    <input type="checkbox" id="tos-agree-checkbox" onchange="toggleTosAcceptBtn()">
+                    <span>I have read, understood, and agree to the Terms of Service & EULA.</span>
+                </label>
+            </div>
+
+            <div class="tos-footer-actions">
+                <button class="btn btn-surface btn-sm" onclick="declineTermsOfService()">Decline & Exit</button>
+                <button class="btn btn-green btn-glow" id="btn-tos-accept" disabled onclick="acceptTermsOfService()">Accept & Continue ▶</button>
             </div>
         </div>
     </div>

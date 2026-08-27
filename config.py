@@ -7,6 +7,7 @@ CONFIG_PATH = os.path.join(SCRIPT_DIR, "config.json")
 
 DEFAULT_CONFIG: Dict[str, Any] = {
     "first_run_completed": False,
+    "tos_accepted": False,
     "auto_guard_enabled": False,
     "auto_guard_interval_sec": 60,
     "theme": "obsidian",  # obsidian, cosmic, emerald, amber, oled, frost
