@@ -2,31 +2,68 @@ import os
 import json
 from typing import Dict, Any
 
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-CONFIG_PATH = os.path.join(SCRIPT_DIR, "config.json")
+CONFIG_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.json")
 
 DEFAULT_CONFIG: Dict[str, Any] = {
-    "first_run_completed": False,
-    "tos_accepted": False,
-    "auto_guard_enabled": False,
-    "auto_guard_interval_sec": 60,
-    "theme": "obsidian",  # obsidian, cosmic, emerald, amber, oled, frost
-    "accent_color": "#00f0ff",
-    "glass_effect": "high",  # high, subtle, none
-    "glow_effects": True,
-    "animation_speed": "normal",  # normal, fast, reduced
-    "font_family": "Outfit",  # Outfit, Inter, JetBrains Mono
-    "density": "spacious",  # spacious, compact
-    "sound_effects": True,
+    "first_run_completed": True,
+    "tos_accepted": True,
+    
+    # Daemon & Performance Settings
+    "continuous_enabled": False,
+    "continuous_interval_sec": 30,
+    "continuous_mode": "gaming",  # gaming, balanced, potato
     "target_free_ram_gb": 4.0,
-    "game_boost_priority": "high",  # high, realtime
-    "auto_clean_on_launch": False,
-    "high_priority_game": ""
+    "continuous_timer_lock": True,
+    "continuous_game_boost": True,
+    "continuous_ram_guard": True,
+    "auto_clean_standby_threshold_gb": 4.0,
+    "run_on_startup": False,
+    "close_to_tray": True,
+    "notify_on_optimization": True,
+    "custom_game_whitelist": ["Valorant.exe", "cs2.exe", "FortniteClient-Win64-Shipping.exe", "GTA5.exe", "Cyberpunk2077.exe", "League of Legends.exe", "Dota2.exe"],
+
+    # Creative Design System & Themes
+    "theme": "obsidian",
+    "accent_color": "#00f0ff",
+    "accent_secondary": "#a855f7",
+    "custom_accent_active": False,
+    "gradient_mode_active": True,
+    
+    # Dynamic Palette Swatches List
+    "custom_palette_swatches": [
+        "#00f0ff", "#10b981", "#c084fc", "#f59e0b", 
+        "#fcee0a", "#ff2a85", "#ff1e42", "#38bdf8",
+        "#00ff66", "#e11d48", "#8b5cf6", "#ff7300"
+    ],
+    
+    # 14 Background Canvas Designs
+    "bg_design": "matrix",         # matrix, tron_grid, vaporwave, tunnel, starfield, hex_shield, circuit, aurora, neural, wireframe, dna, visualizer, bokeh, solid
+    "bg_fx_intensity": 0.70,       # 0.20 to 1.00
+    "bg_fx_speed": 1.0,            # 0.0 to 3.0
+    "bg_animated": True,
+    "glow_effects": True,
+    "glow_opacity": "0.22",
+    
+    # Glassmorphic Card Aesthetics
+    "card_glass_opacity": "0.68",
+    "glass_effect": "16px",
+    "card_border_style": "glow",
+    "card_hover_fx": "tilt",
+    "corner_radius": "16px",
+    
+    # Typography & Interface
+    "font_family": "'Outfit', sans-serif",
+    "ui_density": "spacious",
+    "text_glow": True,
+    
+    # Audio Soundscapes
+    "sound_effects": True,
+    "sound_theme": "cyber",
+    "sound_volume": 0.08
 }
 
-
 def load_config() -> Dict[str, Any]:
-    """Loads configuration from config.json, creating defaults if missing."""
+    """Loads configuration from config.json, merging with defaults if missing."""
     if not os.path.exists(CONFIG_PATH):
         save_config(DEFAULT_CONFIG)
         return DEFAULT_CONFIG.copy()
@@ -34,17 +71,14 @@ def load_config() -> Dict[str, Any]:
     try:
         with open(CONFIG_PATH, "r", encoding="utf-8") as f:
             data = json.load(f)
-            # Ensure all default keys exist
-            config_data = DEFAULT_CONFIG.copy()
-            config_data.update(data)
-            return config_data
+            merged = DEFAULT_CONFIG.copy()
+            merged.update(data)
+            return merged
     except Exception:
-        save_config(DEFAULT_CONFIG)
         return DEFAULT_CONFIG.copy()
 
-
 def save_config(config_dict: Dict[str, Any]) -> bool:
-    """Saves configuration dictionary to config.json safely."""
+    """Saves dictionary to config.json."""
     try:
         with open(CONFIG_PATH, "w", encoding="utf-8") as f:
             json.dump(config_dict, f, indent=4)
@@ -52,34 +86,22 @@ def save_config(config_dict: Dict[str, Any]) -> bool:
     except Exception:
         return False
 
-
 def update_setting(key: str, value: Any) -> bool:
-    """Updates a single setting key in config.json."""
+    """Updates a single setting key."""
     cfg = load_config()
     cfg[key] = value
     return save_config(cfg)
 
-
 def reset_to_defaults() -> Dict[str, Any]:
-    """Resets configuration to default settings."""
+    """Resets entire configuration to factory default state."""
     save_config(DEFAULT_CONFIG)
     return DEFAULT_CONFIG.copy()
 
-
 def is_first_run() -> bool:
-    """Returns True if the app is being run for the first time."""
-    cfg = load_config()
-    return not cfg.get("first_run_completed", False)
-
+    return not load_config().get("first_run_completed", False)
 
 def set_first_run_completed(completed: bool = True) -> bool:
-    """Updates the first_run_completed flag in config.json."""
-    cfg = load_config()
-    cfg["first_run_completed"] = completed
-    return save_config(cfg)
-
+    return update_setting("first_run_completed", completed)
 
 def reset_first_run() -> bool:
-    """Resets first run status to True so tutorial plays again on next launch."""
-    return set_first_run_completed(False)
-
+    return update_setting("first_run_completed", False)

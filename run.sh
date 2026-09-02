@@ -15,13 +15,4 @@ else
     exit 1
 fi
 
-echo "[INFO] Installing / verifying dependencies..."
-$PYTHON_BIN -m pip install -r requirements.txt --quiet 2>/dev/null
-
-if command -v g++ &>/dev/null && [ ! -f "DeviceOptimizer" ]; then
-    echo "[INFO] Compiling C++ native flusher engine (main.cpp -> DeviceOptimizer)..."
-    g++ -O3 main.cpp -o DeviceOptimizer 2>/dev/null && chmod +x DeviceOptimizer
-fi
-
-echo "Launching Device Optimizer Obsidian Suite..."
-$PYTHON_BIN app.py "$@"
+$PYTHON_BIN run.py "$@"

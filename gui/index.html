@@ -1,765 +1,883 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="obsidian" data-glass="high" data-glow="true" data-density="spacious" data-font="Outfit">
+<html lang="en" data-theme="obsidian">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mr. Drew's Device & FPS Optimizer</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mr. Drew's Device Optimizer</title>
     <link rel="icon" type="image/png" href="assets/logo.png">
     
-    <!-- Modern Web Fonts -->
+    <!-- Modern Creative Web Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600;800&family=Outfit:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&family=Outfit:wght@500;600;700;800;900&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
     
     <link rel="stylesheet" href="styles.css">
 </head>
-<body>
-    <!-- Background Animated Mesh Glow Orbs -->
-    <div class="bg-mesh">
-        <div class="glow-orb orb-1"></div>
-        <div class="glow-orb orb-2"></div>
-        <div class="glow-orb orb-3"></div>
+<body class="gradient-mode-on">
+    <!-- GPU-Accelerated Dynamic Canvas Background FX Engine -->
+    <div id="bg-canvas-container">
+        <canvas id="bg-canvas"></canvas>
+        <div id="bg-vignette"></div>
     </div>
 
     <div class="app-container">
         <!-- Top App Header -->
-        <header class="app-header glass-card">
+        <header class="app-header">
             <div class="header-brand">
-                <div class="logo-wrapper">
-                    <img src="assets/logo.png" alt="Logo" class="brand-logo-img">
-                    <span class="logo-pulse-ring"></span>
+                <div class="logo-icon" title="Mr. Drew's Device Optimizer">
+                    <svg class="icon-svg icon-md" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
                 </div>
                 <div class="brand-text">
-                    <h1>MR. DREW'S DEVICE & FPS OPTIMIZER</h1>
-                    <div class="brand-subtitle" id="engine-subtitle">⚡ C++ ENGINE ACTIVE • Smart Hardware Optimizer</div>
-                </div>
-            </div>
-
-            <!-- Dynamic Telemetry Mini-Pills -->
-            <div class="header-telemetry">
-                <div class="pill-metric">
-                    <span class="pill-label">RAM</span>
-                    <span class="pill-value text-cyan" id="hdr-ram-val">0%</span>
-                </div>
-                <div class="pill-metric">
-                    <span class="pill-label">CPU</span>
-                    <span class="pill-value text-amber" id="hdr-cpu-val">0%</span>
-                </div>
-                <div class="pill-metric">
-                    <span class="pill-label">TIMER</span>
-                    <span class="pill-value text-green" id="hdr-timer-val">1.0ms</span>
+                    <h1>MR. DREW'S OPTIMIZER</h1>
+                    <div class="brand-subtitle" id="engine-subtitle">Continuous Performance & Gaming Engine</div>
                 </div>
             </div>
 
             <div class="header-badges">
-                <!-- Audio FX Sound Toggle Button -->
-                <button class="btn btn-icon btn-surface" id="btn-sound-toggle" onclick="toggleAudioMute()" title="Toggle Sound FX">
-                    <span id="sound-icon">🔊</span>
+                <!-- Sound Toggle -->
+                <button class="badge" id="btn-sound-toggle" onclick="toggleAudioMute()" title="Toggle Sound FX">
+                    <span id="sound-icon-wrapper">
+                        <svg class="icon-svg icon-badge" viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+                    </span>
+                    <span>Sound</span>
                 </button>
 
-                <!-- Quick Theme Switcher Header Dropdown -->
-                <div class="quick-theme-dropdown">
-                    <select id="quick-theme-select" onchange="changeAppTheme(this.value)" class="select-compact">
-                        <option value="obsidian">⚡ Obsidian Cyan</option>
-                        <option value="cosmic">🔮 Cosmic Violet</option>
-                        <option value="emerald">🌿 Hyper Emerald</option>
-                        <option value="amber">🔥 Solar Ember</option>
-                        <option value="oled">🕶️ Midnight OLED</option>
-                        <option value="frost">❄️ Light Frost</option>
-                    </select>
+                <!-- Guide Modal Button -->
+                <button class="badge badge-cyan" onclick="openGuideModal()">
+                    <svg class="icon-svg icon-badge" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
+                    <span>Guide</span>
+                </button>
+
+                <!-- OS & Elevation Badges -->
+                <div class="badge badge-green" id="badge-os">
+                    <svg class="icon-svg icon-badge" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+                    <span id="badge-os-text">Windows</span>
                 </div>
-
-                <button class="btn btn-purple btn-glow" id="btn-header-tutorial" onclick="startSpotlightTutorial()">
-                    <span>🎓 Interactive Tour</span>
-                </button>
-                
-                <div class="badge badge-cyan" id="badge-os">💻 Windows 11</div>
-                <button class="badge badge-amber" id="badge-admin" onclick="triggerAction('elevate_admin')">⚠️ USER MODE (Elevate)</button>
+                <div class="badge badge-amber" id="badge-admin" onclick="triggerAction('elevate_admin')" title="Click to elevate permissions">
+                    <svg class="icon-svg icon-badge" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                    <span id="badge-admin-text">Admin</span>
+                </div>
             </div>
         </header>
 
-        <!-- Main Body Shell (Sidebar + Content View) -->
+        <!-- Main Body Shell -->
         <div class="app-body">
             <!-- Sidebar Navigation -->
-            <nav class="sidebar glass-card">
-                <div class="nav-section-label">OPTIMIZATION HUB</div>
+            <nav class="sidebar">
                 <ul class="nav-list">
-                    <li class="nav-item active" data-page="page-dashboard" onclick="switchPage('page-dashboard')">
-                        <span class="nav-icon">🏠</span>
+                    <li class="nav-item active" data-page="page-dashboard" onclick="switchPage('page-dashboard')" title="Dashboard">
+                        <span class="nav-icon">
+                            <svg class="icon-svg icon-md" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                        </span>
                         <span class="nav-title">Dashboard</span>
-                        <span class="nav-indicator"></span>
                     </li>
-                    <li class="nav-item" data-page="page-fps" onclick="switchPage('page-fps')">
-                        <span class="nav-icon">🎮</span>
-                        <span class="nav-title">FPS & Gaming</span>
-                        <span class="nav-indicator"></span>
+                    <li class="nav-item" data-page="page-gaming" onclick="switchPage('page-gaming')" title="Gaming & FPS">
+                        <span class="nav-icon">
+                            <svg class="icon-svg icon-md" viewBox="0 0 24 24"><line x1="6" y1="12" x2="10" y2="12"></line><line x1="8" y1="10" x2="8" y2="14"></line><line x1="15" y1="13" x2="15.01" y2="13"></line><line x1="18" y1="11" x2="18.01" y2="11"></line><rect x="2" y="6" width="20" height="12" rx="2"></rect></svg>
+                        </span>
+                        <span class="nav-title">Gaming & FPS</span>
                     </li>
-                    <li class="nav-item" data-page="page-ram" onclick="switchPage('page-ram')">
-                        <span class="nav-icon">🧠</span>
-                        <span class="nav-title">RAM & Memory</span>
-                        <span class="nav-indicator"></span>
+                    <li class="nav-item" data-page="page-memory" onclick="switchPage('page-memory')" title="Memory & Cleaner">
+                        <span class="nav-icon">
+                            <svg class="icon-svg icon-md" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><rect x="9" y="9" width="6" height="6"></rect><line x1="9" y1="1" x2="9" y2="4"></line><line x1="15" y1="1" x2="15" y2="4"></line><line x1="9" y1="20" x2="9" y2="23"></line><line x1="15" y1="20" x2="15" y2="23"></line><line x1="20" y1="9" x2="23" y2="9"></line><line x1="20" y1="14" x2="23" y2="14"></line><line x1="1" y1="9" x2="4" y2="9"></line><line x1="1" y1="14" x2="4" y2="14"></line></svg>
+                        </span>
+                        <span class="nav-title">Memory & Clean</span>
                     </li>
-                    <li class="nav-item" data-page="page-tools" onclick="switchPage('page-tools')">
-                        <span class="nav-icon">🧹</span>
-                        <span class="nav-title">System Tools</span>
-                        <span class="nav-indicator"></span>
+                    <li class="nav-item" data-page="page-processes" onclick="switchPage('page-processes')" title="Processes">
+                        <span class="nav-icon">
+                            <svg class="icon-svg icon-md" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+                        </span>
+                        <span class="nav-title">Processes</span>
                     </li>
-                    <li class="nav-item" data-page="page-tutorial" onclick="switchPage('page-tutorial')">
-                        <span class="nav-icon">🎓</span>
-                        <span class="nav-title">Tutorial & Guide</span>
-                        <span class="nav-indicator"></span>
-                    </li>
-                    <li class="nav-item" data-page="page-settings" onclick="switchPage('page-settings')">
-                        <span class="nav-icon">⚙️</span>
-                        <span class="nav-title">Settings & Themes</span>
-                        <span class="nav-indicator"></span>
+                    <li class="nav-item" data-page="page-settings" onclick="switchPage('page-settings')" title="Creative Studio & Settings">
+                        <span class="nav-icon">
+                            <svg class="icon-svg icon-md" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                        </span>
+                        <span class="nav-title">Studio & Settings</span>
                     </li>
                 </ul>
 
-                <div class="sidebar-footer">
-                    <div class="sidebar-status-card">
-                        <div class="status-header">
-                            <span class="status-dot green-dot" id="autoguard-dot"></span>
-                            <span class="status-title">Smart Auto-Guard</span>
-                        </div>
-                        <div class="status-desc" id="autoguard-status-text">Monitoring every 60s</div>
-                        <button class="btn btn-xs btn-surface btn-block" onclick="triggerAction('toggle_auto_guard')">Toggle Daemon</button>
+                <div class="sidebar-daemon-card">
+                    <div>
+                        <span class="daemon-status-dot" id="daemon-sidebar-dot"></span>
+                        <strong id="daemon-sidebar-title" style="font-size:11px;">Daemon: Standby</strong>
                     </div>
+                    <div class="text-muted" id="daemon-sidebar-sub" style="font-size:10px; margin-top:3px;">Ready to optimize</div>
                 </div>
             </nav>
 
-            <!-- Main Content View Area -->
+            <!-- Main Content Area -->
             <main class="content-area">
-                <!-- Page 1: Dashboard -->
+                
+                <!-- =========================================================
+                     PAGE 1: DASHBOARD
+                     ========================================================= -->
                 <section class="page active" id="page-dashboard">
-                    <!-- Top Telemetry Cards -->
+                    <!-- MASTER CONTINUOUS TOGGLE HERO CARD -->
+                    <div class="glass-card master-toggle-card" id="master-toggle-box">
+                        <div class="master-toggle-info">
+                            <div class="toggle-status-badge" id="master-status-badge">
+                                <span class="daemon-status-dot" id="master-status-dot"></span>
+                                <span id="master-status-text">CONTINUOUS MODE: IDLE</span>
+                            </div>
+                            <div class="master-title">
+                                <span class="text-glow">Continuous Optimizer</span>
+                            </div>
+                            <div class="master-desc" id="master-desc-text">
+                                Runs continuously in the background — maintains precision low latency, guards free RAM buffers, and prioritizes games without stopping.
+                            </div>
+                            
+                            <!-- Telemetry Pills -->
+                            <div class="master-telemetry-row">
+                                <div class="master-telemetry-pill">
+                                    <svg class="icon-svg icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                                    <span class="text-cyan" id="daemon-uptime">00:00:00</span>
+                                </div>
+                                <div class="master-telemetry-pill">
+                                    <svg class="icon-svg icon-sm" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+                                    <span class="text-green" id="daemon-cycles">0 Cycles</span>
+                                </div>
+                                <div class="master-telemetry-pill">
+                                    <svg class="icon-svg icon-sm" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>
+                                    <span class="text-purple" id="daemon-reclaimed">0 MB Freed</span>
+                                </div>
+                            </div>
+
+                            <div class="mode-chips-bar">
+                                <button class="mode-chip active" id="chip-gaming" onclick="setContinuousModePreset('gaming')">
+                                    <svg class="icon-svg icon-sm" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"></rect><line x1="6" y1="12" x2="10" y2="12"></line><line x1="8" y1="10" x2="8" y2="14"></line><line x1="15" y1="13" x2="15.01" y2="13"></line><line x1="18" y1="11" x2="18.01" y2="11"></line></svg>
+                                    <span>Gaming Priority</span>
+                                </button>
+                                <button class="mode-chip" id="chip-balanced" onclick="setContinuousModePreset('balanced')">
+                                    <svg class="icon-svg icon-sm" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                                    <span>Balanced Guard</span>
+                                </button>
+                                <button class="mode-chip" id="chip-potato" onclick="setContinuousModePreset('potato')">
+                                    <svg class="icon-svg icon-sm" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                                    <span>4GB Potato Mode</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Master Switch Control -->
+                        <div class="toggle-switch-wrapper">
+                            <label class="switch-label" title="Toggle Continuous Background Protection">
+                                <input type="checkbox" id="master-continuous-toggle" onchange="handleMasterToggleChange(this.checked)">
+                                <span class="switch-slider"></span>
+                            </label>
+                            <span class="switch-text" id="switch-state-label">STANDBY</span>
+                        </div>
+                    </div>
+
+                    <!-- TELEMETRY METRICS ROW -->
                     <div class="metrics-grid">
-                        <div class="metric-card glass-card">
-                            <div class="metric-head">
-                                <span class="metric-icon">💾</span>
+                        <!-- Card 1: RAM Usage -->
+                        <div class="glass-card metric-card card-hover-tilt">
+                            <div class="metric-header">
                                 <span class="metric-title">PHYSICAL RAM</span>
-                            </div>
-                            <div class="metric-value text-cyan" id="dash-total-ram">-- GB</div>
-                            <div class="metric-sub">Total Installed Hardware</div>
-                        </div>
-
-                        <div class="metric-card glass-card">
-                            <div class="metric-head">
-                                <span class="metric-icon">⚡</span>
-                                <span class="metric-title">AVAILABLE FREE RAM</span>
-                            </div>
-                            <div class="metric-value text-green" id="dash-free-ram">-- GB</div>
-                            <div class="metric-sub" id="dash-free-percent">0% Unallocated</div>
-                        </div>
-
-                        <div class="metric-card glass-card">
-                            <div class="metric-head">
-                                <span class="metric-icon">🎯</span>
-                                <span class="metric-title">SMART TARGET THRESHOLD</span>
-                            </div>
-                            <div class="metric-value text-purple" id="dash-target-ram">≥ 4.0 GB</div>
-                            <div class="metric-sub">Auto-Guard Threshold</div>
-                        </div>
-
-                        <div class="metric-card glass-card">
-                            <div class="metric-head">
-                                <span class="metric-icon">💻</span>
-                                <span class="metric-title">CPU UTILIZATION</span>
-                            </div>
-                            <div class="metric-value text-amber" id="dash-cpu-percent">--%</div>
-                            <div class="metric-sub" id="dash-cpu-cores">-- Cores Active</div>
-                        </div>
-                    </div>
-
-                    <!-- SVG Circular Memory Gauge & Distribution Section -->
-                    <div class="glass-card gauge-section" id="target-ram-gauge">
-                        <div class="gauge-header">
-                            <div>
-                                <h2>Real-Time Physical Memory Allocation Gauge</h2>
-                                <p class="text-muted">Live memory footprint tracking & system buffer headroom</p>
-                            </div>
-                            <span class="ram-pct-badge text-cyan" id="dash-ram-percent">0% RAM Used</span>
-                        </div>
-
-                        <div class="gauge-body">
-                            <!-- Circular SVG Gauge -->
-                            <div class="svg-gauge-wrapper">
-                                <svg class="svg-gauge" viewBox="0 0 120 120">
-                                    <circle class="gauge-bg" cx="60" cy="60" r="50"></circle>
-                                    <circle class="gauge-fill" id="svg-gauge-circle" cx="60" cy="60" r="50" stroke-dasharray="314.15" stroke-dashoffset="314.15"></circle>
-                                </svg>
-                                <div class="gauge-center-text">
-                                    <span class="gauge-num text-cyan" id="gauge-center-num">0%</span>
-                                    <span class="gauge-label">Used</span>
+                                <div class="metric-icon-box">
+                                    <svg class="icon-svg icon-md text-cyan" viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
                                 </div>
                             </div>
+                            <div class="metric-value-row">
+                                <span class="metric-main-value text-cyan" id="dash-ram-percent">0%</span>
+                                <span class="metric-sub-value" id="dash-ram-fraction">0.0 / 0.0 GB</span>
+                            </div>
+                            <div class="metric-progress-track">
+                                <div class="metric-progress-fill" id="dash-ram-fill" style="width:0%;"></div>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; font-size:11px; color:var(--text-muted);">
+                                <span id="dash-ram-avail">0.0 GB Free</span>
+                                <span id="dash-ram-status" class="text-green">Headroom OK</span>
+                            </div>
+                        </div>
 
-                            <!-- Linear Memory Distribution Segmented Bar -->
-                            <div class="linear-gauge-container">
-                                <div class="progress-bar-track">
-                                    <div class="progress-bar-fill" id="ram-progress-fill"></div>
+                        <!-- Card 2: CPU Utilization -->
+                        <div class="glass-card metric-card card-hover-tilt">
+                            <div class="metric-header">
+                                <span class="metric-title">CPU ACTIVITY</span>
+                                <div class="metric-icon-box">
+                                    <svg class="icon-svg icon-md text-amber" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><rect x="9" y="9" width="6" height="6"></rect><line x1="9" y1="1" x2="9" y2="4"></line><line x1="15" y1="1" x2="15" y2="4"></line><line x1="9" y1="20" x2="9" y2="23"></line><line x1="15" y1="20" x2="15" y2="23"></line><line x1="20" y1="9" x2="23" y2="9"></line><line x1="20" y1="14" x2="23" y2="14"></line><line x1="1" y1="9" x2="4" y2="9"></line><line x1="1" y1="14" x2="4" y2="14"></line></svg>
                                 </div>
-                                <div class="progress-labels">
-                                    <span id="ram-used-detail">0.0 GB Used</span>
-                                    <span id="ram-target-status" class="text-green">Target Headroom OK</span>
-                                    <span id="ram-avail-detail">0.0 GB Free</span>
+                            </div>
+                            <div class="metric-value-row">
+                                <span class="metric-main-value text-amber" id="dash-cpu-percent">0%</span>
+                                <span class="metric-sub-value" id="dash-cpu-cores">-- Cores</span>
+                            </div>
+                            <div class="metric-progress-track">
+                                <div class="metric-progress-fill amber" id="dash-cpu-fill" style="width:0%;"></div>
+                            </div>
+                            <div style="font-size:11px; color:var(--text-muted);">
+                                <span>Multi-core Thread Scheduler</span>
+                            </div>
+                        </div>
+
+                        <!-- Card 3: System Latency -->
+                        <div class="glass-card metric-card card-hover-tilt">
+                            <div class="metric-header">
+                                <span class="metric-title">LATENCY & TIMER</span>
+                                <div class="metric-icon-box">
+                                    <svg class="icon-svg icon-md text-green" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 14"></polyline></svg>
                                 </div>
+                            </div>
+                            <div class="metric-value-row">
+                                <span class="metric-main-value text-green" id="dash-timer-val">1.0 ms</span>
+                                <span class="metric-sub-value text-green">Locked</span>
+                            </div>
+                            <div class="metric-progress-track">
+                                <div class="metric-progress-fill green" style="width:100%;"></div>
+                            </div>
+                            <div style="font-size:11px; color:var(--text-muted);">
+                                <span id="dash-profile-name">High-Performance Profile</span>
+                            </div>
+                        </div>
+                    </div>
 
-                                <!-- Memory Footprint Distribution Pills -->
-                                <div class="memory-distribution-pills">
-                                    <div class="dist-pill"><span class="dist-dot bg-cyan"></span> Active Apps: <strong id="dist-active-val">-- GB</strong></div>
-                                    <div class="dist-pill"><span class="dist-dot bg-purple"></span> Standby Cache: <strong id="dist-standby-val">-- GB</strong></div>
-                                    <div class="dist-pill"><span class="dist-dot bg-green"></span> Free Memory: <strong id="dist-free-val">-- GB</strong></div>
+                    <!-- QUICK ACTIONS SECTION -->
+                    <div>
+                        <div class="section-title">Quick Optimizers</div>
+                        <div class="actions-grid">
+                            <div class="action-card" onclick="triggerAction('run_monster_optimizer')">
+                                <div class="action-icon-circle text-cyan">
+                                    <svg class="icon-svg icon-md" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
                                 </div>
+                                <span class="action-name">Instant RAM Purge</span>
+                                <span class="action-desc">Frees 2-5 GB memory</span>
+                            </div>
+                            <div class="action-card" onclick="triggerAction('open_game_picker')">
+                                <div class="action-icon-circle text-green">
+                                    <svg class="icon-svg icon-md" viewBox="0 0 24 24"><line x1="6" y1="12" x2="10" y2="12"></line><line x1="8" y1="10" x2="8" y2="14"></line><line x1="15" y1="13" x2="15.01" y2="13"></line><line x1="18" y1="11" x2="18.01" y2="11"></line><rect x="2" y="6" width="20" height="12" rx="2"></rect></svg>
+                                </div>
+                                <span class="action-name">Boost Active Game</span>
+                                <span class="action-desc">Elevates CPU & Disk I/O</span>
+                            </div>
+                            <div class="action-card" onclick="triggerAction('clean_shader_cache')">
+                                <div class="action-icon-circle text-purple">
+                                    <svg class="icon-svg icon-md" viewBox="0 0 24 24"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path></svg>
+                                </div>
+                                <span class="action-name">Clean Shaders</span>
+                                <span class="action-desc">DirectX, Vulkan, Mesa</span>
+                            </div>
+                            <div class="action-card" onclick="triggerAction('kill_bloatware')">
+                                <div class="action-icon-circle text-red">
+                                    <svg class="icon-svg icon-md" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line></svg>
+                                </div>
+                                <span class="action-name">Suppress Bloatware</span>
+                                <span class="action-desc">Ends telemetry apps</span>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Master Action Buttons Bar -->
-                    <div class="quick-actions-bar">
-                        <button class="btn btn-amber btn-lg btn-glow" id="target-fps-booster" onclick="triggerAction('run_fps_booster')">
-                            <span class="btn-icon">🎮</span> RUN FPS BOOSTER
-                        </button>
-                        <button class="btn btn-purple btn-lg btn-glow" id="target-monster-optimizer" onclick="triggerAction('run_monster_optimizer')">
-                            <span class="btn-icon">🔥</span> MONSTER OPTIMIZER
-                        </button>
-                        <button class="btn btn-surface btn-lg" id="target-potato-mode" onclick="triggerAction('run_potato_mode')">
-                            <span class="btn-icon">🥔</span> 4GB Potato Mode
-                        </button>
-                        <button class="btn btn-cyan btn-lg" onclick="refreshSystemStats()">
-                            <span class="btn-icon">🔄</span> Refresh Stats
-                        </button>
-                    </div>
-                </section>
-
-                <!-- Page 2: FPS & Gaming Engine -->
-                <section class="page" id="page-fps">
-                    <div class="page-title">
-                        <h2>🎮 High-FPS & Gaming Latency Engine</h2>
-                        <p class="text-muted">High-precision timer locking, GPU shader sweeping, and disk asset priority scheduling</p>
-                    </div>
-
-                    <!-- Verified Performance Status Panel -->
-                    <div class="glass-card status-panel">
-                        <div class="status-panel-title">⚡ Verified Gaming Performance Status</div>
-                        <div class="status-panel-grid">
-                            <div class="status-item">
-                                <span class="status-dot green-dot"></span>
-                                <span>Timer Precision: <strong class="text-green" id="fps-status-timer">1.0 ms (Locked)</strong></span>
-                            </div>
-                            <div class="status-item">
-                                <span class="status-dot cyan-dot"></span>
-                                <span>Game Priority Boost: <strong class="text-cyan" id="fps-status-game">Standby Ready</strong></span>
-                            </div>
-                            <div class="status-item">
-                                <span class="status-dot purple-dot"></span>
-                                <span>OS Power Plan: <strong class="text-purple" id="fps-status-power">High Performance</strong></span>
+                    <!-- ACTIVITY LOG CONSOLE -->
+                    <div class="glass-card app-console-card">
+                        <div class="console-header">
+                            <span class="console-title">Activity Log</span>
+                            <div style="display:flex; gap:6px;">
+                                <button class="btn btn-sm btn-surface" onclick="copyConsoleLog()">
+                                    <svg class="icon-svg icon-sm" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                                    <span>Copy</span>
+                                </button>
+                                <button class="btn btn-sm btn-surface" onclick="clearConsoleLog()">
+                                    <svg class="icon-svg icon-sm" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                                    <span>Clear</span>
+                                </button>
                             </div>
                         </div>
-                    </div>
-
-                    <!-- Feature Cards Grid -->
-                    <div class="cards-grid">
-                        <div class="glass-card feature-card" id="target-fps-booster-card">
-                            <div class="card-icon">🎮</div>
-                            <h3>RUN FPS & GAME BOOSTER</h3>
-                            <p>Locks system timer to 1.0ms, flushes GPU shader caches, and elevates game CPU priority to High.</p>
-                            <button class="btn btn-amber btn-block" onclick="triggerAction('run_fps_booster')">RUN BOOSTER NOW</button>
-                        </div>
-                        <div class="glass-card feature-card" id="target-asset-loader">
-                            <div class="card-icon">🚀</div>
-                            <h3>Fast Asset Loader</h3>
-                            <p>Sets Disk I/O priority to High (ProcessIoPriorityHigh) for game processes to stop texture pop-in.</p>
-                            <button class="btn btn-green btn-block" onclick="triggerAction('accelerate_asset_loading')">ACCELERATE ASSETS</button>
-                        </div>
-                        <div class="glass-card feature-card" id="target-potato-card">
-                            <div class="card-icon">🥔</div>
-                            <h3>4GB Potato Mode</h3>
-                            <p>Aggressive low-RAM preset for budget PCs & laptops with 4GB to 8GB physical memory.</p>
-                            <button class="btn btn-surface btn-block" onclick="triggerAction('run_potato_mode')">ENABLE POTATO PRESET</button>
-                        </div>
-                        <div class="glass-card feature-card" id="target-power-plan">
-                            <div class="card-icon">⚡</div>
-                            <h3>Ultimate Power Mode</h3>
-                            <p>Forces OS power plan into maximum clock speed state, disabling CPU core parking & throttling.</p>
-                            <button class="btn btn-green btn-block" onclick="triggerAction('enable_power_plan')">FORCE ULTIMATE POWER</button>
-                        </div>
-                        <div class="glass-card feature-card" id="target-game-picker">
-                            <div class="card-icon">🎯</div>
-                            <h3>Boost Game Priority</h3>
-                            <p>Set OS scheduling priority class to High for active multiplayer or AAA game executables.</p>
-                            <button class="btn btn-amber btn-block" onclick="triggerAction('open_game_picker')">SELECT & BOOST GAME</button>
-                        </div>
-                        <div class="glass-card feature-card" id="target-shader-cleaner">
-                            <div class="card-icon">🧹</div>
-                            <h3>Clean Shader Cache</h3>
-                            <p>Cleans DirectX, OpenGL, Vulkan, Nvidia (DXCache/GLCache) & AMD compiled GPU shader files.</p>
-                            <button class="btn btn-cyan btn-block" onclick="triggerAction('clean_shader_cache')">CLEAN GPU SHADERS</button>
-                        </div>
+                        <textarea class="console-textarea" id="console-output" readonly>[SYSTEM] Optimizer Engine ready.</textarea>
                     </div>
                 </section>
 
-                <!-- Page 3: RAM & Memory Manager -->
-                <section class="page" id="page-ram">
+                <!-- =========================================================
+                     PAGE 2: GAMING & FPS
+                     ========================================================= -->
+                <section class="page" id="page-gaming">
                     <div class="page-title">
-                        <h2>🧠 RAM & Memory Management Engine</h2>
-                        <p class="text-muted">Kernel working set compaction, standby page list purging, and 24/7 background guard</p>
+                        <h2 style="font-size:16px; font-weight:800; display:flex; align-items:center; gap:8px;">
+                            <svg class="icon-svg icon-md text-cyan" viewBox="0 0 24 24"><line x1="6" y1="12" x2="10" y2="12"></line><line x1="8" y1="10" x2="8" y2="14"></line><line x1="15" y1="13" x2="15.01" y2="13"></line><line x1="18" y1="11" x2="18.01" y2="11"></line><rect x="2" y="6" width="20" height="12" rx="2"></rect></svg>
+                            <span>Gaming & Latency Optimization</span>
+                        </h2>
+                        <p class="text-muted" style="font-size:12px;">Lock precision system timer, boost process scheduling priorities, and sweep GPU shader caches.</p>
                     </div>
 
-                    <div class="cards-grid">
-                        <div class="glass-card feature-card" id="target-monster-card">
-                            <div class="card-icon">🔥</div>
-                            <h3>MONSTER OPTIMIZER</h3>
-                            <p>Multi-stage deep RAM recovery: compacts app working sets, purges standby memory & sweeps temp caches.</p>
-                            <button class="btn btn-purple btn-block" onclick="triggerAction('run_monster_optimizer')">RUN MONSTER PURGE</button>
+                    <div class="feature-grid-2">
+                        <div class="glass-card feature-panel">
+                            <div class="feature-panel-title">
+                                <svg class="icon-svg icon-md text-cyan" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                                <span>RUN FPS BOOSTER PIPELINE</span>
+                            </div>
+                            <p>Locks 1.0ms timer resolution, activates High Performance power governor, purges standby RAM, and elevates active game CPU priority.</p>
+                            <button class="btn btn-cyan btn-block" onclick="triggerAction('run_fps_booster')">Run FPS Booster Now</button>
                         </div>
-                        <div class="glass-card feature-card" id="target-trim-ram">
-                            <div class="card-icon">✂️</div>
-                            <h3>Trim App RAM</h3>
-                            <p>Iterates active user applications (Chrome, Discord, Spotify) and compacts their RAM footprint into free physical RAM.</p>
-                            <button class="btn btn-cyan btn-block" onclick="triggerAction('trim_working_sets')">TRIM WORKING SETS</button>
+
+                        <div class="glass-card feature-panel">
+                            <div class="feature-panel-title">
+                                <svg class="icon-svg icon-md text-green" viewBox="0 0 24 24"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"></path><path d="M12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"></path></svg>
+                                <span>FAST ASSET LOADER</span>
+                            </div>
+                            <p>Sets Disk I/O priority to High (ProcessIoPriorityHigh) for game processes to stop in-game texture pop-in, map stuttering, and loading delays.</p>
+                            <button class="btn btn-green btn-block" onclick="triggerAction('accelerate_asset_loading')">Accelerate Asset Loader</button>
                         </div>
-                        <div class="glass-card feature-card" id="target-purge-standby">
-                            <div class="card-icon">🛡️</div>
-                            <h3>Purge Standby RAM</h3>
-                            <p>Calls C++ NtSetSystemInformation kernel APIs to drop standby cached pages and fix memory hitching.</p>
-                            <button class="btn btn-surface btn-block" onclick="triggerAction('purge_standby')">PURGE STANDBY LIST</button>
+
+                        <div class="glass-card feature-panel">
+                            <div class="feature-panel-title">
+                                <svg class="icon-svg icon-md text-purple" viewBox="0 0 24 24"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path></svg>
+                                <span>GPU SHADER CACHE CLEANER</span>
+                            </div>
+                            <p>Cleans DirectX, OpenGL, Vulkan, Nvidia (DXCache/GLCache), AMD, and Mesa shader caches to eliminate corrupted shader stutters after game updates.</p>
+                            <button class="btn btn-surface btn-block" onclick="triggerAction('clean_shader_cache')">Clean GPU Shaders</button>
                         </div>
-                        <div class="glass-card feature-card" id="target-autoguard">
-                            <div class="card-icon">⚡</div>
-                            <h3>Smart Auto-Guard Loop</h3>
-                            <p>Background daemon thread automatically triggering standby purges when free RAM drops below target threshold.</p>
-                            <button class="btn btn-green btn-block" id="btn-toggle-autoguard-page" onclick="triggerAction('toggle_auto_guard')">TOGGLE AUTO-GUARD</button>
+
+                        <div class="glass-card feature-panel">
+                            <div class="feature-panel-title">
+                                <svg class="icon-svg icon-md text-amber" viewBox="0 0 24 24"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path><line x1="12" y1="2" x2="12" y2="12"></line></svg>
+                                <span>ULTIMATE POWER SCHEME</span>
+                            </div>
+                            <p>Configures OS power scheme into Ultimate Performance mode, disabling CPU core parking and power throttling for maximum clocks.</p>
+                            <button class="btn btn-amber btn-block" onclick="triggerAction('enable_power_plan')">Enable High Power Plan</button>
                         </div>
                     </div>
                 </section>
 
-                <!-- Page 4: System Tools -->
-                <section class="page" id="page-tools">
+                <!-- =========================================================
+                     PAGE 3: MEMORY & CLEANER
+                     ========================================================= -->
+                <section class="page" id="page-memory">
                     <div class="page-title">
-                        <h2>🧹 System Tools & Process Manager</h2>
-                        <p class="text-muted">Live memory footprint scanner, bloatware terminator, and system temp cleaner</p>
+                        <h2 style="font-size:16px; font-weight:800; display:flex; align-items:center; gap:8px;">
+                            <svg class="icon-svg icon-md text-cyan" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><rect x="9" y="9" width="6" height="6"></rect><line x1="9" y1="1" x2="9" y2="4"></line><line x1="15" y1="1" x2="15" y2="4"></line><line x1="9" y1="20" x2="9" y2="23"></line><line x1="15" y1="20" x2="15" y2="23"></line><line x1="20" y1="9" x2="23" y2="9"></line><line x1="20" y1="14" x2="23" y2="14"></line><line x1="1" y1="9" x2="4" y2="9"></line><line x1="1" y1="14" x2="4" y2="14"></line></svg>
+                            <span>Memory Management & Storage Cleaner</span>
+                        </h2>
+                        <p class="text-muted" style="font-size:12px;">Kernel working set compaction, standby page list purge, and system temp cleaner.</p>
                     </div>
 
-                    <!-- Search & Action Toolbar -->
-                    <div class="tools-actions-bar">
-                        <div class="search-input-wrapper">
-                            <span class="search-icon">🔍</span>
-                            <input type="text" id="proc-search-input" placeholder="Search processes by name or PID..." onkeyup="filterProcessTable()">
+                    <div class="feature-grid-2">
+                        <div class="glass-card feature-panel">
+                            <div class="feature-panel-title">
+                                <svg class="icon-svg icon-md text-cyan" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                                <span>DEEP MONSTER RAM RECOVERY</span>
+                            </div>
+                            <p>Compacts background application working sets, drops standby cached memory pages, and frees maximum physical RAM.</p>
+                            <button class="btn btn-cyan btn-block" onclick="triggerAction('run_monster_optimizer')">Run Deep Monster Purge</button>
                         </div>
-                        <button class="btn btn-surface" id="target-clear-temp" onclick="triggerAction('clear_temp')">🧹 Clear Temp Files</button>
-                        <button class="btn btn-red" id="target-kill-bloatware" onclick="triggerAction('kill_bloatware')">🚫 End Bloatware</button>
-                        <button class="btn btn-cyan" onclick="refreshTopProcesses()">📊 Refresh Processes</button>
-                    </div>
 
-                    <!-- Process Data Table -->
-                    <div class="table-card glass-card" id="target-process-table">
-                        <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th>PID</th>
-                                    <th>Application / Process Name</th>
-                                    <th>Physical RAM (MB)</th>
-                                    <th>RAM Share</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody id="top-procs-tbody">
-                                <tr>
-                                    <td colspan="5" class="text-muted text-center">Click 'Refresh Processes' to load live process list.</td>
-                                </tr>
-                            </tbody>
-                        </table>
+                        <div class="glass-card feature-panel">
+                            <div class="feature-panel-title">
+                                <svg class="icon-svg icon-md text-green" viewBox="0 0 24 24"><circle cx="6" cy="6" r="3"></circle><circle cx="6" cy="18" r="3"></circle><line x1="20" y1="4" x2="8.12" y2="15.88"></line><line x1="14.47" y1="14.48" x2="20" y2="20"></line><line x1="8.12" y1="8.12" x2="12" y2="12"></line></svg>
+                                <span>TRIM APPLICATION WORKING SETS</span>
+                            </div>
+                            <p>Iterates active user applications (browsers, Discord, Spotify) and compacts their active memory footprints into free physical memory.</p>
+                            <button class="btn btn-green btn-block" onclick="triggerAction('trim_working_sets')">Trim Working Sets</button>
+                        </div>
+
+                        <div class="glass-card feature-panel">
+                            <div class="feature-panel-title">
+                                <svg class="icon-svg icon-md text-purple" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>
+                                <span>PURGE STANDBY RAM CACHE</span>
+                            </div>
+                            <p>Flushes cached standby list memory via kernel APIs to fix memory hitching and stutters when available RAM drops to zero.</p>
+                            <button class="btn btn-surface btn-block" onclick="triggerAction('purge_standby')">Purge Standby Cache</button>
+                        </div>
+
+                        <div class="glass-card feature-panel">
+                            <div class="feature-panel-title">
+                                <svg class="icon-svg icon-md text-amber" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                                <span>CLEAN SYSTEM TEMP FILES</span>
+                            </div>
+                            <p>Safely sweeps temporary folders (%TEMP%, /tmp, cache folders) to recover disk space and remove leftover installer clutter.</p>
+                            <button class="btn btn-amber btn-block" onclick="triggerAction('clear_temp')">Clean Temp Files</button>
+                        </div>
                     </div>
                 </section>
 
-                <!-- Page 5: Tutorial & Guide Hub -->
-                <section class="page" id="page-tutorial">
+                <!-- =========================================================
+                     PAGE 4: PROCESSES
+                     ========================================================= -->
+                <section class="page" id="page-processes">
                     <div class="page-title">
-                        <h2>🎓 Interactive Tutorial & Feature Guide Hub</h2>
-                        <p class="text-muted">Interactive guided tour spotlight, detailed feature breakdowns, and live test buttons</p>
+                        <h2 style="font-size:16px; font-weight:800; display:flex; align-items:center; gap:8px;">
+                            <svg class="icon-svg icon-md text-cyan" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+                            <span>Process Manager</span>
+                        </h2>
+                        <p class="text-muted" style="font-size:12px;">Inspect top RAM consuming processes, search by executable name or PID, and terminate unwanted applications.</p>
                     </div>
 
-                    <div class="glass-card tut-header-card">
-                        <div class="tut-hero-text">
-                            <h3>Learn How, Why, and When to Use Every Button</h3>
-                            <p class="text-muted">Launch the interactive spotlight tour to see real UI elements highlighted live on your screen:</p>
+                    <div class="glass-card" style="display:flex; flex-direction:column; gap:10px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;">
+                            <input type="text" class="search-input" id="proc-search" placeholder="Search processes by name or PID..." onkeyup="filterProcessTable()" style="max-width:320px;">
+                            <button class="btn btn-sm btn-cyan" onclick="refreshTopProcesses()">
+                                <svg class="icon-svg icon-sm" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+                                <span>Refresh List</span>
+                            </button>
                         </div>
-                        <button class="btn btn-purple btn-glow btn-lg" onclick="startSpotlightTutorial()">▶ Launch Spotlight Tour</button>
-                    </div>
 
-                    <!-- Category Tabs & Search Bar -->
-                    <div class="tut-toolbar">
-                        <div class="tab-buttons">
-                            <button class="tab-btn active" data-tab="tab-all" onclick="switchCategoryTab('tab-all')">🌐 All Features</button>
-                            <button class="tab-btn" data-tab="tab-gaming" onclick="switchCategoryTab('tab-gaming')">🎮 Gaming Engine</button>
-                            <button class="tab-btn" data-tab="tab-memory" onclick="switchCategoryTab('tab-memory')">🧠 RAM & Memory</button>
-                            <button class="tab-btn" data-tab="tab-tools" onclick="switchCategoryTab('tab-tools')">🧹 Tools & Cleaning</button>
+                        <div class="data-table-wrapper">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>PID</th>
+                                        <th>Application</th>
+                                        <th>Physical RAM</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="top-procs-tbody">
+                                    <tr>
+                                        <td colspan="4" class="text-muted text-center">Loading active processes...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
-                        <div class="search-input-wrapper tut-search">
-                            <span class="search-icon">🔍</span>
-                            <input type="text" id="tut-search-input" placeholder="Search guides by keyword..." onkeyup="filterTutorialCards()">
-                        </div>
-                    </div>
-
-                    <div class="tut-cards-grid" id="tut-list-container">
-                        <!-- Populated by main.js -->
                     </div>
                 </section>
 
-                <!-- Page 6: Settings & Themes Hub -->
+                <!-- =========================================================
+                     PAGE 5: CREATIVE STUDIO & CUSTOMIZATION
+                     ========================================================= -->
                 <section class="page" id="page-settings">
                     <div class="page-title">
-                        <h2>⚙️ Settings & Theme Customization Hub</h2>
-                        <p class="text-muted">Personalize app themes, visual aesthetics, sound FX, and core optimization preferences</p>
+                        <h2 style="font-size:16px; font-weight:800; display:flex; align-items:center; gap:8px;">
+                            <svg class="icon-svg icon-md text-cyan" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                            <span>Creative Theming Studio & Customization</span>
+                        </h2>
+                        <p class="text-muted" style="font-size:12px;">Customize 14 high-impact canvas background designs, interactive multi-tone neon palettes, and system automation.</p>
                     </div>
 
-                    <!-- Theme Preset Cards Grid -->
-                    <div class="glass-card settings-card" id="target-theme-section">
-                        <h3>🎨 App Theme Selector</h3>
-                        <p class="text-muted">Choose your preferred visual aesthetic mode:</p>
-                        
+                    <!-- 1. 14 High-Impact Background FX Canvas Designs -->
+                    <div class="glass-card settings-section-card">
+                        <div class="settings-section-header">
+                            <svg class="icon-svg icon-md text-cyan" viewBox="0 0 24 24"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path></svg>
+                            <span>Live Animated Background Designs (14 Selectable 60 FPS Canvas Modes)</span>
+                        </div>
+
+                        <div class="bg-designs-grid">
+                            <div class="bg-design-card active" data-bg-design="matrix" onclick="selectBgDesign('matrix')">
+                                <div class="bg-design-icon">
+                                    <svg class="icon-svg icon-md" viewBox="0 0 24 24"><path d="M4 4h16v16H4z"></path><path d="M8 8v8M12 6v12M16 10v6"></path></svg>
+                                </div>
+                                <span class="bg-design-title">Matrix Rain</span>
+                            </div>
+                            <div class="bg-design-card" data-bg-design="tron_grid" onclick="selectBgDesign('tron_grid')">
+                                <div class="bg-design-icon">
+                                    <svg class="icon-svg icon-md" viewBox="0 0 24 24"><line x1="2" y1="20" x2="22" y2="20"></line><line x1="2" y1="16" x2="22" y2="16"></line><line x1="4" y1="20" x2="10" y2="12"></line><line x1="20" y1="20" x2="14" y2="12"></line></svg>
+                                </div>
+                                <span class="bg-design-title">Cyber Tron 3D</span>
+                            </div>
+                            <div class="bg-design-card" data-bg-design="vaporwave" onclick="selectBgDesign('vaporwave')">
+                                <div class="bg-design-icon">
+                                    <svg class="icon-svg icon-md" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><line x1="2" y1="16" x2="22" y2="16"></line></svg>
+                                </div>
+                                <span class="bg-design-title">Vaporwave 80s Sun</span>
+                            </div>
+                            <div class="bg-design-card" data-bg-design="tunnel" onclick="selectBgDesign('tunnel')">
+                                <div class="bg-design-icon">
+                                    <svg class="icon-svg icon-md" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"></rect><rect x="7" y="7" width="10" height="10" rx="1"></rect><rect x="10" y="10" width="4" height="4"></rect></svg>
+                                </div>
+                                <span class="bg-design-title">Hyperspace Tunnel</span>
+                            </div>
+                            <div class="bg-design-card" data-bg-design="starfield" onclick="selectBgDesign('starfield')">
+                                <div class="bg-design-icon">
+                                    <svg class="icon-svg icon-md" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                                </div>
+                                <span class="bg-design-title">Warp Starfield</span>
+                            </div>
+                            <div class="bg-design-card" data-bg-design="neural" onclick="selectBgDesign('neural')">
+                                <div class="bg-design-icon">
+                                    <svg class="icon-svg icon-md" viewBox="0 0 24 24"><circle cx="5" cy="5" r="3"></circle><circle cx="19" cy="5" r="3"></circle><circle cx="12" cy="19" r="3"></circle><line x1="5" y1="5" x2="12" y2="19"></line><line x1="19" y1="5" x2="12" y2="19"></line><line x1="5" y1="5" x2="19" y2="5"></line></svg>
+                                </div>
+                                <span class="bg-design-title">Neural Synapse</span>
+                            </div>
+                            <div class="bg-design-card" data-bg-design="wireframe" onclick="selectBgDesign('wireframe')">
+                                <div class="bg-design-icon">
+                                    <svg class="icon-svg icon-md" viewBox="0 0 24 24"><polygon points="1 22 8 8 16 16 23 4 23 22 1 22"></polygon></svg>
+                                </div>
+                                <span class="bg-design-title">Wireframe Terrain</span>
+                            </div>
+                            <div class="bg-design-card" data-bg-design="hex_shield" onclick="selectBgDesign('hex_shield')">
+                                <div class="bg-design-icon">
+                                    <svg class="icon-svg icon-md" viewBox="0 0 24 24"><path d="M12 2l8 4.5v9L12 20l-8-4.5v-9z"></path></svg>
+                                </div>
+                                <span class="bg-design-title">Hexagonal Shield</span>
+                            </div>
+                            <div class="bg-design-card" data-bg-design="circuit" onclick="selectBgDesign('circuit')">
+                                <div class="bg-design-icon">
+                                    <svg class="icon-svg icon-md" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+                                </div>
+                                <span class="bg-design-title">Circuit Traces</span>
+                            </div>
+                            <div class="bg-design-card" data-bg-design="dna" onclick="selectBgDesign('dna')">
+                                <div class="bg-design-icon">
+                                    <svg class="icon-svg icon-md" viewBox="0 0 24 24"><path d="M2 15c6.667-6 13.333 0 20-6M2 9c6.667 6 13.333 0 20 6"></path></svg>
+                                </div>
+                                <span class="bg-design-title">DNA Cyber Helix</span>
+                            </div>
+                            <div class="bg-design-card" data-bg-design="visualizer" onclick="selectBgDesign('visualizer')">
+                                <div class="bg-design-icon">
+                                    <svg class="icon-svg icon-md" viewBox="0 0 24 24"><line x1="4" y1="20" x2="4" y2="10"></line><line x1="8" y1="20" x2="8" y2="4"></line><line x1="12" y1="20" x2="12" y2="14"></line><line x1="16" y1="20" x2="16" y2="7"></line><line x1="20" y1="20" x2="20" y2="12"></line></svg>
+                                </div>
+                                <span class="bg-design-title">Audio Visualizer</span>
+                            </div>
+                            <div class="bg-design-card" data-bg-design="aurora" onclick="selectBgDesign('aurora')">
+                                <div class="bg-design-icon">
+                                    <svg class="icon-svg icon-md" viewBox="0 0 24 24"><path d="M2 12c4-8 8-8 12 0s8 8 12 0"></path></svg>
+                                </div>
+                                <span class="bg-design-title">Aurora Plasma</span>
+                            </div>
+                            <div class="bg-design-card" data-bg-design="bokeh" onclick="selectBgDesign('bokeh')">
+                                <div class="bg-design-icon">
+                                    <svg class="icon-svg icon-md" viewBox="0 0 24 24"><circle cx="7" cy="8" r="4"></circle><circle cx="16" cy="14" r="5"></circle></svg>
+                                </div>
+                                <span class="bg-design-title">Cyber Bokeh</span>
+                            </div>
+                            <div class="bg-design-card" data-bg-design="solid" onclick="selectBgDesign('solid')">
+                                <div class="bg-design-icon">
+                                    <svg class="icon-svg icon-md" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"></rect></svg>
+                                </div>
+                                <span class="bg-design-title">Clean Matte</span>
+                            </div>
+                        </div>
+
+                        <!-- Canvas Controls -->
+                        <div class="settings-group" style="margin-top:6px;">
+                            <div class="setting-row">
+                                <div class="setting-info">
+                                    <span class="setting-label">Background FX Brightness / Visibility</span>
+                                    <span class="setting-desc">Adjust background canvas visual prominence from subtle glow to vivid immersion</span>
+                                </div>
+                                <select id="setting-bg-intensity" onchange="updateBgIntensity(this.value)" class="select-clean">
+                                    <option value="0.25">Subtle Glow (25%)</option>
+                                    <option value="0.45">Balanced (45%)</option>
+                                    <option value="0.70" selected>Vivid High Contrast (70%)</option>
+                                    <option value="0.95">Ultra-Immersive (95%)</option>
+                                </select>
+                            </div>
+
+                            <div class="setting-row">
+                                <div class="setting-info">
+                                    <span class="setting-label">FX Motion Speed</span>
+                                    <span class="setting-desc">Precision animation velocity multiplier for the background engine</span>
+                                </div>
+                                <select id="setting-bg-speed" onchange="updateBgSpeed(this.value)" class="select-clean">
+                                    <option value="0.2">Ultra Chill (0.2x)</option>
+                                    <option value="0.5">Slow & Ambient (0.5x)</option>
+                                    <option value="1.0" selected>Standard (1.0x)</option>
+                                    <option value="1.8">Dynamic Fast (1.8x)</option>
+                                    <option value="3.0">Hyper Drive (3.0x)</option>
+                                    <option value="0.0">Frozen / Paused (0.0x)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2. Interactive Custom Neon Palette Manager Studio -->
+                    <div class="glass-card settings-section-card">
+                        <div class="settings-section-header">
+                            <svg class="icon-svg icon-md text-purple" viewBox="0 0 24 24"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path></svg>
+                            <span>Interactive Neon Accent Palette Studio (Add, Edit, Scale Count, Multi-Tone)</span>
+                        </div>
+
+                        <div class="palette-manager-container">
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <span style="font-size:12px; font-weight:700; color:var(--text-secondary);">Custom Swatches Collection (<span id="palette-count-label">12</span> Colors)</span>
+                                <span class="text-muted" style="font-size:11px;">Hover swatch to delete (✕) • Click to activate</span>
+                            </div>
+
+                            <!-- Swatches List -->
+                            <div class="palette-swatches-row" id="palette-swatches-list">
+                                <!-- Rendered dynamically by JS -->
+                            </div>
+
+                            <!-- Controls & Multi-Tone Tools -->
+                            <div class="palette-controls-row">
+                                <div class="dual-color-inputs">
+                                    <div class="color-input-badge">
+                                        <span>Primary:</span>
+                                        <input type="color" id="primary-color-picker" class="custom-color-picker" value="#00f0ff" onchange="setPrimaryAccent(this.value)" title="Change Primary Accent">
+                                        <span id="primary-hex-label" style="color:var(--accent);">#00f0ff</span>
+                                    </div>
+                                    <div class="color-input-badge">
+                                        <span>Secondary:</span>
+                                        <input type="color" id="secondary-color-picker" class="custom-color-picker" value="#a855f7" onchange="setSecondaryAccent(this.value)" title="Change Secondary Glow Color">
+                                        <span id="secondary-hex-label" style="color:var(--accent-secondary);">#a855f7</span>
+                                    </div>
+                                </div>
+
+                                <div style="display:flex; align-items:center; gap:6px;">
+                                    <button class="btn btn-sm btn-surface" onclick="promptAddNewColor()">
+                                        <svg class="icon-svg icon-sm" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                        <span>Add New Swatch</span>
+                                    </button>
+                                    <button class="btn btn-sm btn-surface" onclick="randomizePaletteHarmonies()" title="Generate vibrant new color harmony">
+                                        <svg class="icon-svg icon-sm" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+                                        <span>Harmonize Colors</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Gradient Duo Mode Switch -->
+                        <div class="setting-row" style="margin-top:4px;">
+                            <div class="setting-info">
+                                <span class="setting-label">Dual-Tone Neon Gradient Lighting</span>
+                                <span class="setting-desc">Blends Primary + Secondary colors into smooth multi-tone glowing gradients on buttons and borders</span>
+                            </div>
+                            <label class="switch-sm">
+                                <input type="checkbox" id="setting-gradient-mode" checked onchange="toggleGradientMode(this.checked)">
+                                <span class="switch-sm-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- 3. Visual Themes (10 Presets) -->
+                    <div class="glass-card settings-section-card">
+                        <div class="settings-section-header">
+                            <svg class="icon-svg icon-md text-amber" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                            <span>Theme Foundation Styles (10 Presets)</span>
+                        </div>
+
                         <div class="themes-grid">
-                            <!-- Theme Card 1: Obsidian Cyan -->
                             <div class="theme-card active" data-theme-id="obsidian" onclick="changeAppTheme('obsidian')">
-                                <div class="theme-preview obsidian-preview">
-                                    <div class="preview-accent bg-cyan"></div>
-                                    <div class="preview-bg"></div>
-                                </div>
-                                <div class="theme-info">
-                                    <span class="theme-name">Obsidian Cyan</span>
-                                    <span class="theme-tag">Cyber Dark Mode (Default)</span>
-                                </div>
+                                <div class="theme-color-dot" style="background:#00f0ff;"></div>
+                                <span class="theme-name">Obsidian Cyan</span>
                             </div>
-
-                            <!-- Theme Card 2: Cosmic Violet -->
                             <div class="theme-card" data-theme-id="cosmic" onclick="changeAppTheme('cosmic')">
-                                <div class="theme-preview cosmic-preview">
-                                    <div class="preview-accent bg-purple"></div>
-                                    <div class="preview-bg"></div>
-                                </div>
-                                <div class="theme-info">
-                                    <span class="theme-name">Cosmic Violet</span>
-                                    <span class="theme-tag">Vaporwave & Deep Indigo</span>
-                                </div>
+                                <div class="theme-color-dot" style="background:#c084fc;"></div>
+                                <span class="theme-name">Cosmic Violet</span>
                             </div>
-
-                            <!-- Theme Card 3: Hyper Emerald -->
                             <div class="theme-card" data-theme-id="emerald" onclick="changeAppTheme('emerald')">
-                                <div class="theme-preview emerald-preview">
-                                    <div class="preview-accent bg-green"></div>
-                                    <div class="preview-bg"></div>
-                                </div>
-                                <div class="theme-info">
-                                    <span class="theme-name">Hyper Emerald</span>
-                                    <span class="theme-tag">Tactical Dark Green</span>
-                                </div>
+                                <div class="theme-color-dot" style="background:#10b981;"></div>
+                                <span class="theme-name">Hyper Emerald</span>
                             </div>
-
-                            <!-- Theme Card 4: Solar Ember -->
                             <div class="theme-card" data-theme-id="amber" onclick="changeAppTheme('amber')">
-                                <div class="theme-preview amber-preview">
-                                    <div class="preview-accent bg-amber"></div>
-                                    <div class="preview-bg"></div>
-                                </div>
-                                <div class="theme-info">
-                                    <span class="theme-name">Solar Ember</span>
-                                    <span class="theme-tag">Fiery Amber & Gold</span>
-                                </div>
+                                <div class="theme-color-dot" style="background:#f59e0b;"></div>
+                                <span class="theme-name">Solar Ember</span>
                             </div>
-
-                            <!-- Theme Card 5: Midnight OLED -->
+                            <div class="theme-card" data-theme-id="cyberpunk" onclick="changeAppTheme('cyberpunk')">
+                                <div class="theme-color-dot" style="background:#fcee0a; border: 2px solid #ff0055;"></div>
+                                <span class="theme-name">Cyberpunk 2077</span>
+                            </div>
+                            <div class="theme-card" data-theme-id="synthwave" onclick="changeAppTheme('synthwave')">
+                                <div class="theme-color-dot" style="background:#ff2a85;"></div>
+                                <span class="theme-name">Synthwave 80s</span>
+                            </div>
+                            <div class="theme-card" data-theme-id="tokyo" onclick="changeAppTheme('tokyo')">
+                                <div class="theme-color-dot" style="background:#00f5d4;"></div>
+                                <span class="theme-name">Tokyo Night</span>
+                            </div>
+                            <div class="theme-card" data-theme-id="crimson" onclick="changeAppTheme('crimson')">
+                                <div class="theme-color-dot" style="background:#ff1e42;"></div>
+                                <span class="theme-name">Crimson Stealth</span>
+                            </div>
                             <div class="theme-card" data-theme-id="oled" onclick="changeAppTheme('oled')">
-                                <div class="theme-preview oled-preview">
-                                    <div class="preview-accent bg-blue"></div>
-                                    <div class="preview-bg"></div>
-                                </div>
-                                <div class="theme-info">
-                                    <span class="theme-name">Midnight OLED</span>
-                                    <span class="theme-tag">True Black & Ice Blue</span>
-                                </div>
+                                <div class="theme-color-dot" style="background:#000000; border:1px solid #38bdf8;"></div>
+                                <span class="theme-name">Midnight OLED</span>
                             </div>
-
-                            <!-- Theme Card 6: Light Frost -->
                             <div class="theme-card" data-theme-id="frost" onclick="changeAppTheme('frost')">
-                                <div class="theme-preview frost-preview">
-                                    <div class="preview-accent bg-cobalt"></div>
-                                    <div class="preview-bg"></div>
-                                </div>
-                                <div class="theme-info">
-                                    <span class="theme-name">Light Frost</span>
-                                    <span class="theme-tag">Clean High-Contrast Light</span>
-                                </div>
+                                <div class="theme-color-dot" style="background:#2563eb;"></div>
+                                <span class="theme-name">Light Frost</span>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Aesthetics & Appearance Settings -->
-                    <div class="glass-card settings-card">
-                        <h3>✨ Aesthetics & Visual Appearance Settings</h3>
-                        
-                        <div class="settings-form-grid">
-                            <!-- Accent Color Selector -->
-                            <div class="setting-item">
-                                <label>Primary Accent Color:</label>
-                                <div class="accent-color-options">
-                                    <button class="accent-dot active" style="background:#00f0ff" onclick="changeAccentColor('#00f0ff')" title="Neon Cyan"></button>
-                                    <button class="accent-dot" style="background:#a855f7" onclick="changeAccentColor('#a855f7')" title="Electric Purple"></button>
-                                    <button class="accent-dot" style="background:#10b981" onclick="changeAccentColor('#10b981')" title="Emerald Green"></button>
-                                    <button class="accent-dot" style="background:#f59e0b" onclick="changeAccentColor('#f59e0b')" title="Solar Amber"></button>
-                                    <button class="accent-dot" style="background:#ef4444" onclick="changeAccentColor('#ef4444')" title="Crimson Red"></button>
-                                    <button class="accent-dot" style="background:#38bdf8" onclick="changeAccentColor('#38bdf8')" title="Ice Blue"></button>
+                    <!-- 4. Glassmorphism & UI Geometry -->
+                    <div class="glass-card settings-section-card">
+                        <div class="settings-section-header">
+                            <svg class="icon-svg icon-md text-cyan" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"></rect></svg>
+                            <span>Glassmorphism, Card Geometry & Typography</span>
+                        </div>
+
+                        <div class="settings-group">
+                            <div class="setting-row">
+                                <div class="setting-info">
+                                    <span class="setting-label">Glass Translucency</span>
+                                    <span class="setting-desc">Adjust card surface opacity from frosted glass to deep solid</span>
                                 </div>
-                            </div>
-
-                            <!-- Glassmorphism Level -->
-                            <div class="setting-item">
-                                <label for="setting-glass">Glassmorphism Intensity:</label>
-                                <select id="setting-glass" onchange="updateAppSetting('glass_effect', this.value)" class="select-styled">
-                                    <option value="high">✨ High Glass (Blur + Transparency)</option>
-                                    <option value="subtle">🔍 Subtle Glass (Low Blur)</option>
-                                    <option value="none">⏹️ Flat Solid (No Glass Blur)</option>
+                                <select id="setting-card-opacity" onchange="updateCardOpacity(this.value)" class="select-clean">
+                                    <option value="0.45">High Translucency (45%)</option>
+                                    <option value="0.68" selected>Balanced Frosted (68%)</option>
+                                    <option value="0.88">Deep Matte (88%)</option>
+                                    <option value="1.00">Solid Opaque (100%)</option>
                                 </select>
                             </div>
 
-                            <!-- Neon Glow Effects -->
-                            <div class="setting-item">
-                                <label for="setting-glow">Neon Button & Border Glows:</label>
-                                <select id="setting-glow" onchange="updateAppSetting('glow_effects', this.value === 'true')" class="select-styled">
-                                    <option value="true">💡 Enabled (Glow Accents Active)</option>
-                                    <option value="false">🚫 Disabled (Clean Matte Borders)</option>
+                            <div class="setting-row">
+                                <div class="setting-info">
+                                    <span class="setting-label">Backdrop Blur Strength</span>
+                                    <span class="setting-desc">Diffusion blur applied behind floating glass panels</span>
+                                </div>
+                                <select id="setting-glass-blur" onchange="updateGlassBlur(this.value)" class="select-clean">
+                                    <option value="28px">Ultra Frosted (28px)</option>
+                                    <option value="16px" selected>Standard Blur (16px)</option>
+                                    <option value="8px">Light Diffusion (8px)</option>
+                                    <option value="0px">No Blur (0px)</option>
                                 </select>
                             </div>
 
-                            <!-- Font Family Picker -->
-                            <div class="setting-item">
-                                <label for="setting-font">Typography Style:</label>
-                                <select id="setting-font" onchange="updateAppSetting('font_family', this.value)" class="select-styled">
-                                    <option value="Outfit">Modern Tech (Outfit)</option>
-                                    <option value="Inter">Clean UI (Inter)</option>
-                                    <option value="JetBrains Mono">Cyber Code (JetBrains Mono)</option>
+                            <div class="setting-row">
+                                <div class="setting-info">
+                                    <span class="setting-label">UI Corner Curvature</span>
+                                    <span class="setting-desc">Curvature style for cards, modals, and input controls</span>
+                                </div>
+                                <select id="setting-corner-radius" onchange="updateCornerRadius(this.value)" class="select-clean">
+                                    <option value="22px">Modern Ultra-Round (22px)</option>
+                                    <option value="16px" selected>Balanced Round (16px)</option>
+                                    <option value="10px">Sleek Rounded (10px)</option>
+                                    <option value="3px">Cyber Sharp (3px)</option>
                                 </select>
                             </div>
 
-                            <!-- UI Layout Density -->
-                            <div class="setting-item">
-                                <label for="setting-density">UI Layout Density:</label>
-                                <select id="setting-density" onchange="updateAppSetting('density', this.value)" class="select-styled">
-                                    <option value="spacious">Spacious (Default Comfortable)</option>
-                                    <option value="compact">Compact (High Density Telemetry)</option>
+                            <div class="setting-row">
+                                <div class="setting-info">
+                                    <span class="setting-label">Typography Style</span>
+                                    <span class="setting-desc">Custom typeface applied across the interface</span>
+                                </div>
+                                <select id="setting-font-family" onchange="updateFontFamily(this.value)" class="select-clean">
+                                    <option value="'Outfit', sans-serif" selected>Outfit (Modern / Futuristic)</option>
+                                    <option value="'Space Grotesk', sans-serif">Space Grotesk (Sci-Fi Tech)</option>
+                                    <option value="'Inter', sans-serif">Inter (Precision / Clean)</option>
+                                    <option value="'JetBrains Mono', monospace">JetBrains Mono (Developer / Terminal)</option>
+                                    <option value="system-ui, sans-serif">System Default</option>
                                 </select>
                             </div>
 
-                            <!-- Web Audio FX -->
-                            <div class="setting-item">
-                                <label for="setting-sound">Web Audio FX Feedback:</label>
-                                <select id="setting-sound" onchange="updateAppSetting('sound_effects', this.value === 'true')" class="select-styled">
-                                    <option value="true">🔊 Enabled (Click & Action Chimes)</option>
-                                    <option value="false">🔇 Disabled (Mute Sound FX)</option>
+                            <div class="setting-row">
+                                <div class="setting-info">
+                                    <span class="setting-label">Text Neon Bloom / Glow</span>
+                                    <span class="setting-desc">Adds subtle luminous bloom to primary titles and telemetry metrics</span>
+                                </div>
+                                <label class="switch-sm">
+                                    <input type="checkbox" id="setting-text-glow-toggle" checked onchange="toggleTextGlow(this.checked)">
+                                    <span class="switch-sm-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 5. System Automation & Tray Operation -->
+                    <div class="glass-card settings-section-card">
+                        <div class="settings-section-header">
+                            <svg class="icon-svg icon-md text-green" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                            <span>System Automation & Background Operation</span>
+                        </div>
+
+                        <div class="settings-group">
+                            <div class="setting-row">
+                                <div class="setting-info">
+                                    <span class="setting-label">Launch on System Startup</span>
+                                    <span class="setting-desc">Automatically start the optimizer on OS boot (runs quietly minimized in tray)</span>
+                                </div>
+                                <label class="switch-sm">
+                                    <input type="checkbox" id="setting-startup-toggle" onchange="toggleStartupSetting(this.checked)">
+                                    <span class="switch-sm-slider"></span>
+                                </label>
+                            </div>
+
+                            <div class="setting-row">
+                                <div class="setting-info">
+                                    <span class="setting-label">Run in Background on Close (Close to System Tray)</span>
+                                    <span class="setting-desc">When you click (X), keep the continuous optimizer running in taskbar tray</span>
+                                </div>
+                                <label class="switch-sm">
+                                    <input type="checkbox" id="setting-close-tray-toggle" onchange="toggleCloseToTraySetting(this.checked)">
+                                    <span class="switch-sm-slider"></span>
+                                </label>
+                            </div>
+
+                            <div class="setting-row">
+                                <div class="setting-info">
+                                    <span class="setting-label">Continuous Optimization Loop Interval</span>
+                                    <span class="setting-desc">Frequency of the background RAM buffer and game priority checks</span>
+                                </div>
+                                <select id="setting-interval" onchange="updateContinuousInterval(this.value)" class="select-clean">
+                                    <option value="10">10 Seconds (Ultra-Responsive)</option>
+                                    <option value="15">15 Seconds (Aggressive)</option>
+                                    <option value="30" selected>30 Seconds (Recommended)</option>
+                                    <option value="60">60 Seconds (Balanced)</option>
+                                    <option value="120">120 Seconds (Eco)</option>
+                                </select>
+                            </div>
+
+                            <div class="setting-row">
+                                <div class="setting-info">
+                                    <span class="setting-label">Smart RAM Target Free Headroom</span>
+                                    <span class="setting-desc">Minimum free physical memory headroom the background daemon actively maintains</span>
+                                </div>
+                                <select id="setting-ram-headroom" onchange="updateTargetRamThreshold(this.value)" class="select-clean">
+                                    <option value="1.5">1.5 GB (Ultra Budget)</option>
+                                    <option value="2.0">2.0 GB (Budget / 4GB PC)</option>
+                                    <option value="3.0">3.0 GB (Standard / 8GB PC)</option>
+                                    <option value="4.0" selected>4.0 GB (Gaming / 16GB PC)</option>
+                                    <option value="6.0">6.0 GB (High-End / 32GB PC)</option>
+                                    <option value="8.0">8.0 GB (Workstation / 64GB PC)</option>
                                 </select>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Core Optimization Preferences -->
-                    <div class="glass-card settings-card">
-                        <h3>🛠️ Core Optimization & Daemon Settings</h3>
-                        
-                        <div class="settings-form-grid">
-                            <!-- RAM Target Free Slider -->
-                            <div class="setting-item">
-                                <label for="setting-target-ram">Smart Auto-Guard Target RAM Threshold:</label>
-                                <div class="slider-wrapper">
-                                    <input type="range" id="setting-target-ram" min="2.0" max="8.0" step="0.5" value="4.0" oninput="updateTargetRamSlider(this.value)" onchange="updateAppSetting('target_free_ram_gb', parseFloat(this.value))">
-                                    <span class="slider-val text-purple" id="target-ram-val-label">4.0 GB</span>
+                    <!-- 6. Sound Effects & Diagnostics -->
+                    <div class="glass-card settings-section-card">
+                        <div class="settings-section-header">
+                            <svg class="icon-svg icon-md text-cyan" viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+                            <span>Audio Feedback & System Diagnostics</span>
+                        </div>
+
+                        <div class="settings-group">
+                            <div class="setting-row">
+                                <div class="setting-info">
+                                    <span class="setting-label">Sound Effects & Synthesizer Feedback</span>
+                                    <span class="setting-desc">Auditory confirmation for optimization toggles and actions</span>
+                                </div>
+                                <div style="display:flex; align-items:center; gap:8px;">
+                                    <button class="btn btn-sm btn-surface" onclick="playAudioFX('success')">Test Sound</button>
+                                    <label class="switch-sm">
+                                        <input type="checkbox" id="setting-sound-toggle" checked onchange="toggleSoundSetting(this.checked)">
+                                        <span class="switch-sm-slider"></span>
+                                    </label>
                                 </div>
                             </div>
+                        </div>
 
-                            <!-- Auto-Guard Interval -->
-                            <div class="setting-item">
-                                <label for="setting-autoguard-interval">Auto-Guard Monitoring Interval:</label>
-                                <select id="setting-autoguard-interval" onchange="updateAppSetting('auto_guard_interval_sec', parseInt(this.value))" class="select-styled">
-                                    <option value="30">⚡ 30 Seconds (Aggressive)</option>
-                                    <option value="60" selected>⏱️ 60 Seconds (Recommended)</option>
-                                    <option value="120">⌛ 120 Seconds (Balanced)</option>
-                                    <option value="300">🌙 300 Seconds (Low CPU)</option>
-                                </select>
-                            </div>
-
-                            <!-- Game Boost Priority -->
-                            <div class="setting-item">
-                                <label for="setting-game-priority">Game Boost CPU Scheduling Priority:</label>
-                                <select id="setting-game-priority" onchange="updateAppSetting('game_boost_priority', this.value)" class="select-styled">
-                                    <option value="high" selected>High Priority (Safe & Recommended)</option>
-                                    <option value="realtime">Realtime Priority (Extreme)</option>
-                                </select>
+                        <div style="margin-top:8px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                            <span class="text-muted" style="font-size:11px;" id="specs-summary-line">Loading hardware specs...</span>
+                            <div style="display:flex; gap:6px;">
+                                <button class="btn btn-sm btn-surface" onclick="exportDiagnosticsReport()">
+                                    <svg class="icon-svg icon-sm" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                                    <span>Copy Diagnostics</span>
+                                </button>
+                                <button class="btn btn-sm btn-surface" onclick="resetConfigDefaults()">
+                                    <svg class="icon-svg icon-sm" viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
+                                    <span>Restore Defaults</span>
+                                </button>
                             </div>
                         </div>
-                    </div>
-
-                    <!-- Hardware & Specs Overview -->
-                    <div class="glass-card settings-card">
-                        <h3>💻 Detected Hardware & System Specifications</h3>
-                        <ul class="specs-list" id="settings-specs-list">
-                            <li>Loading hardware specs...</li>
-                        </ul>
-                    </div>
-
-                    <!-- System Legal & Terms of Service Control -->
-                    <div class="glass-card settings-card settings-actions-row">
-                        <button class="btn btn-cyan" onclick="openTermsOfServiceModal()">📜 Review Terms of Service (ToS)</button>
-                        <button class="btn btn-purple" onclick="triggerAction('reset_tutorial')">🔄 Reset Tutorial First-Run State</button>
-                        <button class="btn btn-surface" onclick="resetConfigDefaults()">⏪ Restore Default App Settings</button>
                     </div>
                 </section>
+
             </main>
         </div>
-
-        <!-- Bottom Console Log Output Area -->
-        <footer class="app-console">
-            <div class="console-header">
-                <div class="console-left">
-                    <span class="console-title">Real-Time Optimizer Console & FPS Performance Log</span>
-                    <span class="console-live-tag">● LIVE</span>
-                </div>
-
-                <div class="console-actions">
-                    <div class="console-filter">
-                        <select id="console-filter-select" onchange="filterConsoleLog(this.value)" class="select-xs">
-                            <option value="all">All Logs</option>
-                            <option value="info">Info</option>
-                            <option value="success">Success</option>
-                            <option value="warning">Warnings</option>
-                        </select>
-                    </div>
-                    <button class="btn btn-xs btn-surface" onclick="openTermsOfServiceModal()">📜 ToS</button>
-                    <button class="btn btn-xs btn-surface" onclick="copyConsoleLog()">📋 Copy Log</button>
-                    <button class="btn btn-xs btn-surface" onclick="clearConsoleLog()">🗑️ Clear</button>
-                </div>
-            </div>
-            <textarea id="console-output" readonly>[00:00:00] [SYSTEM] Optimizer Engine initialized successfully.</textarea>
-        </footer>
     </div>
 
-    <!-- Interactive Spotlight Tutorial Overlay System -->
-    <div class="spotlight-overlay" id="spotlight-overlay">
-        <!-- SVG Mask layer for spotlight cut-out cutout -->
-        <svg class="spotlight-svg-mask" width="100%" height="100%">
-            <defs>
-                <mask id="spotlight-mask">
-                    <rect width="100%" height="100%" fill="white" />
-                    <!-- Illuminated Target Cutout Circle / Rect -->
-                    <rect id="spotlight-cutout" x="0" y="0" width="0" height="0" rx="12" fill="black" />
-                </mask>
-            </defs>
-            <rect width="100%" height="100%" fill="rgba(3, 7, 18, 0.85)" mask="url(#spotlight-mask)" />
-        </svg>
-
-        <!-- Pulsing Focus Beacon Outline around highlighted UI element -->
-        <div class="spotlight-focus-ring" id="spotlight-focus-ring"></div>
-
-        <!-- Floating & Draggable Spotlight Step Card -->
-        <div class="spotlight-card glass-card" id="spotlight-card">
-            <div class="spotlight-card-header">
-                <div class="spotlight-header-left">
-                    <span class="drag-handle-icon" title="Drag card to move anywhere">⣿</span>
-                    <div class="spotlight-step-badge" id="spotlight-cat-badge">STEP 1 OF 14 • CATEGORY</div>
-                </div>
-
-                <div class="spotlight-jump">
-                    <select id="spotlight-jump-select" onchange="jumpToSpotlightStep(this.value)">
-                        <!-- Populated dynamically -->
-                    </select>
-                    <div class="spotlight-win-ctrls">
-                        <button class="btn-min-spotlight" id="btn-spotlight-min" onclick="toggleSpotlightMinimize()" title="Minimize / Expand Card">🗕</button>
-                        <button class="btn-close-spotlight" onclick="closeSpotlightTutorial(true)" title="Close Tutorial">✕</button>
-                    </div>
-                </div>
+    <!-- Interactive Guide Modal -->
+    <div class="modal-overlay" id="guide-modal-overlay">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>
+                    <svg class="icon-svg icon-md text-cyan" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
+                    <span>Mr. Drew's Optimizer Guide</span>
+                </h3>
+                <button class="btn btn-sm btn-surface" onclick="closeGuideModal()">✕</button>
             </div>
+            <div class="modal-body">
+                <h4 style="color:var(--accent); margin-bottom:4px;">Continuous Background Optimization</h4>
+                <p>When you turn the Master Switch <strong>ON</strong>, the optimizer runs quietly in the background without closing or stopping. It locks 1.0ms timer resolution, monitors free RAM headroom, trims bloated background apps, and boosts active game priorities automatically.</p>
+                
+                <h4 style="color:var(--green); margin:10px 0 4px 0;">Running in the Background & System Tray</h4>
+                <p>With <strong>Close to Tray</strong> enabled in Settings, clicking the window close (X) hides the window to the taskbar notification tray area. The continuous optimizer keeps protecting your system 24/7 without accidental interruptions.</p>
 
-            <div class="spotlight-card-body" id="spotlight-card-body">
-                <div class="spotlight-progress-bar">
-                    <div class="spotlight-progress-fill" id="spotlight-prog-fill"></div>
-                </div>
-
-                <h2 class="spotlight-title" id="spotlight-title">Step Title</h2>
-
-                <div class="info-block block-cyan">
-                    <div class="block-title">🛠️ HOW IT WORKS (Technical Engine):</div>
-                    <div class="block-text" id="spotlight-how">How text...</div>
-                </div>
-
-                <div class="info-block block-green">
-                    <div class="block-title">💡 WHY USE IT (Performance Benefit):</div>
-                    <div class="block-text" id="spotlight-why">Why text...</div>
-                </div>
-
-                <div class="info-block block-amber">
-                    <div class="block-title">⏱️ WHEN TO USE IT (Best Scenario):</div>
-                    <div class="block-text" id="spotlight-when">When text...</div>
-                </div>
-
-                <div class="spotlight-action-wrapper" id="spotlight-action-wrapper">
-                    <button class="btn btn-green btn-glow btn-block" id="btn-spotlight-try" onclick="executeSpotlightStepAction()">
-                        🧪 Try Feature Now
-                    </button>
-                </div>
-
-                <div class="spotlight-footer">
-                    <button class="btn btn-red btn-sm" onclick="closeSpotlightTutorial(true)">⏭️ Skip Tutorial</button>
-                    <div class="spotlight-nav-btns">
-                        <button class="btn btn-surface btn-sm" id="btn-spotlight-prev" onclick="prevSpotlightStep()">◀ Previous</button>
-                        <button class="btn btn-cyan btn-sm" id="btn-spotlight-next" onclick="nextSpotlightStep()">Next Step ▶</button>
-                    </div>
-                </div>
+                <h4 style="color:var(--amber); margin:10px 0 4px 0;">14 Animated GPU Background Designs</h4>
+                <p>Explore 14 live 60 FPS GPU-accelerated background designs (Matrix Rain, Cyber Tron 3D, Vaporwave Sun, Hyperspace Tunnel, Neural Synapse, Wireframe Terrain, etc.) with real-time motion speed and intensity tuning in the <strong>Studio & Settings</strong> tab.</p>
             </div>
-
-            <!-- Minimized Compact Pill Body -->
-            <div class="spotlight-min-body" id="spotlight-min-body" style="display:none;" onclick="toggleSpotlightMinimize()">
-                <span class="text-cyan">🎓 Step <span id="min-step-num">1</span>/14: <strong id="min-step-title">Welcome</strong></span>
-                <span class="min-expand-text">Click to Expand 🗖</span>
-            </div>
-        </div>
-    </div>
-
-    <!-- In-Built Terms of Service (ToS) & EULA Modal Overlay System -->
-    <div class="tos-modal-overlay" id="tos-modal-overlay">
-        <div class="tos-modal-card glass-card">
-            <div class="tos-card-header">
-                <div class="tos-header-title">
-                    <span class="tos-icon">📜</span>
-                    <h3>End User Terms of Service & License Agreement</h3>
-                </div>
-                <span class="tos-badge">Official EULA v1.0</span>
-            </div>
-
-            <div class="tos-scroll-box" id="tos-scroll-box" onscroll="handleTosScroll()">
-                <h4>1. SCOPE OF USE & SYSTEM MODIFICATIONS</h4>
-                <p>Mr. Drew's Device & FPS Optimizer operates low-level Win32 kernel API invocations, process priority adjustments, system timer resolution modifications, and physical RAM working set compactions. By running this software, you grant explicit permission for the application to modify thread priorities and perform memory management tasks.</p>
-
-                <h4>2. MEMORY COMPACTION & SAFETY GUARANTEE</h4>
-                <p>The application includes an immutable System Safety Whitelist (protecting core processes such as <code>explorer.exe</code>, <code>lsass.exe</code>, <code>svchost.exe</code>, <code>csrss.exe</code>). While kernel working set compactions and standby page list flushes are non-destructive and conform strictly to Microsoft Win32 API contracts, operations are performed at the user's discretion.</p>
-
-                <h4>3. DISCLAIMER OF WARRANTY & LIMITATION OF LIABILITY</h4>
-                <p>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
-
-                <h4>4. USER PRIVACY & DATA TELEMETRY</h4>
-                <p>Mr. Drew's Device & FPS Optimizer operates 100% locally on your computer. It does NOT collect, transmit, or store any personal data, telemetry, analytics, internet logs, or private user files to any external remote servers.</p>
-
-                <h4>5. MIT LICENSE & OWNERSHIP</h4>
-                <p>Distributed under the MIT License. Copyright (c) 2026 Raghav Gogoi / Mr. Drew's Device Optimizer Team. All rights reserved.</p>
-            </div>
-
-            <div class="tos-agree-row">
-                <label class="tos-checkbox-label">
-                    <input type="checkbox" id="tos-agree-checkbox" onchange="toggleTosAcceptBtn()">
-                    <span>I have read, understood, and agree to the Terms of Service & EULA.</span>
-                </label>
-            </div>
-
-            <div class="tos-footer-actions">
-                <button class="btn btn-surface btn-sm" onclick="declineTermsOfService()">Decline & Exit</button>
-                <button class="btn btn-green btn-glow" id="btn-tos-accept" disabled onclick="acceptTermsOfService()">Accept & Continue ▶</button>
+            <div class="modal-footer">
+                <button class="btn btn-cyan btn-sm" onclick="closeGuideModal()">Got It!</button>
             </div>
         </div>
     </div>
