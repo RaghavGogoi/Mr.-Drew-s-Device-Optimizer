@@ -72,14 +72,24 @@ Mr. Drew's Device Optimizer/
 ├── config.py               # Application configuration persistence manager
 ├── optimizer_core.py       # Python system optimization interface
 ├── main.cpp                # Native C++ optimization kernel source
-├── tutorial_manager.py     # Fallback tutorial step definitions
+├── tutorial_manager.py     # Tutorial definitions and guide reference
 ├── run.bat                 # Windows automated initialization script
+├── run.py                  # Universal cross-platform launcher
 ├── run.sh                  # Linux/macOS launcher script
+├── tests/                  # Automated verification and unit test suite
 ├── gui/
 │   ├── index.html          # Main HTML5 application container
 │   ├── styles.css          # Theme system and layout stylesheets
-│   ├── main.js             # Frontend application controller and tutorial spotlight
+│   ├── main.js             # Frontend application controller and interactive guide
 │   └── assets/             # Application icons and branding assets
+```
+
+### Running Automated Tests
+
+Run the test suite to verify the native engine, API bridge, and optimization pipelines:
+
+```cmd
+python -m unittest discover tests -v
 ```
 
 ---

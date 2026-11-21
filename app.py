@@ -98,6 +98,7 @@ class Api:
             f"Elevation Status: {'Administrator / Root' if specs.get('is_admin') else 'Standard User'}",
             f"Physical RAM: {specs.get('used_ram_gb')} / {specs.get('total_ram_gb')} GB ({specs.get('percent_used')}% used)",
             f"Available RAM: {specs.get('avail_ram_gb')} GB",
+            f"Standby / Cache RAM: {specs.get('standby_ram_gb')} GB",
             f"CPU Load: {specs.get('cpu_percent')}% ({hw.get('cpu_cores_logical')} logical cores)",
             f"GPU: {hw.get('gpu_vendor')}",
             f"Device Profile: {hw.get('device_profile')}",
@@ -109,6 +110,13 @@ class Api:
             "============================================================"
         ]
         return "\n".join(diag)
+
+    def get_guide_steps(self) -> list:
+        try:
+            from tutorial_manager import TUTORIAL_STEPS
+            return TUTORIAL_STEPS
+        except Exception:
+            return []
 
     # =========================================================================
     # Continuous Optimizer Methods

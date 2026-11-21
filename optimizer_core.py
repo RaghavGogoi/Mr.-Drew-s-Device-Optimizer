@@ -7,6 +7,7 @@ import tempfile
 import time
 import threading
 import ctypes
+import atexit
 from typing import Dict, List, Tuple, Any, Optional
 
 # Ensure psutil is imported or provide native fallback
@@ -23,16 +24,18 @@ SYSTEM_WHITELIST = {
         "system", "system idle process", "smss.exe", "csrss.exe", "wininit.exe",
         "services.exe", "lsass.exe", "svchost.exe", "fontdrvhost.exe", "memory compression",
         "dwm.exe", "explorer.exe", "spoolsv.exe", "securityhealthservice.exe",
-        "taskmgr.exe", "ctfmon.exe", "conhost.exe", "sihost.exe", "runtimebroker.exe"
+        "taskmgr.exe", "ctfmon.exe", "conhost.exe", "sihost.exe", "runtimebroker.exe",
+        "audiodg.exe", "registry", "vssvc.exe", "searchindexer.exe", "securityhealthhost.exe",
+        "smartscreen.exe", "deviceoptimizer.exe", "main.exe", "python.exe", "pythonw.exe"
     },
     "linux": {
         "systemd", "kthreadd", "init", "dbus-daemon", "xorg", "wayland",
         "gnome-shell", "kdeinit", "bash", "zsh", "sshd", "dockerd", "containerd",
-        "pulseaudio", "pipewire", "systemd-journald", "systemd-udevd"
+        "pulseaudio", "pipewire", "systemd-journald", "systemd-udevd", "python3", "python"
     },
     "darwin": {
         "kernel_task", "launchd", "windowserver", "syslogd", "loginwindow", "finder",
-        "dock", "coreaudiod", "controlcenter", "systemserver"
+        "dock", "coreaudiod", "controlcenter", "systemserver", "python3", "python"
     }
 }
 
@@ -80,9 +83,21 @@ class OptimizerCore:
         self.is_admin = self._check_admin()
         self.script_dir = os.path.dirname(os.path.abspath(__file__))
         self.cpp_exe_path = self._find_cpp_engine()
+        self.cached_gpu_vendor: Optional[str] = None
         self.hardware_info = self.get_hardware_details()
         self.active_game_pids = set()
         self.protected_game_names = set()
+
+        # Warm up CPU sampling so first query immediately returns accurate load
+        if HAS_PSUTIL:
+            try:
+                psutil.cpu_percent(interval=None)
+            except Exception:
+                pass
+
+        # Automatically enable Windows kernel token privileges if running with admin rights
+        if self.os_type == "windows":
+            self._enable_windows_privileges()
 
         # Continuous Optimizer Daemon State
         self.continuous_running = False
@@ -97,6 +112,18 @@ class OptimizerCore:
         self.continuous_recent_events: List[Dict[str, Any]] = []
         self._lock = threading.Lock()
 
+        # Register process exit cleanup
+        atexit.register(self.cleanup)
+
+    def cleanup(self):
+        """Cleanup handler when optimizer process exits."""
+        try:
+            self.stop_continuous_mode()
+            if self.os_type == "windows":
+                ctypes.windll.winmm.timeEndPeriod(1)
+        except Exception:
+            pass
+
     def _find_cpp_engine(self) -> Optional[str]:
         """Locates the compiled native C++ engine binary if available."""
         exe_names = ["DeviceOptimizer.exe", "DeviceOptimizer", "main.exe", "main"]
@@ -106,13 +133,18 @@ class OptimizerCore:
                 return path
         return None
 
-    def _run_cpp_engine(self, flag: str) -> Tuple[bool, List[str]]:
-        """Runs the native C++ engine with the specified CLI flag."""
+    def _run_cpp_engine(self, args: Any) -> Tuple[bool, List[str]]:
+        """Runs the native C++ engine with the specified CLI arguments."""
         if not self.cpp_exe_path or not os.path.exists(self.cpp_exe_path):
             return False, ["Native C++ engine binary not found. Using Python core routines."]
         
+        if isinstance(args, str):
+            cmd_args = args.split()
+        else:
+            cmd_args = list(args)
+
         try:
-            res = subprocess.run([self.cpp_exe_path, flag], capture_output=True, text=True, timeout=15)
+            res = subprocess.run([self.cpp_exe_path] + cmd_args, capture_output=True, text=True, timeout=15)
             output_lines = [line.strip() for line in res.stdout.splitlines() if line.strip()]
             return res.returncode == 0, output_lines
         except Exception as e:
@@ -127,6 +159,48 @@ class OptimizerCore:
                 return os.geteuid() == 0
         except Exception:
             return False
+
+    def _enable_windows_privileges(self) -> bool:
+        """Enables essential NT privileges on process token if available (admin mode)."""
+        if self.os_type != "windows":
+            return False
+        privileges_to_enable = [
+            "SeProfileSingleProcessPrivilege",
+            "SeIncreaseQuotaPrivilege",
+            "SeIncreaseBasePriorityPrivilege",
+            "SeDebugPrivilege"
+        ]
+        any_success = False
+        try:
+            from ctypes import wintypes
+            advapi32 = ctypes.windll.advapi32
+            kernel32 = ctypes.windll.kernel32
+            hToken = wintypes.HANDLE()
+            TOKEN_ADJUST_PRIVILEGES = 0x0020
+            TOKEN_QUERY = 0x0008
+
+            if advapi32.OpenProcessToken(kernel32.GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, ctypes.byref(hToken)):
+                class LUID(ctypes.Structure):
+                    _fields_ = [('LowPart', wintypes.DWORD), ('HighPart', wintypes.LONG)]
+                class LUID_AND_ATTRIBUTES(ctypes.Structure):
+                    _fields_ = [('Luid', LUID), ('Attributes', wintypes.DWORD)]
+                class TOKEN_PRIVILEGES(ctypes.Structure):
+                    _fields_ = [('PrivilegeCount', wintypes.DWORD), ('Privileges', LUID_AND_ATTRIBUTES * 1)]
+
+                for priv in privileges_to_enable:
+                    luid = LUID()
+                    if advapi32.LookupPrivilegeValueW(None, priv, ctypes.byref(luid)):
+                        tp = TOKEN_PRIVILEGES()
+                        tp.PrivilegeCount = 1
+                        tp.Privileges[0].Luid = luid
+                        tp.Privileges[0].Attributes = 0x00000002 # SE_PRIVILEGE_ENABLED
+                        advapi32.AdjustTokenPrivileges(hToken, False, ctypes.byref(tp), ctypes.sizeof(tp), None, None)
+                        if kernel32.GetLastError() == 0:
+                            any_success = True
+                kernel32.CloseHandle(hToken)
+        except Exception:
+            pass
+        return any_success
 
     def get_timer_resolution_ms(self) -> Tuple[float, float]:
         """Returns (current_timer_resolution_ms, min_timer_resolution_ms) on Windows or default on POSIX."""
@@ -147,7 +221,7 @@ class OptimizerCore:
         return 1.0, 15.625
 
     def get_hardware_details(self) -> Dict[str, Any]:
-        """Cross-platform Super-Smart OS, CPU, GPU, and Hardware Detector."""
+        """Cross-platform Super-Smart OS, CPU, GPU, and Hardware Detector with caching."""
         cpu_count = os.cpu_count() or 1
         cpu_physical = cpu_count
         if HAS_PSUTIL:
@@ -156,32 +230,36 @@ class OptimizerCore:
             except Exception:
                 cpu_physical = cpu_count
 
-        gpu_vendor = "Integrated / Standard Graphics"
-        if self.os_type == "windows":
-            try:
-                cmd = "powershell -NoProfile -Command \"(Get-CimInstance Win32_VideoController).Name\""
-                res = subprocess.check_output(cmd, shell=True, text=True, stderr=subprocess.DEVNULL, timeout=5)
-                names = [line.strip() for line in res.splitlines() if line.strip()]
-                if names:
-                    gpu_vendor = ", ".join(names[:2])
-            except Exception:
-                pass
-        elif self.os_type == "linux":
-            try:
-                res = subprocess.check_output("lspci 2>/dev/null | grep -i 'vga\\|3d\\|display'", shell=True, text=True, stderr=subprocess.DEVNULL, timeout=5)
-                if res.strip():
-                    gpu_vendor = res.strip().split('\n')[0].split(':')[-1].strip()
-            except Exception:
-                pass
-        elif self.os_type == "darwin":
-            try:
-                res = subprocess.check_output("system_profiler SPDisplaysDataType 2>/dev/null", shell=True, text=True, stderr=subprocess.DEVNULL, timeout=5)
-                for line in res.splitlines():
-                    if "Chipset Model:" in line:
-                        gpu_vendor = line.split("Chipset Model:")[1].strip()
-                        break
-            except Exception:
-                pass
+        if not self.cached_gpu_vendor:
+            gpu_vendor = "Integrated / Standard Graphics"
+            if self.os_type == "windows":
+                try:
+                    cmd = "powershell -NoProfile -Command \"(Get-CimInstance Win32_VideoController).Name\""
+                    res = subprocess.check_output(cmd, shell=True, text=True, stderr=subprocess.DEVNULL, timeout=4)
+                    names = [line.strip() for line in res.splitlines() if line.strip()]
+                    if names:
+                        gpu_vendor = ", ".join(names[:2])
+                except Exception:
+                    pass
+            elif self.os_type == "linux":
+                try:
+                    res = subprocess.check_output("lspci 2>/dev/null | grep -i 'vga\\|3d\\|display'", shell=True, text=True, stderr=subprocess.DEVNULL, timeout=4)
+                    if res.strip():
+                        gpu_vendor = res.strip().split('\n')[0].split(':')[-1].strip()
+                except Exception:
+                    pass
+            elif self.os_type == "darwin":
+                try:
+                    res = subprocess.check_output("system_profiler SPDisplaysDataType 2>/dev/null", shell=True, text=True, stderr=subprocess.DEVNULL, timeout=4)
+                    for line in res.splitlines():
+                        if "Chipset Model:" in line:
+                            gpu_vendor = line.split("Chipset Model:")[1].strip()
+                            break
+                except Exception:
+                    pass
+            self.cached_gpu_vendor = gpu_vendor
+        else:
+            gpu_vendor = self.cached_gpu_vendor
 
         specs = self.get_system_specs() if hasattr(self, 'os_type') else {}
         total_ram_gb = specs.get("total_ram_gb", 8.0) if specs else 8.0
@@ -207,6 +285,69 @@ class OptimizerCore:
             "timer_resolution_ms": cur_res,
             "default_timer_ms": min_res
         }
+
+    def get_standby_ram_bytes(self) -> int:
+        """Returns accurate standby / file system cache size in bytes."""
+        if self.os_type == "windows":
+            try:
+                class PERFORMANCE_INFORMATION(ctypes.Structure):
+                    _fields_ = [
+                        ('cb', ctypes.c_ulong),
+                        ('CommitTotal', ctypes.c_size_t),
+                        ('CommitLimit', ctypes.c_size_t),
+                        ('CommitPeak', ctypes.c_size_t),
+                        ('PhysicalTotal', ctypes.c_size_t),
+                        ('PhysicalAvailable', ctypes.c_size_t),
+                        ('SystemCache', ctypes.c_size_t),
+                        ('KernelTotal', ctypes.c_size_t),
+                        ('KernelPaged', ctypes.c_size_t),
+                        ('KernelNonpaged', ctypes.c_size_t),
+                        ('PageSize', ctypes.c_size_t),
+                        ('HandleCount', ctypes.c_ulong),
+                        ('ProcessCount', ctypes.c_ulong),
+                        ('ThreadCount', ctypes.c_ulong),
+                    ]
+                pi = PERFORMANCE_INFORMATION()
+                pi.cb = ctypes.sizeof(PERFORMANCE_INFORMATION)
+                if ctypes.windll.psapi.GetPerformanceInfo(ctypes.byref(pi), ctypes.sizeof(pi)):
+                    return int(pi.SystemCache * pi.PageSize)
+            except Exception:
+                pass
+        elif self.os_type == "linux":
+            try:
+                with open("/proc/meminfo", "r") as f:
+                    lines = f.readlines()
+                info = {}
+                for line in lines:
+                    parts = line.split(":")
+                    if len(parts) == 2:
+                        info[parts[0].strip()] = int(parts[1].strip().split()[0]) * 1024
+                cached = info.get("Cached", 0)
+                buffers = info.get("Buffers", 0)
+                s_reclaimable = info.get("SReclaimable", 0)
+                return cached + buffers + s_reclaimable
+            except Exception:
+                pass
+        elif self.os_type == "darwin":
+            try:
+                out = subprocess.check_output(["vm_stat"], text=True)
+                page_size = 4096
+                inactive = 0
+                speculative = 0
+                for line in out.splitlines():
+                    if "page size of" in line:
+                        parts = line.split()
+                        for p in parts:
+                            if p.isdigit():
+                                page_size = int(p)
+                    elif "Pages inactive:" in line:
+                        inactive = int(line.split(":")[1].strip().rstrip('.'))
+                    elif "Pages speculative:" in line:
+                        speculative = int(line.split(":")[1].strip().rstrip('.'))
+                return (inactive + speculative) * page_size
+            except Exception:
+                pass
+        return 0
 
     def get_system_specs(self) -> Dict[str, Any]:
         """Fetch total RAM, free RAM, used RAM, CPU usage, and OS details across OS."""
@@ -285,8 +426,12 @@ class OptimizerCore:
         used_gb = round(used_ram / (1024**3), 2)
         cur_res, min_res = self.get_timer_resolution_ms()
 
-        # Standby memory estimation
-        standby_gb = max(0.2, round(avail_gb * 0.35, 2))
+        # Accurate Standby / File System Cache measurement
+        standby_bytes = self.get_standby_ram_bytes()
+        if standby_bytes > 0:
+            standby_gb = round(standby_bytes / (1024**3), 2)
+        else:
+            standby_gb = max(0.2, round(avail_gb * 0.35, 2))
 
         os_display = "Windows"
         if self.os_type == "darwin":
@@ -407,19 +552,27 @@ class OptimizerCore:
 
         if self.os_type == "windows":
             local_appdata = os.environ.get("LOCALAPPDATA", "")
+            roaming = os.environ.get("APPDATA", "")
             temp_dir = os.environ.get("TEMP", "")
 
             if local_appdata:
                 cache_dirs.extend([
                     os.path.join(local_appdata, "NVIDIA", "DXCache"),
                     os.path.join(local_appdata, "NVIDIA", "GLCache"),
+                    os.path.join(local_appdata, "NVIDIA Corporation", "NV_Cache"),
                     os.path.join(local_appdata, "AMD", "DxCache"),
-                    os.path.join(local_appdata, "D3DSCache")
+                    os.path.join(local_appdata, "AMD", "GLCache"),
+                    os.path.join(local_appdata, "D3DSCache"),
+                    os.path.join(local_appdata, "Microsoft", "DirectX Shader Cache"),
+                    os.path.join(local_appdata, "Intel", "ShaderCache")
                 ])
+            if roaming:
+                cache_dirs.append(os.path.join(roaming, "NVIDIA", "ComputeCache"))
             if temp_dir:
                 cache_dirs.extend([
                     os.path.join(temp_dir, "NVIDIA Corporation"),
-                    os.path.join(temp_dir, "AMD")
+                    os.path.join(temp_dir, "AMD"),
+                    os.path.join(temp_dir, "Intel")
                 ])
         elif self.os_type == "linux":
             home = os.path.expanduser("~")
@@ -446,7 +599,7 @@ class OptimizerCore:
                             os.remove(fp)
                             cleaned_bytes += size
                             cleaned_files += 1
-                        except Exception:
+                        except (PermissionError, OSError, Exception):
                             pass
 
         cleaned_mb = round(cleaned_bytes / (1024 * 1024), 2)
@@ -478,7 +631,8 @@ class OptimizerCore:
             if not hProc:
                 return False
             
-            ProcessIoPriority = 21
+            # In NT6+, ProcessIoPriority is info class 33 (IoPriorityHigh = 3, IoPriorityNormal = 2)
+            ProcessIoPriority = 33
             priority_val = ctypes.c_ulong(io_priority)
             status = ctypes.windll.ntdll.NtSetInformationProcess(
                 hProc,
@@ -616,17 +770,18 @@ class OptimizerCore:
         if self.is_admin:
             return True, "Application is already running with Administrator / root privileges."
 
+        run_script = os.path.abspath(os.path.join(os.path.dirname(__file__), "run.py"))
         main_script = os.path.abspath(os.path.join(os.path.dirname(__file__), "app.py"))
-        work_dir = os.path.dirname(main_script)
+        target_script = run_script if os.path.exists(run_script) else main_script
+        work_dir = os.path.dirname(target_script)
 
         if self.os_type == "windows":
             try:
-                # Prefer pythonw.exe if available so no black cmd console window ever opens
                 python_dir = os.path.dirname(sys.executable)
                 pythonw_exe = os.path.join(python_dir, "pythonw.exe")
                 target_exe = pythonw_exe if os.path.exists(pythonw_exe) else sys.executable
 
-                params = f'"{main_script}" --elevated'
+                params = f'"{target_script}" --elevated'
                 ret = ctypes.windll.shell32.ShellExecuteW(None, "runas", target_exe, params, work_dir, 1)
                 if int(ret) > 32:
                     return True, "Elevated instance spawned successfully."
@@ -644,7 +799,7 @@ class OptimizerCore:
                     if var in os.environ:
                         env_args.append(f"{var}={os.environ[var]}")
 
-                cmd = ["pkexec", "env"] + env_args + [sys.executable, main_script, "--elevated"]
+                cmd = ["pkexec", "env"] + env_args + [sys.executable, target_script, "--elevated"]
                 subprocess.Popen(cmd, cwd=work_dir, start_new_session=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
                 return True, "Elevated Linux instance spawned."
             except Exception as e:
@@ -652,7 +807,7 @@ class OptimizerCore:
 
         elif self.os_type == "darwin":
             try:
-                osa_script = f'do shell script "\'{sys.executable}\' \'{main_script}\' --elevated > /dev/null 2>&1 &" with administrator privileges'
+                osa_script = f'do shell script "\'{sys.executable}\' \'{target_script}\' --elevated > /dev/null 2>&1 &" with administrator privileges'
                 res = subprocess.run(["osascript", "-e", osa_script], capture_output=True, text=True)
                 if res.returncode == 0:
                     return True, "Elevated macOS instance spawned."
@@ -719,7 +874,7 @@ class OptimizerCore:
                 if enable:
                     os.makedirs(autostart_dir, exist_ok=True)
                     run_py = os.path.abspath(os.path.join(os.path.dirname(__file__), "run.py"))
-                    content = f"[Desktop Entry]\\nType=Application\\nName=Mr. Drew's Device Optimizer\\nExec={sys.executable} \\\"{run_py}\\\" --minimized\\nHidden=false\\nNoDisplay=false\\nX-GNOME-Autostart-enabled=true\\n"
+                    content = f"[Desktop Entry]\nType=Application\nName=Mr. Drew's Device Optimizer\nExec={sys.executable} \"{run_py}\" --minimized\nHidden=false\nNoDisplay=false\nX-GNOME-Autostart-enabled=true\n"
                     with open(desktop_file, "w", encoding="utf-8") as f:
                         f.write(content)
                     return True, "Linux desktop autostart entry created."
@@ -778,6 +933,7 @@ class OptimizerCore:
         if self.os_type == "windows":
             try:
                 if self.is_admin:
+                    self._enable_windows_privileges()
                     SystemMemoryListInformation = 80
                     MemoryPurgeStandbyList = 4
 
@@ -815,7 +971,17 @@ class OptimizerCore:
 
     def trim_process_working_sets(self) -> Tuple[int, int]:
         """Trims working sets of non-essential processes safely across OS."""
-        ok_cpp, lines_cpp = self._run_cpp_engine("--trim-ram")
+        running_games = {g['name'].lower() for g in self.get_running_game_processes()}
+        game_pids = {g['pid'] for g in self.get_running_game_processes()}
+        current_pid = os.getpid()
+        protected_pids = set(game_pids)
+        protected_pids.add(current_pid)
+        protected_pids.update(self.active_game_pids)
+
+        # Fast C++ engine call with active games & self excluded
+        if self.cpp_exe_path:
+            pids_arg = ",".join(str(p) for p in protected_pids)
+            self._run_cpp_engine(["--trim-ram", "--exclude-pids", pids_arg])
 
         processed = 0
         succeeded = 0
@@ -824,15 +990,12 @@ class OptimizerCore:
             return 0, 0
 
         whitelist = SYSTEM_WHITELIST.get(self.os_type, set())
-        running_games = {g['name'].lower() for g in self.get_running_game_processes()}
-        game_pids = {g['pid'] for g in self.get_running_game_processes()}
-        current_pid = os.getpid()
 
         for proc in psutil.process_iter(['pid', 'name']):
             try:
                 name = (proc.info['name'] or '').lower()
                 pid = proc.info['pid']
-                if not name or name in whitelist or name in running_games or name in self.protected_game_names or pid in game_pids or pid in self.active_game_pids or pid == current_pid:
+                if not name or name in whitelist or name in running_games or name in self.protected_game_names or pid in protected_pids:
                     continue
 
                 processed += 1
@@ -841,9 +1004,9 @@ class OptimizerCore:
                     PROCESS_QUERY_INFORMATION = 0x0400
                     hProc = ctypes.windll.kernel32.OpenProcess(PROCESS_SET_QUOTA | PROCESS_QUERY_INFORMATION, False, pid)
                     if hProc:
-                        ctypes.windll.psapi.EmptyWorkingSet(hProc)
+                        if ctypes.windll.psapi.EmptyWorkingSet(hProc):
+                            succeeded += 1
                         ctypes.windll.kernel32.CloseHandle(hProc)
-                        succeeded += 1
                 else:
                     succeeded += 1
             except (psutil.NoSuchProcess, psutil.AccessDenied, Exception):
@@ -854,15 +1017,24 @@ class OptimizerCore:
     def clear_temp_files(self) -> Tuple[int, str]:
         """Safely removes temporary files from system and user temp directories."""
         cleaned_bytes = 0
+        cleaned_count = 0
         paths_to_clean = []
 
         if self.os_type == "windows":
             temp_user = os.environ.get("TEMP")
             temp_sys = os.path.join(os.environ.get("SystemRoot", "C:\\Windows"), "Temp")
+            local_appdata = os.environ.get("LOCALAPPDATA", "")
             if temp_user and os.path.exists(temp_user):
                 paths_to_clean.append(temp_user)
             if temp_sys and os.path.exists(temp_sys):
                 paths_to_clean.append(temp_sys)
+            if local_appdata:
+                crash_dumps = os.path.join(local_appdata, "CrashDumps")
+                if os.path.exists(crash_dumps):
+                    paths_to_clean.append(crash_dumps)
+                wer_archive = os.path.join(local_appdata, "Microsoft", "Windows", "WER", "ReportArchive")
+                if os.path.exists(wer_archive):
+                    paths_to_clean.append(wer_archive)
         elif self.os_type == "darwin":
             paths_to_clean.extend(["/tmp", os.path.expanduser("~/Library/Caches")])
         else:
@@ -878,17 +1050,18 @@ class OptimizerCore:
                         size = os.path.getsize(fp)
                         os.remove(fp)
                         cleaned_bytes += size
-                    except Exception:
+                        cleaned_count += 1
+                    except (PermissionError, OSError, Exception):
                         pass
                 for d in dirs:
                     try:
                         dp = os.path.join(root, d)
                         os.rmdir(dp)
-                    except Exception:
+                    except (PermissionError, OSError, Exception):
                         pass
 
         cleaned_mb = round(cleaned_bytes / (1024 * 1024), 2)
-        return cleaned_bytes, f"Cleaned {cleaned_mb} MB of temporary files."
+        return cleaned_bytes, f"Cleaned {cleaned_count} temporary items ({cleaned_mb} MB freed)."
 
     def terminate_bloatware(self, target_list: List[str] = None) -> List[str]:
         """Safely terminates bloatware processes while obeying OS safety whitelist."""
@@ -951,7 +1124,7 @@ class OptimizerCore:
             self.continuous_last_action = "Continuous Engine Initialized"
             self.continuous_recent_events = []
 
-            # 1. Initial immediate baseline optimization
+            # Initial baseline optimization
             self.set_windows_timer_resolution(True)
             self.enable_high_performance_power_plan()
 
@@ -1224,4 +1397,3 @@ class OptimizerCore:
             "working_sets_trimmed": proc_trimmed,
             "logs": logs
         }
-

@@ -1420,19 +1420,23 @@ async function refreshTopProcesses() {
             `;
             tbody.appendChild(tr);
         });
+        filterProcessTable();
     } catch (e) {
         console.error("Process refresh error:", e);
     }
 }
 
 function filterProcessTable() {
-    const query = document.getElementById("proc-search").value.toLowerCase();
+    const searchEl = document.getElementById("proc-search");
+    if (!searchEl) return;
+    const query = searchEl.value.toLowerCase();
     document.querySelectorAll(".proc-row").forEach(row => {
         const text = row.innerText.toLowerCase();
         row.style.display = text.includes(query) ? "" : "none";
     });
 }
 
+let procRefreshInterval = null;
 function switchPage(pageId) {
     playAudioFX("click");
     document.querySelectorAll(".nav-item").forEach(item => {
@@ -1445,6 +1449,14 @@ function switchPage(pageId) {
 
     if (pageId === "page-processes") {
         refreshTopProcesses();
+        if (!procRefreshInterval) {
+            procRefreshInterval = setInterval(refreshTopProcesses, 3500);
+        }
+    } else {
+        if (procRefreshInterval) {
+            clearInterval(procRefreshInterval);
+            procRefreshInterval = null;
+        }
     }
 }
 
@@ -1540,8 +1552,257 @@ function copyConsoleLog() {
     logToConsole("Activity log copied to clipboard!", "success");
 }
 
-function openGuideModal() {
+// Interactive Feature Guide Data & Controller
+let guideSteps = [
+    {
+        id: "welcome",
+        category: "🚀 GETTING STARTED",
+        title: "Welcome to Mr. Drew's Device & FPS Optimizer",
+        icon: "⚡",
+        color: "#00F0FF",
+        how: "Combines a native C++ engine, GPU shader management, real-time memory compaction, and process priority tuning into one fast suite.",
+        why: "Eliminates game micro-stutters, reclaims 2 to 5 GB physical RAM, lowers input lag, and prevents texture pop-in.",
+        when: "Run before starting gaming sessions (Fortnite, Valorant, Roblox, Unreal Engine), or run Smart Auto-Guard in the background.",
+        action_id: null,
+        action_label: null
+    },
+    {
+        id: "fps_booster",
+        category: "🎮 GAMING ENGINE",
+        title: "RUN FPS & GAME BOOSTER",
+        icon: "🎮",
+        color: "#F59E0B",
+        how: "Locks system timer resolution to 1.0ms, flushes GPU shader caches (Nvidia/AMD/DirectX), and elevates game process CPU priority to High.",
+        why: "Fixes frame drops, removes micro-stutters, and lowers input latency in competitive games.",
+        when: "Click right before launching your game or whenever you notice stutters during gameplay.",
+        action_id: "run_fps_booster",
+        action_label: "🧪 Try FPS Booster Now"
+    },
+    {
+        id: "asset_loader",
+        category: "🎮 GAMING ENGINE",
+        title: "Fast Asset Loader",
+        icon: "🚀",
+        color: "#10B981",
+        how: "Sets Disk I/O priority to High (ProcessIoPriorityHigh) for active game processes and protects loaded game assets from RAM eviction.",
+        why: "Accelerates map loading, texture streaming, and 3D asset rendering; stops texture pop-in.",
+        when: "Use when loading open-world games, map transitions, or heavy Roblox / Unreal Engine projects.",
+        action_id: "accelerate_asset_loading",
+        action_label: "🧪 Test Asset Loader"
+    },
+    {
+        id: "potato_mode",
+        category: "🥔 LOW-SPEC ENGINE",
+        title: "4GB Potato Mode",
+        icon: "🥔",
+        color: "#EAB308",
+        how: "Triggers aggressive memory compaction targeting 1.5 GB free RAM, drops inactive page caches, and terminates background bloatware.",
+        why: "Enables smooth gaming and app performance on budget/low-spec devices with 4GB to 8GB physical RAM without paging stutters.",
+        when: "Activate on low-end laptops or budget PCs before launching any game.",
+        action_id: "run_potato_mode",
+        action_label: "🧪 Test Potato Mode"
+    },
+    {
+        id: "ultimate_power",
+        category: "⚡ POWER ENGINE",
+        title: "Ultimate Power Mode",
+        icon: "⚡",
+        color: "#10B981",
+        how: "Forces Windows OS power scheme to High / Ultimate Performance, disabling CPU core parking and power throttling.",
+        why: "Ensures CPU cores run at peak clock speeds without sudden frequency drops during demanding scenes.",
+        when: "Enable when gaming, video editing, or rendering on desktop or plugged-in laptops.",
+        action_id: "enable_power_plan",
+        action_label: "🧪 Enable Ultimate Power"
+    },
+    {
+        id: "monster_optimizer",
+        category: "🧠 MEMORY ENGINE",
+        title: "RUN MONSTER OPTIMIZER",
+        icon: "🔥",
+        color: "#A855F7",
+        how: "Multi-stage deep RAM recovery: compacts background working sets via EmptyWorkingSet, flushes kernel standby page list, and sweeps temp memory.",
+        why: "Recovers the maximum possible physical memory (up to 3-6 GB RAM) in one click without closing critical system apps.",
+        when: "Use when overall RAM usage exceeds 80%, or before running memory-heavy applications.",
+        action_id: "run_monster_optimizer",
+        action_label: "🧪 Run Monster Optimizer"
+    },
+    {
+        id: "trim_ram",
+        category: "🧠 MEMORY ENGINE",
+        title: "Trim App RAM",
+        icon: "✂️",
+        color: "#00F0FF",
+        how: "Iterates through non-critical user applications and compacts their active working set memory into physical free RAM.",
+        why: "Instantly reclaims RAM held hostage by web browsers (Chrome, Edge) and background software (Discord, Spotify).",
+        when: "Use while multitasking when you want to free RAM without quitting open applications.",
+        action_id: "trim_working_sets",
+        action_label: "🧪 Trim App RAM Now"
+    },
+    {
+        id: "purge_standby",
+        category: "🧠 MEMORY ENGINE",
+        title: "Purge Standby RAM",
+        icon: "🛡️",
+        color: "#3B82F6",
+        how: "Calls C++ NtSetSystemInformation with SystemMemoryListInformation (or POSIX drop_caches on Linux/macOS) to clear cached standby list memory.",
+        why: "Fixes Windows Standby RAM bugs that cause game crashes and hitching when free RAM drops to zero.",
+        when: "Use when Standby cached memory is high and free memory is low.",
+        action_id: "purge_standby",
+        action_label: "🧪 Purge Standby RAM"
+    },
+    {
+        id: "clear_temp",
+        category: "🧹 CLEANING ENGINE",
+        title: "Clear Temp Files",
+        icon: "🧹",
+        color: "#EC4899",
+        how: "Recursively cleans %TEMP%, %SystemRoot%\\Temp, log caches, and leftover installer clutter while bypassing locked files safely.",
+        why: "Frees up gigabytes of SSD/HDD drive space and removes system clutter.",
+        when: "Run weekly or whenever drive space is tight.",
+        action_id: "clear_temp",
+        action_label: "🧪 Clear Temp Files"
+    },
+    {
+        id: "game_picker",
+        category: "🎯 PRIORITY TUNER",
+        title: "Boost Game Priority",
+        icon: "🎯",
+        color: "#F59E0B",
+        how: "Lets you pick your active game process and elevates its OS scheduling priority class to High Priority.",
+        why: "Guarantees that the CPU allocates maximum execution clock cycles to your game over background threads.",
+        when: "Use whenever playing competitive multiplayer games or resource-demanding titles.",
+        action_id: "open_game_picker",
+        action_label: "🧪 Select & Boost Game"
+    },
+    {
+        id: "shader_cleaner",
+        category: "🎨 GRAPHICS TUNER",
+        title: "Clean Shader Cache",
+        icon: "🧹",
+        color: "#00F0FF",
+        how: "Sweeps compiled DirectX, OpenGL, Vulkan, Nvidia (DXCache/GLCache), AMD (DxCache), and Intel GPU shader caches.",
+        why: "Fixes corrupted shader stuttering, visual artifacts, and frame drops caused by stale shader caches.",
+        when: "Run after updating graphics drivers, installing game updates, or experiencing graphical stutters.",
+        action_id: "clean_shader_cache",
+        action_label: "🧪 Clean Shader Cache"
+    },
+    {
+        id: "end_bloatware",
+        category: "🛡️ SECURITY & CLEANING",
+        title: "End Bloatware",
+        icon: "🚫",
+        color: "#EF4444",
+        how: "Safely terminates non-essential background bloatware (OneDrive, Widgets, Teams, Cortana) protected by safety whitelists.",
+        why: "Stops unwanted background telemetry, reduces background CPU usage, and saves memory.",
+        when: "Run on computer startup or before launching games.",
+        action_id: "kill_bloatware",
+        action_label: "🧪 Terminate Bloatware"
+    }
+];
+
+let currentGuideStepIndex = 0;
+
+function renderGuideStep(index) {
+    if (index < 0) index = 0;
+    if (index >= guideSteps.length) index = guideSteps.length - 1;
+    currentGuideStepIndex = index;
+
+    const step = guideSteps[index];
+    const body = document.getElementById("guide-step-body");
+    const select = document.getElementById("guide-topic-select");
+    const tryBtn = document.getElementById("guide-try-btn");
+    const prevBtn = document.getElementById("guide-prev-btn");
+    const nextBtn = document.getElementById("guide-next-btn");
+
+    if (select) select.value = step.id;
+    if (prevBtn) prevBtn.disabled = (index === 0);
+    if (nextBtn) nextBtn.disabled = (index === guideSteps.length - 1);
+
+    if (tryBtn) {
+        if (step.action_id) {
+            tryBtn.style.display = "";
+            tryBtn.innerText = step.action_label || "🧪 Try Feature Now";
+        } else {
+            tryBtn.style.display = "none";
+        }
+    }
+
+    if (body) {
+        body.innerHTML = `
+            <div class="guide-step-card">
+                <div class="guide-step-header">
+                    <span class="guide-category-badge">${step.category}</span>
+                    <span style="font-size:11px; color:var(--text-muted);">Step ${index + 1} of ${guideSteps.length}</span>
+                </div>
+                <h4 style="font-size:15px; font-weight:800; color:${step.color}; margin:0; display:flex; align-items:center; gap:8px;">
+                    <span>${step.icon}</span>
+                    <span>${step.title}</span>
+                </h4>
+                <div class="guide-block how">
+                    <span class="guide-block-title" style="color:var(--cyan);">🛠️ How It Works (Technical Engine)</span>
+                    <span class="guide-block-desc">${step.how}</span>
+                </div>
+                <div class="guide-block why">
+                    <span class="guide-block-title" style="color:var(--green);">💡 Why Use It (Performance Benefit)</span>
+                    <span class="guide-block-desc">${step.why}</span>
+                </div>
+                <div class="guide-block when">
+                    <span class="guide-block-title" style="color:var(--amber);">⏱️ When To Use It (Best Scenario)</span>
+                    <span class="guide-block-desc">${step.when}</span>
+                </div>
+            </div>
+        `;
+    }
+}
+
+function selectGuideTopic(stepId) {
     playAudioFX("click");
+    const idx = guideSteps.findIndex(s => s.id === stepId);
+    if (idx !== -1) renderGuideStep(idx);
+}
+
+function nextGuideStep() {
+    playAudioFX("click");
+    renderGuideStep(currentGuideStepIndex + 1);
+}
+
+function prevGuideStep() {
+    playAudioFX("click");
+    renderGuideStep(currentGuideStepIndex - 1);
+}
+
+function tryCurrentGuideAction() {
+    const step = guideSteps[currentGuideStepIndex];
+    if (step && step.action_id) {
+        playAudioFX("action");
+        closeGuideModal();
+        switchPage("page-dashboard");
+        triggerAction(step.action_id);
+    }
+}
+
+async function openGuideModal() {
+    playAudioFX("click");
+    const select = document.getElementById("guide-topic-select");
+    if (select && select.options.length === 0) {
+        if (window.pywebview && window.pywebview.api && window.pywebview.api.get_guide_steps) {
+            try {
+                const backendSteps = await window.pywebview.api.get_guide_steps();
+                if (backendSteps && backendSteps.length) {
+                    guideSteps = backendSteps;
+                }
+            } catch (e) {}
+        }
+        select.innerHTML = "";
+        guideSteps.forEach((s, i) => {
+            const opt = document.createElement("option");
+            opt.value = s.id;
+            opt.innerText = `${i + 1}. ${s.title}`;
+            select.appendChild(opt);
+        });
+    }
+
+    renderGuideStep(currentGuideStepIndex);
     const overlay = document.getElementById("guide-modal-overlay");
     if (overlay) overlay.classList.add("active");
 }
@@ -1551,3 +1812,25 @@ function closeGuideModal() {
     const overlay = document.getElementById("guide-modal-overlay");
     if (overlay) overlay.classList.remove("active");
 }
+
+// Global Keyboard & Overlay backdrop event listeners
+window.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+        closeGuideModal();
+    } else if (e.key === "ArrowRight") {
+        const overlay = document.getElementById("guide-modal-overlay");
+        if (overlay && overlay.classList.contains("active")) nextGuideStep();
+    } else if (e.key === "ArrowLeft") {
+        const overlay = document.getElementById("guide-modal-overlay");
+        if (overlay && overlay.classList.contains("active")) prevGuideStep();
+    }
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+    const overlay = document.getElementById("guide-modal-overlay");
+    if (overlay) {
+        overlay.addEventListener("click", (e) => {
+            if (e.target === overlay) closeGuideModal();
+        });
+    }
+});

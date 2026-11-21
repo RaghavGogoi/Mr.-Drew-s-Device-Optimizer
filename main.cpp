@@ -6,13 +6,18 @@
 #include <cstdlib>
 #include <iomanip>
 #include <sstream>
+#include <algorithm>
+#include <filesystem>
+#include <unordered_set>
 
 #ifdef _WIN32
 #include <windows.h>
 #include <psapi.h>
 #include <timeapi.h>
+#ifdef _MSC_VER
 #pragma comment(lib, "winmm.lib")
 #pragma comment(lib, "psapi.lib")
+#endif
 #else
 #include <unistd.h>
 #include <sys/types.h>
@@ -125,6 +130,13 @@ bool EnablePrivilege(LPCWSTR privilegeName) {
     CloseHandle(hToken);
     return result;
 }
+
+void EnableAllKernelPrivileges() {
+    EnablePrivilege(L"SeProfileSingleProcessPrivilege");
+    EnablePrivilege(L"SeIncreaseQuotaPrivilege");
+    EnablePrivilege(L"SeIncreaseBasePriorityPrivilege");
+    EnablePrivilege(L"SeDebugPrivilege");
+}
 #endif
 
 // Lock 1ms High Precision Timer with Exact Resolution Measurement
@@ -166,6 +178,8 @@ void LockHighPrecisionTimer() {
 // Perform Standby RAM List Flush safely across OS
 bool FlushStandbyMemory() {
 #ifdef _WIN32
+    EnableAllKernelPrivileges();
+
     HMODULE hNtdll = GetModuleHandleW(L"ntdll.dll");
     if (!hNtdll) {
         LogError("Failed to locate ntdll.dll.");
@@ -177,8 +191,6 @@ bool FlushStandbyMemory() {
         LogError("Failed to locate NtSetSystemInformation.");
         return false;
     }
-
-    EnablePrivilege(L"SeProfileSingleProcessPrivilege");
 
     SYSTEM_MEMORY_LIST_COMMAND command = MemoryPurgeStandbyList;
     NTSTATUS status = NtSetSystemInformation(
@@ -220,24 +232,59 @@ bool FlushStandbyMemory() {
 #endif
 }
 
+// Whitelisted system and optimizer process names
+static const std::unordered_set<std::string> CRITICAL_WHITELIST = {
+    "system", "system idle process", "smss.exe", "csrss.exe", "wininit.exe",
+    "services.exe", "lsass.exe", "svchost.exe", "fontdrvhost.exe", "memory compression",
+    "dwm.exe", "explorer.exe", "spoolsv.exe", "securityhealthservice.exe",
+    "taskmgr.exe", "ctfmon.exe", "conhost.exe", "sihost.exe", "runtimebroker.exe",
+    "audiodg.exe", "registry", "vssvc.exe", "searchindexer.exe", "securityhealthhost.exe",
+    "smartscreen.exe", "deviceoptimizer.exe", "main.exe", "python.exe", "pythonw.exe"
+};
+
 // Compact Process Working Sets safely
-void TrimWorkingSets() {
+void TrimWorkingSets(const std::unordered_set<DWORD>& excludePids = {}) {
 #ifdef _WIN32
+    EnableAllKernelPrivileges();
     LogInfo("Compacting process working sets via EmptyWorkingSet...");
-    DWORD aProcesses[1024], cbNeeded, cProcesses;
+    DWORD currentPid = GetCurrentProcessId();
+    DWORD aProcesses[2048], cbNeeded, cProcesses;
+
     if (EnumProcesses(aProcesses, sizeof(aProcesses), &cbNeeded)) {
         cProcesses = cbNeeded / sizeof(DWORD);
         size_t trimmedCount = 0;
+
         for (unsigned int i = 0; i < cProcesses; i++) {
-            if (aProcesses[i] != 0) {
-                HANDLE hProcess = OpenProcess(PROCESS_SET_QUOTA | PROCESS_QUERY_INFORMATION, FALSE, aProcesses[i]);
-                if (hProcess) {
-                    if (EmptyWorkingSet(hProcess)) {
-                        trimmedCount++;
-                    }
+            DWORD pid = aProcesses[i];
+            if (pid == 0 || pid == currentPid || excludePids.count(pid)) {
+                continue;
+            }
+
+            HANDLE hProcess = OpenProcess(PROCESS_SET_QUOTA | PROCESS_QUERY_INFORMATION, FALSE, pid);
+            if (!hProcess) {
+                continue;
+            }
+
+            // Check executable name against critical system whitelist
+            char nameBuf[MAX_PATH] = {0};
+            if (GetProcessImageFileNameA(hProcess, nameBuf, MAX_PATH) > 0) {
+                std::string fullPath(nameBuf);
+                std::string baseName = fullPath;
+                size_t slashPos = fullPath.find_last_of("\\/");
+                if (slashPos != std::string::npos) {
+                    baseName = fullPath.substr(slashPos + 1);
+                }
+                std::transform(baseName.begin(), baseName.end(), baseName.begin(), ::tolower);
+                if (CRITICAL_WHITELIST.count(baseName)) {
                     CloseHandle(hProcess);
+                    continue;
                 }
             }
+
+            if (EmptyWorkingSet(hProcess)) {
+                trimmedCount++;
+            }
+            CloseHandle(hProcess);
         }
         LogSuccess("Trimmed working sets for " + std::to_string(trimmedCount) + " running processes.");
     }
@@ -246,18 +293,51 @@ void TrimWorkingSets() {
 #endif
 }
 
-// Clear Temp Files across OS
+// Clear Temp Files across OS safely using std::filesystem
 void ClearTempDirectories() {
     LogInfo("Sweeping temporary files to free disk space...");
+    namespace fs = std::filesystem;
+    size_t deletedFiles = 0;
+    uintmax_t deletedBytes = 0;
+
+    std::vector<std::string> dirsToClean;
 #ifdef _WIN32
-    system("del /q /f /s \"%TEMP%\\*\" >nul 2>&1");
-    system("for /d %i in (\"%TEMP%\\*\") do rmdir /q /s \"%i\" >nul 2>&1");
-    system("del /q /f /s \"%SystemRoot%\\Temp\\*\" >nul 2>&1");
-    system("for /d %i in (\"%SystemRoot%\\Temp\\*\") do rmdir /q /s \"%i\" >nul 2>&1");
+    const char* tempEnv = std::getenv("TEMP");
+    if (tempEnv) dirsToClean.push_back(tempEnv);
+    const char* sysRoot = std::getenv("SystemRoot");
+    if (sysRoot) dirsToClean.push_back(std::string(sysRoot) + "\\Temp");
 #else
-    system("rm -rf /tmp/* 2>/dev/null");
+    dirsToClean.push_back("/tmp");
 #endif
-    LogSuccess("Disk temp cleanup finished.");
+
+    for (const auto& dirPath : dirsToClean) {
+        std::error_code ec;
+        if (!fs::exists(dirPath, ec) || !fs::is_directory(dirPath, ec)) {
+            continue;
+        }
+
+        for (const auto& entry : fs::directory_iterator(dirPath, fs::directory_options::skip_permission_denied, ec)) {
+            if (ec) break;
+            std::error_code removeEc;
+            if (entry.is_regular_file(removeEc)) {
+                auto sz = entry.file_size(removeEc);
+                if (!removeEc && fs::remove(entry.path(), removeEc)) {
+                    deletedFiles++;
+                    deletedBytes += sz;
+                }
+            } else if (entry.is_directory(removeEc)) {
+                auto count = fs::remove_all(entry.path(), removeEc);
+                if (!removeEc && count > 0) {
+                    deletedFiles += count;
+                }
+            }
+        }
+    }
+
+    double mb = (double)deletedBytes / (1024.0 * 1024.0);
+    std::stringstream ss;
+    ss << std::fixed << std::setprecision(1) << mb;
+    LogSuccess("Cleaned " + std::to_string(deletedFiles) + " temporary items (" + ss.str() + " MB freed).");
 }
 
 // Terminate default background bloatware
@@ -273,33 +353,92 @@ void KillBloatware() {
     LogSuccess("Bloatware processes terminated.");
 }
 
+void PrintBanner() {
+    std::cout << MAGENTA << "==================================================" << RESET << std::endl;
+    std::cout << MAGENTA << "  ⚡ MR. DREW'S DEVICE & FPS OPTIMIZER (C++ ENGINE) " << RESET << std::endl;
+    std::cout << MAGENTA << "==================================================" << RESET << std::endl;
+}
+
+void PrintHelp() {
+    PrintBanner();
+    std::cout << "Usage: DeviceOptimizer [OPTIONS]\n\n"
+              << "Options:\n"
+              << "  --help, -h               Show this help message and exit\n"
+              << "  --version, -v            Show engine version\n"
+              << "  --monster                Run Monster RAM & system optimization pipeline\n"
+              << "  --fps-boost              Run Gaming & FPS optimization pipeline (1ms timer lock)\n"
+              << "  --flush-standby          Purge Windows Standby List memory via NT kernel\n"
+              << "  --trim-ram               Compact working sets for non-critical processes\n"
+              << "  --exclude-pids <list>    Comma-separated list of process PIDs to protect from trimming\n"
+              << "  --clear-temp             Safely clear system & user temporary files\n"
+              << "  --kill-bloat             Terminate non-essential background bloatware\n"
+              << "  --json-stats             Output system admin status as JSON\n"
+              << "  --gui                    Launch desktop web interface\n"
+              << std::endl;
+}
+
 int main(int argc, char* argv[]) {
     EnableAnsiSupport();
 
     std::vector<std::string> args(argv, argv + argc);
+    if (args.size() <= 1) {
+        PrintHelp();
+        return 0;
+    }
+
     bool runMonster = false;
     bool fpsBoost = false;
     bool flushOnly = false;
     bool trimOnly = false;
     bool tempOnly = false;
+    bool killBloat = false;
     bool jsonStats = false;
     bool launchGui = false;
+    std::unordered_set<DWORD> excludePids;
 
-    for (const auto& arg : args) {
-        if (arg == "--monster") runMonster = true;
-        if (arg == "--fps-boost") fpsBoost = true;
-        if (arg == "--flush-standby") flushOnly = true;
-        if (arg == "--trim-ram") trimOnly = true;
-        if (arg == "--clear-temp") tempOnly = true;
-        if (arg == "--json-stats") jsonStats = true;
-        if (arg == "--gui") launchGui = true;
+    for (size_t i = 1; i < args.size(); ++i) {
+        const std::string& arg = args[i];
+        if (arg == "--help" || arg == "-h") {
+            PrintHelp();
+            return 0;
+        } else if (arg == "--version" || arg == "-v") {
+            std::cout << "Mr. Drew's Device Optimizer Native Engine v2.2.0" << std::endl;
+            return 0;
+        } else if (arg == "--monster") {
+            runMonster = true;
+        } else if (arg == "--fps-boost") {
+            fpsBoost = true;
+        } else if (arg == "--flush-standby") {
+            flushOnly = true;
+        } else if (arg == "--trim-ram") {
+            trimOnly = true;
+        } else if (arg == "--clear-temp") {
+            tempOnly = true;
+        } else if (arg == "--kill-bloat") {
+            killBloat = true;
+        } else if (arg == "--json-stats") {
+            jsonStats = true;
+        } else if (arg == "--gui") {
+            launchGui = true;
+        } else if (arg == "--exclude-pids" && i + 1 < args.size()) {
+            std::string pidsStr = args[++i];
+            std::stringstream ss(pidsStr);
+            std::string item;
+            while (std::getline(ss, item, ',')) {
+                try {
+                    if (!item.empty()) {
+                        excludePids.insert(static_cast<DWORD>(std::stoul(item)));
+                    }
+                } catch (...) {}
+            }
+        }
     }
 
     if (launchGui) {
 #ifdef _WIN32
-        system("python app.py");
+        system("python run.py");
 #else
-        system("python3 app.py");
+        system("python3 run.py");
 #endif
         return 0;
     }
@@ -314,7 +453,7 @@ int main(int argc, char* argv[]) {
     }
 
     if (trimOnly) {
-        TrimWorkingSets();
+        TrimWorkingSets(excludePids);
         return 0;
     }
 
@@ -323,9 +462,12 @@ int main(int argc, char* argv[]) {
         return 0;
     }
 
-    std::cout << MAGENTA << "==================================================" << RESET << std::endl;
-    std::cout << MAGENTA << "  ⚡ MR. DREW'S DEVICE & FPS OPTIMIZER (C++ ENGINE) " << RESET << std::endl;
-    std::cout << MAGENTA << "==================================================" << RESET << std::endl;
+    if (killBloat) {
+        KillBloatware();
+        return 0;
+    }
+
+    PrintBanner();
 
     bool isAdmin = IsAdminOrRoot();
     if (!isAdmin) {
@@ -337,16 +479,28 @@ int main(int argc, char* argv[]) {
     if (fpsBoost) {
         LogInfo("🎮 GAMING & FPS BOOSTER ENGINE RUNNING...");
         LockHighPrecisionTimer();
-        TrimWorkingSets();
+        TrimWorkingSets(excludePids);
         FlushStandbyMemory();
         ClearTempDirectories();
         LogSuccess("FPS Booster Engine complete!");
         return 0;
     }
 
+    if (runMonster) {
+        LogInfo("🔥 MONSTER SYSTEM OPTIMIZER PIPELINE RUNNING...");
+        LockHighPrecisionTimer();
+        KillBloatware();
+        ClearTempDirectories();
+        TrimWorkingSets(excludePids);
+        FlushStandbyMemory();
+        LogSuccess("Monster Optimizer Engine complete!");
+        return 0;
+    }
+
+    // Default action if unknown flag or mixed
     KillBloatware();
     ClearTempDirectories();
-    TrimWorkingSets();
+    TrimWorkingSets(excludePids);
     FlushStandbyMemory();
 
     LogSuccess("System & Memory Optimization successfully executed.");
