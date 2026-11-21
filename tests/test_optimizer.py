@@ -170,7 +170,7 @@ class TestApiBridge(unittest.TestCase):
 
 
 class TestNativeEngine(unittest.TestCase):
-    """Verifies that the compiled C++ executable handles flags correctly."""
+    """Verifies that the compiled C++ executable and shared library handle functions correctly."""
 
     def test_cpp_binary_help(self):
         binary = os.path.join(PROJECT_ROOT, "DeviceOptimizer.exe" if sys.platform == "win32" else "DeviceOptimizer")
@@ -189,6 +189,37 @@ class TestNativeEngine(unittest.TestCase):
         proc = subprocess.run([binary, "--version"], capture_output=True, text=True, timeout=5)
         self.assertEqual(proc.returncode, 0)
         self.assertIn("Native Engine", proc.stdout)
+
+    def test_cpp_dll_in_process_bridge(self):
+        if sys.platform != "win32":
+            self.skipTest("DLL bridge tests are Windows-specific.")
+        core = OptimizerCore()
+        if not core.cpp_dll:
+            self.skipTest("device_optimizer.dll not found or could not be loaded.")
+        
+        self.assertIsNotNone(core.cpp_dll)
+        hw = core.get_hardware_details()
+        self.assertTrue(hw.get("cpp_dll_active", False))
+
+        # Test C_GetMemoryMetrics
+        specs = core.get_system_specs()
+        self.assertGreater(specs["total_ram_gb"], 0)
+        self.assertGreater(specs["avail_ram_gb"], 0)
+        self.assertGreater(specs["standby_ram_gb"], 0)
+
+        # Test C_GetTopProcessesJson
+        procs = core.get_top_ram_processes(count=3)
+        self.assertIsInstance(procs, list)
+        self.assertGreaterEqual(len(procs), 1)
+        self.assertIn("name", procs[0])
+        self.assertIn("mem_mb", procs[0])
+
+        # Test C_LockHighPrecisionTimer
+        timer_ok = core.set_windows_timer_resolution(True)
+        self.assertTrue(timer_ok)
+        cur, min_r = core.get_timer_resolution_ms()
+        self.assertGreater(cur, 0.0)
+        self.assertGreater(min_r, 0.0)
 
 
 if __name__ == "__main__":

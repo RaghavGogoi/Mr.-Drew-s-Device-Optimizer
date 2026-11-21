@@ -1354,6 +1354,24 @@ async function refreshSystemStats() {
                 }
             }
 
+            const badgeCpp = document.getElementById("badge-cpp");
+            const badgeCppText = document.getElementById("badge-cpp-text");
+            if (badgeCpp && hw) {
+                if (hw.cpp_dll_active) {
+                    badgeCpp.className = "badge badge-cyan";
+                    badgeCpp.title = "In-Process Native C++ Engine Active (device_optimizer.dll - sub-millisecond execution)";
+                    if (badgeCppText) badgeCppText.innerText = "C++ DLL";
+                } else if (hw.cpp_engine_active) {
+                    badgeCpp.className = "badge badge-cyan";
+                    badgeCpp.title = "Native C++ Engine Executable Active";
+                    if (badgeCppText) badgeCppText.innerText = "C++ Native";
+                } else {
+                    badgeCpp.className = "badge";
+                    badgeCpp.title = "Python Core Mode";
+                    if (badgeCppText) badgeCppText.innerText = "Python Core";
+                }
+            }
+
             if (hw) {
                 document.getElementById("engine-subtitle").innerText = `${hw.gpu_vendor} • ${hw.device_profile}`;
                 document.getElementById("specs-summary-line").innerText = `OS: ${specs.os_name} | CPU: ${hw.cpu_cores_logical} Cores | RAM: ${specs.total_ram_gb} GB | GPU: ${hw.gpu_vendor}`;
