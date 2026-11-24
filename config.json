@@ -41,7 +41,7 @@
         "#8b5cf6",
         "#ff7300"
     ],
-    "bg_design": "circuit",
+    "bg_design": "matrix",
     "bg_fx_intensity": 0.7,
     "bg_fx_speed": 1.0,
     "bg_animated": true,
@@ -62,11 +62,12 @@
         "username": "Guest User",
         "avatar": "\ud83c\udfae",
         "account_type": "guest",
+        "is_guest": true,
         "created_at": "2026-11-25",
         "pin_protected": false,
         "pin_code": "",
-        "total_optimizations": 4,
-        "total_ram_reclaimed_gb": 3.86,
+        "total_optimizations": 0,
+        "total_ram_reclaimed_gb": 0.0,
         "custom_profiles": [
             {
                 "id": "profile_guest",
@@ -90,8 +91,7 @@
                 "theme": "emerald"
             }
         ],
-        "active_profile_id": "profile_guest",
-        "is_guest": true
+        "active_profile_id": "profile_guest"
     },
     "security_settings": {
         "process_whitelist_enforced": true,
@@ -100,34 +100,5 @@
         "detect_suspicious_processes": true,
         "app_lock_enabled": false
     },
-    "feedback_history": [
-        {
-            "type": "feature",
-            "title": "Add Auto-Game Priority",
-            "description": "Automatically prioritize Steam games on launch.",
-            "category": "Gaming",
-            "severity": "Enhancement",
-            "timestamp": "2026-11-25 00:29:30"
-        },
-        {
-            "type": "bug",
-            "title": "Test Bug",
-            "description": "Unit test report",
-            "timestamp": "2026-11-25 00:29:25"
-        },
-        {
-            "type": "feature",
-            "title": "Add Auto-Game Priority",
-            "description": "Automatically prioritize Steam games on launch.",
-            "category": "Gaming",
-            "severity": "Enhancement",
-            "timestamp": "2026-11-25 00:28:18"
-        },
-        {
-            "type": "bug",
-            "title": "Test Bug",
-            "description": "Unit test report",
-            "timestamp": "2026-11-25 00:28:13"
-        }
-    ]
+    "feedback_history": []
 }

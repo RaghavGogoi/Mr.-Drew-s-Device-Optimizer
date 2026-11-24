@@ -8,6 +8,8 @@ Verifies OptimizerCore, Api Bridge, Config Persistence, and Native C++ Engine.
 import os
 import sys
 import json
+import shutil
+import tempfile
 import unittest
 import subprocess
 
@@ -19,6 +21,24 @@ if PROJECT_ROOT not in sys.path:
 import config
 from optimizer_core import OptimizerCore, SYSTEM_WHITELIST, KNOWN_GAME_PROCESSES
 from app import Api
+
+_ORIGINAL_CONFIG_PATH = config.CONFIG_PATH
+_TEST_TEMP_DIR = None
+
+
+def setUpModule():
+    """Isolate config.json writes to a temporary directory outside %TEMP% during test execution."""
+    global _TEST_TEMP_DIR
+    _TEST_TEMP_DIR = tempfile.mkdtemp(prefix=".test_cfg_", dir=PROJECT_ROOT)
+    config.CONFIG_PATH = os.path.join(_TEST_TEMP_DIR, "config.json")
+    config.reset_to_defaults()
+
+
+def tearDownModule():
+    """Restore original config path and remove temporary test directory."""
+    config.CONFIG_PATH = _ORIGINAL_CONFIG_PATH
+    if _TEST_TEMP_DIR and os.path.exists(_TEST_TEMP_DIR):
+        shutil.rmtree(_TEST_TEMP_DIR, ignore_errors=True)
 
 
 class TestConfig(unittest.TestCase):

@@ -1,6 +1,7 @@
 import sys
 import os
 import json
+import copy
 from typing import Dict, Any
 
 if getattr(sys, "frozen", False):
@@ -119,21 +120,25 @@ DEFAULT_CONFIG: Dict[str, Any] = {
 def load_config() -> Dict[str, Any]:
     """Loads configuration from config.json, merging with defaults if missing."""
     if not os.path.exists(CONFIG_PATH):
-        save_config(DEFAULT_CONFIG)
-        return DEFAULT_CONFIG.copy()
+        defaults = copy.deepcopy(DEFAULT_CONFIG)
+        save_config(defaults)
+        return defaults
     
     try:
         with open(CONFIG_PATH, "r", encoding="utf-8") as f:
             data = json.load(f)
-            merged = DEFAULT_CONFIG.copy()
+            merged = copy.deepcopy(DEFAULT_CONFIG)
             merged.update(data)
             return merged
     except Exception:
-        return DEFAULT_CONFIG.copy()
+        return copy.deepcopy(DEFAULT_CONFIG)
 
 def save_config(config_dict: Dict[str, Any]) -> bool:
     """Saves dictionary to config.json."""
     try:
+        parent = os.path.dirname(os.path.abspath(CONFIG_PATH))
+        if parent and not os.path.exists(parent):
+            os.makedirs(parent, exist_ok=True)
         with open(CONFIG_PATH, "w", encoding="utf-8") as f:
             json.dump(config_dict, f, indent=4)
         return True
@@ -148,8 +153,9 @@ def update_setting(key: str, value: Any) -> bool:
 
 def reset_to_defaults() -> Dict[str, Any]:
     """Resets entire configuration to factory default state."""
-    save_config(DEFAULT_CONFIG)
-    return DEFAULT_CONFIG.copy()
+    defaults = copy.deepcopy(DEFAULT_CONFIG)
+    save_config(defaults)
+    return defaults
 
 def is_first_run() -> bool:
     return not load_config().get("first_run_completed", False)
@@ -166,7 +172,7 @@ def get_account_info() -> Dict[str, Any]:
     cfg = load_config()
     account = cfg.get("user_account", {})
     if not isinstance(account, dict):
-        account = DEFAULT_CONFIG["user_account"].copy()
+        account = copy.deepcopy(DEFAULT_CONFIG["user_account"])
     if "is_guest" not in account:
         account["is_guest"] = account.get("account_type", "guest") == "guest"
     return account
@@ -174,7 +180,7 @@ def get_account_info() -> Dict[str, Any]:
 def update_account_info(account_dict: Dict[str, Any]) -> bool:
     """Updates account profile settings (username, avatar, pin, active profile)."""
     cfg = load_config()
-    current = cfg.get("user_account", DEFAULT_CONFIG["user_account"].copy())
+    current = cfg.get("user_account", copy.deepcopy(DEFAULT_CONFIG["user_account"]))
     current.update(account_dict)
     cfg["user_account"] = current
     return save_config(cfg)
@@ -182,7 +188,7 @@ def update_account_info(account_dict: Dict[str, Any]) -> bool:
 def record_optimization_stat(reclaimed_gb: float = 0.0) -> bool:
     """Increments total optimizations and lifetime memory freed counters."""
     cfg = load_config()
-    account = cfg.get("user_account", DEFAULT_CONFIG["user_account"].copy())
+    account = cfg.get("user_account", copy.deepcopy(DEFAULT_CONFIG["user_account"]))
     account["total_optimizations"] = account.get("total_optimizations", 0) + 1
     current_reclaimed = account.get("total_ram_reclaimed_gb", 0.0)
     account["total_ram_reclaimed_gb"] = round(current_reclaimed + max(0.0, reclaimed_gb), 2)
@@ -192,7 +198,7 @@ def record_optimization_stat(reclaimed_gb: float = 0.0) -> bool:
 def switch_profile(profile_id: str) -> Dict[str, Any]:
     """Switches active profile and applies profile settings (theme, continuous mode)."""
     cfg = load_config()
-    account = cfg.get("user_account", DEFAULT_CONFIG["user_account"].copy())
+    account = cfg.get("user_account", copy.deepcopy(DEFAULT_CONFIG["user_account"]))
     profiles = account.get("custom_profiles", [])
     selected = None
     for p in profiles:
