@@ -489,8 +489,8 @@ class OptimizerCore:
             gpu_vendor = "Integrated / Standard Graphics"
             if self.os_type == "windows":
                 try:
-                    cmd = "powershell -NoProfile -Command \"(Get-CimInstance Win32_VideoController).Name\""
-                    res = subprocess.check_output(cmd, shell=True, text=True, stderr=subprocess.DEVNULL, timeout=4)
+                    cmd = ["powershell", "-NoProfile", "-Command", "(Get-CimInstance Win32_VideoController).Name"]
+                    res = subprocess.check_output(cmd, text=True, stderr=subprocess.DEVNULL, timeout=4)
                     names = [line.strip() for line in res.splitlines() if line.strip()]
                     if names:
                         gpu_vendor = ", ".join(names[:2])
@@ -498,14 +498,15 @@ class OptimizerCore:
                     pass
             elif self.os_type == "linux":
                 try:
-                    res = subprocess.check_output("lspci 2>/dev/null | grep -i 'vga\\|3d\\|display'", shell=True, text=True, stderr=subprocess.DEVNULL, timeout=4)
-                    if res.strip():
-                        gpu_vendor = res.strip().split('\n')[0].split(':')[-1].strip()
+                    res = subprocess.check_output(["lspci"], text=True, stderr=subprocess.DEVNULL, timeout=4)
+                    vga_lines = [l for l in res.splitlines() if any(k in l.lower() for k in ("vga", "3d", "display"))]
+                    if vga_lines:
+                        gpu_vendor = vga_lines[0].split(':')[-1].strip()
                 except Exception:
                     pass
             elif self.os_type == "darwin":
                 try:
-                    res = subprocess.check_output("system_profiler SPDisplaysDataType 2>/dev/null", shell=True, text=True, stderr=subprocess.DEVNULL, timeout=4)
+                    res = subprocess.check_output(["system_profiler", "SPDisplaysDataType"], text=True, stderr=subprocess.DEVNULL, timeout=4)
                     for line in res.splitlines():
                         if "Chipset Model:" in line:
                             gpu_vendor = line.split("Chipset Model:")[1].strip()
@@ -795,7 +796,7 @@ class OptimizerCore:
         else:
             if self.os_type == "windows":
                 try:
-                    output = subprocess.check_output("tasklist /FO CSV /NH", shell=True, text=True, stderr=subprocess.DEVNULL)
+                    output = subprocess.check_output(["tasklist", "/FO", "CSV", "/NH"], text=True, stderr=subprocess.DEVNULL)
                     for line in output.strip().splitlines():
                         parts = [p.strip('"') for p in line.split('","')]
                         if len(parts) >= 5:
@@ -820,11 +821,11 @@ class OptimizerCore:
 
         if self.os_type == "windows":
             try:
-                res_ult = subprocess.run("powercfg /setactive e9a42b02-d5df-448d-aa00-03f14749eb61", shell=True, capture_output=True)
+                res_ult = subprocess.run(["powercfg", "/setactive", "e9a42b02-d5df-448d-aa00-03f14749eb61"], capture_output=True)
                 if res_ult.returncode == 0:
                     return True, "Ultimate Performance Power Plan activated!"
 
-                res_high = subprocess.run("powercfg /setactive 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c", shell=True, capture_output=True)
+                res_high = subprocess.run(["powercfg", "/setactive", "8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c"], capture_output=True)
                 if res_high.returncode == 0:
                     return True, "High Performance Power Plan activated!"
 
@@ -833,7 +834,7 @@ class OptimizerCore:
                 return False, f"Failed to set Windows power scheme: {str(e)}"
         elif self.os_type == "linux":
             try:
-                subprocess.run("cpupower frequency-set -g performance >/dev/null 2>&1", shell=True)
+                subprocess.run(["cpupower", "frequency-set", "-g", "performance"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
                 return True, "Linux CPU governor set to Performance."
             except Exception:
                 return True, "Linux Power Plan performance request sent."
@@ -1308,10 +1309,13 @@ class OptimizerCore:
                 return False, f"Failed to flush Standby RAM: {str(e)}"
         elif self.os_type == "linux":
             try:
-                res = subprocess.run("sync && echo 3 > /proc/sys/vm/drop_caches", shell=True, capture_output=True)
-                if res.returncode == 0:
+                subprocess.run(["sync"], capture_output=True)
+                try:
+                    with open("/proc/sys/vm/drop_caches", "w", encoding="utf-8") as dc:
+                        dc.write("3\n")
                     return True, "Linux pagecache, dentries, and inodes dropped."
-                return True, "Linux memory synced and buffer caches compacted."
+                except PermissionError:
+                    return True, "Linux memory synced and buffer caches compacted."
             except Exception as e:
                 return False, f"Linux drop caches: {str(e)}"
         elif self.os_type == "darwin":
@@ -1406,9 +1410,9 @@ class OptimizerCore:
                 if os.path.exists(wer_archive):
                     paths_to_clean.append(wer_archive)
         elif self.os_type == "darwin":
-            paths_to_clean.extend(["/tmp", os.path.expanduser("~/Library/Caches")])
+            paths_to_clean.extend([tempfile.gettempdir(), os.path.expanduser("~/Library/Caches")])
         else:
-            paths_to_clean.extend(["/tmp", os.path.expanduser("~/.cache")])
+            paths_to_clean.extend([tempfile.gettempdir(), os.path.expanduser("~/.cache")])
 
         for target_dir in paths_to_clean:
             if not os.path.exists(target_dir):
@@ -1469,7 +1473,7 @@ class OptimizerCore:
                     continue
                 try:
                     if self.os_type == "windows":
-                        res = subprocess.run(f"taskkill /F /IM {target} >nul 2>&1", shell=True)
+                        res = subprocess.run(["taskkill", "/F", "/IM", str(target)], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
                         if res.returncode == 0:
                             terminated.append(target)
                     else:

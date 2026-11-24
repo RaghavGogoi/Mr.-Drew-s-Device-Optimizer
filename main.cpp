@@ -27,7 +27,10 @@
 #else
 #include <unistd.h>
 #include <sys/types.h>
+#ifdef __APPLE__
 #include <sys/sysctl.h>
+#endif
+typedef uint32_t DWORD;
 #endif
 
 // Custom definitions for Windows undocumented NT APIs
@@ -162,6 +165,7 @@ bool LockHighPrecisionTimer(bool enable = true) {
     MMRESULT res = enable ? timeBeginPeriod(1) : timeEndPeriod(1);
     return (res == TIMERR_NOERROR);
 #else
+    (void)enable;
     return true;
 #endif
 }
@@ -285,6 +289,8 @@ uint32_t TrimWorkingSets(const std::unordered_set<DWORD>& excludePids = {}) {
             CloseHandle(hProcess);
         }
     }
+#else
+    (void)excludePids;
 #endif
     return trimmedCount;
 }
@@ -450,6 +456,8 @@ std::vector<std::string> TerminateBloatwareProcesses(const std::vector<std::stri
             CloseHandle(hProcess);
         }
     }
+#else
+    (void)targets;
 #endif
     return killed;
 }
@@ -463,6 +471,7 @@ bool TerminateProcessById(DWORD pid) {
     CloseHandle(hProcess);
     return (res == TRUE);
 #else
+    (void)pid;
     return false;
 #endif
 }
@@ -659,6 +668,8 @@ std::vector<NativeProcInfo> GetTopMemoryProcesses(int count = 15) {
     if (count > 0 && procs.size() > static_cast<size_t>(count)) {
         procs.resize(count);
     }
+#else
+    (void)count;
 #endif
     return procs;
 }
@@ -667,7 +678,11 @@ std::vector<NativeProcInfo> GetTopMemoryProcesses(int count = 15) {
 // EXPORTED C API FOR PYTHON IN-PROCESS CDLL (SUB-MICROSECOND LATENCY)
 // ============================================================================
 
+#ifdef _WIN32
 #define DLL_EXPORT extern "C" __declspec(dllexport)
+#else
+#define DLL_EXPORT extern "C" __attribute__((visibility("default")))
+#endif
 
 DLL_EXPORT int C_FlushStandbyMemory() {
     return FlushStandbyMemory() ? 1 : 0;
