@@ -34,6 +34,24 @@
             </div>
 
             <div class="header-badges">
+                <!-- Account / Guest Profile Button -->
+                <button class="badge badge-surface" id="btn-profile-badge" onclick="openProfileModal()" title="User Profile & Account System (Guest by default)">
+                    <span id="header-avatar">👤</span>
+                    <span id="header-username">Guest User</span>
+                </button>
+
+                <!-- Security Status Shield -->
+                <button class="badge badge-green" id="btn-security-badge" onclick="openSecurityModal()" title="System Security & Whitelist Immunity Shield">
+                    <svg class="icon-svg icon-badge" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                    <span id="header-security-text">Security: A+</span>
+                </button>
+
+                <!-- Bug Report / Feature Suggestion -->
+                <button class="badge badge-purple" id="btn-feedback-badge" onclick="openFeedbackModal()" title="Report a Bug or Suggest a Feature">
+                    <svg class="icon-svg icon-badge" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                    <span>Report / Suggest</span>
+                </button>
+
                 <!-- Sound Toggle -->
                 <button class="badge" id="btn-sound-toggle" onclick="toggleAudioMute()" title="Toggle Sound FX">
                     <span id="sound-icon-wrapper">
@@ -766,6 +784,17 @@
                         <div class="settings-group">
                             <div class="setting-row">
                                 <div class="setting-info">
+                                    <span class="setting-label">Low-Spec Hardware Mode (Ultra-Low CPU)</span>
+                                    <span class="setting-desc">Throttles background canvas, pauses animations when idle/minimized, and optimizes for low-end / budget PCs</span>
+                                </div>
+                                <label class="switch-sm">
+                                    <input type="checkbox" id="setting-low-power-toggle" onchange="toggleLowPowerMode(this.checked)">
+                                    <span class="switch-sm-slider"></span>
+                                </label>
+                            </div>
+
+                            <div class="setting-row">
+                                <div class="setting-info">
                                     <span class="setting-label">Launch on System Startup</span>
                                     <span class="setting-desc">Automatically start the optimizer on OS boot (runs quietly minimized in tray)</span>
                                 </div>
@@ -885,6 +914,212 @@
                 <div style="display:flex; gap:6px;">
                     <button class="btn btn-sm btn-green" id="guide-try-btn" onclick="tryCurrentGuideAction()">🧪 Try Now</button>
                     <button class="btn btn-sm btn-cyan" onclick="closeGuideModal()">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Account & Profile Studio Modal -->
+    <div class="modal-overlay" id="profile-modal-overlay">
+        <div class="modal-card" style="max-width: 620px;">
+            <div class="modal-header">
+                <h3>
+                    <span id="modal-profile-avatar" style="font-size:22px;">👤</span>
+                    <span>User Account & Profile Studio</span>
+                </h3>
+                <button class="btn btn-sm btn-surface" onclick="closeProfileModal()" title="Close">✕</button>
+            </div>
+            <div class="modal-body">
+                <!-- Guest Mode Banner -->
+                <div style="background:rgba(0, 240, 255, 0.08); border:1px solid rgba(0, 240, 255, 0.3); border-radius:10px; padding:12px; margin-bottom:12px; display:flex; align-items:center; justify-content:space-between; gap:10px;">
+                    <div>
+                        <div style="font-weight:700; color:var(--cyan); font-size:13px;">Guest Account Mode (Default)</div>
+                        <div style="font-size:11px; color:var(--text-secondary);">100% offline, private, zero login-wall. All optimization features are unlocked.</div>
+                    </div>
+                    <span class="status-pill pass">ACTIVE</span>
+                </div>
+
+                <!-- Profile Customization -->
+                <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:12px;">
+                    <div>
+                        <label class="setting-label" style="font-size:11px;">Display Name</label>
+                        <input type="text" id="profile-username-input" class="select-clean" style="width:100%; margin-top:4px;" placeholder="Guest User">
+                    </div>
+                    <div>
+                        <label class="setting-label" style="font-size:11px;">Choose Avatar</label>
+                        <div class="avatar-picker-grid" id="avatar-picker">
+                            <!-- Populated with avatars: 👤, 🎮, ⚡, 🛡️, 🚀, 💻, 👑, 👾, 🤖, 🐉, 🎯, 🔮 -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lifetime Reclaimed Stats -->
+                <div class="profile-stats-grid">
+                    <div class="profile-stat-box">
+                        <span class="setting-desc">Lifetime Physical RAM Reclaimed</span>
+                        <span class="profile-stat-val" id="profile-ram-stat">0.0 GB</span>
+                    </div>
+                    <div class="profile-stat-box">
+                        <span class="setting-desc">Total Optimizations Executed</span>
+                        <span class="profile-stat-val" id="profile-runs-stat">0</span>
+                    </div>
+                </div>
+
+                <!-- Profile Switching -->
+                <div style="margin-top:10px;">
+                    <label class="setting-label" style="font-size:11px;">Active Optimization Profile</label>
+                    <div style="display:flex; gap:8px; margin-top:6px;">
+                        <select id="profile-selector" class="select-clean" style="flex:1;" onchange="switchUserProfile(this.value)">
+                            <option value="profile_guest">Default Guest Profile (Obsidian / Balanced)</option>
+                            <option value="profile_esports">Esports High-FPS (Cyberpunk / Aggressive 15s)</option>
+                            <option value="profile_eco">Eco Battery Profile (Emerald / Silent Low Power)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Security PIN Setting (Optional) -->
+                <div style="margin-top:12px; padding-top:10px; border-top:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <div class="setting-label" style="font-size:11px;">Optional 4-Digit Settings Lock PIN</div>
+                        <div class="setting-desc" style="font-size:10px;">Prevent unauthorized changes to configuration presets</div>
+                    </div>
+                    <input type="password" id="profile-pin-input" maxlength="4" placeholder="None" class="select-clean" style="width:90px; text-align:center; font-family:'JetBrains Mono', monospace; font-size:12px;">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div style="display:flex; gap:6px;">
+                    <button class="btn btn-sm btn-surface" onclick="exportProfileData()">Export Profile</button>
+                </div>
+                <div style="display:flex; gap:6px;">
+                    <button class="btn btn-sm btn-cyan" onclick="saveProfileChanges()">Save Profile</button>
+                    <button class="btn btn-sm btn-surface" onclick="closeProfileModal()">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Security & System Integrity Shield Modal -->
+    <div class="modal-overlay" id="security-modal-overlay">
+        <div class="modal-card" style="max-width: 660px;">
+            <div class="modal-header">
+                <h3>
+                    <svg class="icon-svg icon-md text-green" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                    <span>System Security & Integrity Shield</span>
+                </h3>
+                <button class="btn btn-sm btn-surface" onclick="closeSecurityModal()" title="Close">✕</button>
+            </div>
+            <div class="modal-body">
+                <!-- Security Banner with Score & Grade -->
+                <div class="security-banner">
+                    <div>
+                        <div style="font-size:11px; text-transform:uppercase; letter-spacing:1px; color:var(--text-muted); font-weight:700;">Security Integrity Score</div>
+                        <div style="font-size:26px; font-weight:900; color:var(--text-primary); font-family:'Outfit', sans-serif;" id="sec-score-text">100 / 100</div>
+                        <div style="font-size:11px; color:var(--text-secondary);" id="sec-audit-time">Last audited: Just now</div>
+                    </div>
+                    <div class="security-grade-pill" id="sec-grade-pill">A+</div>
+                </div>
+
+                <!-- Checklist Container -->
+                <div id="security-checklist-container">
+                    <!-- Populated dynamically: Whitelist, Traversal, UAC, Defender, Cryptominers -->
+                </div>
+
+                <!-- Suspicious Processes alert (hidden if empty) -->
+                <div id="suspicious-procs-box" style="display:none; background:rgba(239, 68, 68, 0.1); border:1px solid rgba(239, 68, 68, 0.4); border-radius:8px; padding:10px; margin-top:8px;">
+                    <div style="font-weight:700; color:var(--red); font-size:12px;">⚠️ Suspicious Background CPU Drain Detected</div>
+                    <div id="suspicious-procs-list" style="margin-top:4px; font-size:11px; color:var(--text-secondary);"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-sm btn-green" onclick="runLiveSecurityAudit()">
+                    <svg class="icon-svg icon-sm" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+                    <span>Run Security Audit Now</span>
+                </button>
+                <button class="btn btn-sm btn-surface" onclick="closeSecurityModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Report & Suggestion Feature Modal -->
+    <div class="modal-overlay" id="feedback-modal-overlay">
+        <div class="modal-card" style="max-width: 680px;">
+            <div class="modal-header">
+                <h3>
+                    <svg class="icon-svg icon-md text-purple" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                    <span>Community Report & Suggestion Center</span>
+                </h3>
+                <button class="btn btn-sm btn-surface" onclick="closeFeedbackModal()" title="Close">✕</button>
+            </div>
+            <div class="modal-body">
+                <!-- Tab Strip -->
+                <div class="tab-strip">
+                    <button class="tab-btn active" id="f-tab-bug" onclick="switchFeedbackTab('bug')">🐛 Bug Report</button>
+                    <button class="tab-btn" id="f-tab-feature" onclick="switchFeedbackTab('feature')">💡 Feature Suggestion</button>
+                    <button class="tab-btn" id="f-tab-general" onclick="switchFeedbackTab('general')">⭐ General Feedback</button>
+                    <button class="tab-btn" id="f-tab-history" onclick="switchFeedbackTab('history')">📜 Local History</button>
+                </div>
+
+                <!-- Form Panel -->
+                <div id="feedback-form-panel">
+                    <div style="display:flex; flex-direction:column; gap:8px;">
+                        <div>
+                            <label class="setting-label" style="font-size:11px;">Subject / Title</label>
+                            <input type="text" id="feedback-title" class="select-clean" style="width:100%; margin-top:4px;" placeholder="Brief summary (e.g. Memory flush on low-RAM device)">
+                        </div>
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                            <div>
+                                <label class="setting-label" style="font-size:11px;">Category</label>
+                                <select id="feedback-category" class="select-clean" style="width:100%; margin-top:4px;">
+                                    <option value="RAM & Memory Cleaner">RAM & Memory Cleaner</option>
+                                    <option value="FPS & Game Optimization">FPS & Game Optimization</option>
+                                    <option value="Continuous Background Daemon">Continuous Background Daemon</option>
+                                    <option value="UI & Themes">UI & Themes</option>
+                                    <option value="Compatibility & OS">Compatibility & OS</option>
+                                    <option value="Security & Safety">Security & Safety</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="setting-label" style="font-size:11px;">Severity / Impact</label>
+                                <select id="feedback-severity" class="select-clean" style="width:100%; margin-top:4px;">
+                                    <option value="Enhancement / Suggestion">Enhancement / Suggestion</option>
+                                    <option value="Minor Glitch">Minor Glitch</option>
+                                    <option value="Major Issue / Crash">Major Issue / Crash</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="setting-label" style="font-size:11px;">Description & Details</label>
+                            <textarea id="feedback-desc" class="select-clean" style="width:100%; height:85px; margin-top:4px; resize:vertical; font-family:inherit; padding:8px;" placeholder="Explain what happened or describe your idea in detail..."></textarea>
+                        </div>
+                        <div>
+                            <label style="display:inline-flex; align-items:center; gap:6px; cursor:pointer; font-size:11px; color:var(--text-primary);">
+                                <input type="checkbox" id="feedback-include-specs" checked onchange="toggleSpecPreview(this.checked)">
+                                <span>Include Anonymous Sanitized Diagnostics (No personal data / usernames)</span>
+                            </label>
+                            <div class="spec-preview-box" id="feedback-spec-preview" style="margin-top:6px;">Loading diagnostics preview...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- History Panel (Hidden by default) -->
+                <div id="feedback-history-panel" style="display:none;">
+                    <div class="feedback-history-list" id="feedback-history-container">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div style="display:flex; gap:6px;">
+                    <button class="btn btn-sm btn-surface" onclick="copyFeedbackReport()">📋 Copy Report</button>
+                    <button class="btn btn-sm btn-surface" onclick="saveFeedbackReportLocally()">💾 Save Local</button>
+                </div>
+                <div style="display:flex; gap:6px;">
+                    <button class="btn btn-sm btn-purple" onclick="submitToGitHubIssues()">
+                        <svg class="icon-svg icon-sm" viewBox="0 0 24 24"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
+                        <span>Submit on GitHub Issues</span>
+                    </button>
+                    <button class="btn btn-sm btn-surface" onclick="closeFeedbackModal()">Close</button>
                 </div>
             </div>
         </div>

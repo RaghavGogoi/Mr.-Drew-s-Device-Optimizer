@@ -5,3 +5,8 @@ __pycache__/
 .pytest_cache/
 .DS_Store
 *.tmp
+
+# PyInstaller build caches and distributions
+build/
+dist/
+DeviceOptimizerGUI.spec

@@ -1,8 +1,12 @@
+import sys
 import os
 import json
 from typing import Dict, Any
 
-CONFIG_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.json")
+if getattr(sys, "frozen", False):
+    CONFIG_PATH = os.path.join(os.path.dirname(sys.executable), "config.json")
+else:
+    CONFIG_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.json")
 
 DEFAULT_CONFIG: Dict[str, Any] = {
     "first_run_completed": True,
@@ -20,6 +24,7 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "run_on_startup": False,
     "close_to_tray": True,
     "notify_on_optimization": True,
+    "low_power_mode": False,
     "custom_game_whitelist": ["Valorant.exe", "cs2.exe", "FortniteClient-Win64-Shipping.exe", "GTA5.exe", "Cyberpunk2077.exe", "League of Legends.exe", "Dota2.exe"],
 
     # Creative Design System & Themes
@@ -59,7 +64,56 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     # Audio Soundscapes
     "sound_effects": True,
     "sound_theme": "cyber",
-    "sound_volume": 0.08
+    "sound_volume": 0.08,
+
+    # User Account & Profile System (Guest by default)
+    "user_account": {
+        "username": "Guest User",
+        "avatar": "🎮",
+        "account_type": "guest",
+        "is_guest": True,
+        "created_at": "2026-11-25",
+        "pin_protected": False,
+        "pin_code": "",
+        "total_optimizations": 0,
+        "total_ram_reclaimed_gb": 0.0,
+        "custom_profiles": [
+            {
+                "id": "profile_guest",
+                "name": "Guest Profile (Default)",
+                "icon": "🎮",
+                "mode": "gaming",
+                "theme": "obsidian"
+            },
+            {
+                "id": "profile_esports",
+                "name": "Esports High-FPS Rig",
+                "icon": "⚡",
+                "mode": "gaming",
+                "theme": "cyberpunk"
+            },
+            {
+                "id": "profile_eco",
+                "name": "Silent Eco & Battery",
+                "icon": "🌱",
+                "mode": "potato",
+                "theme": "emerald"
+            }
+        ],
+        "active_profile_id": "profile_guest"
+    },
+
+    # Security & Integrity Settings
+    "security_settings": {
+        "process_whitelist_enforced": True,
+        "strict_path_validation": True,
+        "prevent_critical_termination": True,
+        "detect_suspicious_processes": True,
+        "app_lock_enabled": False
+    },
+
+    # Local Reports & Suggestion History
+    "feedback_history": []
 }
 
 def load_config() -> Dict[str, Any]:
@@ -105,3 +159,69 @@ def set_first_run_completed(completed: bool = True) -> bool:
 
 def reset_first_run() -> bool:
     return update_setting("first_run_completed", False)
+
+# User Account & Profile Helpers
+def get_account_info() -> Dict[str, Any]:
+    """Retrieves current user account details and profile states."""
+    cfg = load_config()
+    account = cfg.get("user_account", {})
+    if not isinstance(account, dict):
+        account = DEFAULT_CONFIG["user_account"].copy()
+    if "is_guest" not in account:
+        account["is_guest"] = account.get("account_type", "guest") == "guest"
+    return account
+
+def update_account_info(account_dict: Dict[str, Any]) -> bool:
+    """Updates account profile settings (username, avatar, pin, active profile)."""
+    cfg = load_config()
+    current = cfg.get("user_account", DEFAULT_CONFIG["user_account"].copy())
+    current.update(account_dict)
+    cfg["user_account"] = current
+    return save_config(cfg)
+
+def record_optimization_stat(reclaimed_gb: float = 0.0) -> bool:
+    """Increments total optimizations and lifetime memory freed counters."""
+    cfg = load_config()
+    account = cfg.get("user_account", DEFAULT_CONFIG["user_account"].copy())
+    account["total_optimizations"] = account.get("total_optimizations", 0) + 1
+    current_reclaimed = account.get("total_ram_reclaimed_gb", 0.0)
+    account["total_ram_reclaimed_gb"] = round(current_reclaimed + max(0.0, reclaimed_gb), 2)
+    cfg["user_account"] = account
+    return save_config(cfg)
+
+def switch_profile(profile_id: str) -> Dict[str, Any]:
+    """Switches active profile and applies profile settings (theme, continuous mode)."""
+    cfg = load_config()
+    account = cfg.get("user_account", DEFAULT_CONFIG["user_account"].copy())
+    profiles = account.get("custom_profiles", [])
+    selected = None
+    for p in profiles:
+        p_id = p.get("id", "")
+        if p_id == profile_id or p_id == f"profile_{profile_id}" or (profile_id and profile_id in p_id):
+            selected = p
+            break
+    if selected:
+        account["active_profile_id"] = selected.get("id")
+        if "theme" in selected:
+            cfg["theme"] = selected["theme"]
+        if "mode" in selected:
+            cfg["continuous_mode"] = selected["mode"]
+        cfg["user_account"] = account
+        save_config(cfg)
+        return {"status": True, "profile": selected, "config": cfg}
+    return {"status": False, "message": "Profile not found"}
+
+def save_feedback_entry(entry: Dict[str, Any]) -> bool:
+    """Saves a user feedback or bug report to local history."""
+    cfg = load_config()
+    history = cfg.get("feedback_history", [])
+    import time
+    entry["timestamp"] = time.strftime("%Y-%m-%d %H:%M:%S")
+    history.insert(0, entry)
+    cfg["feedback_history"] = history[:50]  # keep latest 50 entries
+    return save_config(cfg)
+
+def get_feedback_history() -> list:
+    """Returns local feedback submission history."""
+    cfg = load_config()
+    return cfg.get("feedback_history", [])

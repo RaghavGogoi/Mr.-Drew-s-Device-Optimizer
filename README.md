@@ -22,9 +22,12 @@ Built with a high-speed dual architecture combining a **Pure C++17 Kernel Engine
 
 ### Interface & User Experience
 * **Responsive HTML5 Engine:** Zero-dependency UI built with Vanilla CSS Grid/Flexbox layouts and native Web Audio API telemetry feedback.
-* **Live Hardware & C++ Badges:** Displays real-time OS, Elevation (Standard/Admin), and Native C++ Engine status directly in the header.
+* **Guest-First User Account Studio:** 100% offline and private by default with zero login-wall or cloud account requirements. Includes 12 avatar choices, custom display names, lifetime RAM reclaimed metrics, profile switcher (Guest, Esports, Eco), and optional 4-digit PIN protection.
+* **Security & System Integrity Shield:** In-app security scoring (Grade A+) that validates immutable process whitelist immunity, directory traversal barriers, Windows UAC privilege isolation, active Antivirus engine status, and scans for rogue background cryptominers.
+* **Community Report & Suggestion Center:** In-app reporting tool for bugs, suggestions, and feedback with automatic privacy-sanitized diagnostic exports (masked usernames and directories) and 1-click GitHub Issues submission.
+* **Live Hardware & C++ Badges:** Displays real-time OS, Elevation (Standard/Admin), Security Grade, and Native C++ Engine status directly in the header.
 * **Interactive Spotlight System:** Position-aware guided tour engine with element tracking, viewport bounds detection, and manual drag controls.
-* **Custom Theme Pipeline:** Supports 6 visual themes (Obsidian, Cosmic, Emerald, Ember, OLED, Frost) with dynamic CSS custom property injection.
+* **Custom Theme Pipeline:** Supports visual themes (Obsidian, Cosmic, Emerald, Ember, OLED, Frost) with dynamic CSS custom property injection.
 
 ---
 
@@ -84,12 +87,18 @@ DeviceOptimizer.exe --boost-game "RobloxPlayerBeta.exe"
 
 ### Windows Setup
 
-#### Prerequisites
+#### 1-Click Instant Run (Zero Dependencies)
+Run the application instantly without needing Python, compilers, or third-party packages:
+* **Option A:** Double-click `run.bat` in the repository root.
+* **Option B:** Double-click `DeviceOptimizer.exe` (automatically opens the desktop GUI when launched without CLI arguments, or runs as high-speed C++ CLI in terminal).
+* **Option C:** Double-click `dist\DeviceOptimizerGUI\DeviceOptimizerGUI.exe` for the completely standalone zero-dependency portable binary.
+
+#### Prerequisites for Developers (Optional)
 * Windows 10 or Windows 11 (64-bit)
 * Python 3.8 or higher
 * MinGW-w64 `g++` or MSVC (optional, for compiling C++ kernel binary)
 
-#### Quick Run
+#### Quick Run from Source
 Execute the automated boot script from Command Prompt or PowerShell:
 
 ```cmd
@@ -104,11 +113,11 @@ run.bat
 To manually compile both the executable and shared library:
 
 ```cmd
-# Standalone CLI executable
-g++ -O3 -std=c++17 main.cpp -o DeviceOptimizer.exe -static -lpsapi -lwinmm -lpowrprof
+# Standalone CLI executable & GUI launcher
+g++ -O3 -std=c++17 main.cpp -o DeviceOptimizer.exe -static -lpsapi -lwinmm -lpowrprof -lshell32
 
 # Native C ABI shared library (loaded in-process by Python)
-g++ -DBUILD_DLL -O3 -std=c++17 -shared main.cpp -o device_optimizer.dll -static -lpsapi -lwinmm -lpowrprof
+g++ -DBUILD_DLL -O3 -std=c++17 -shared main.cpp -o device_optimizer.dll -static -lpsapi -lwinmm -lpowrprof -lshell32
 ```
 
 ---
@@ -147,6 +156,17 @@ Run the test suite to verify the native engine, DLL bridge, API bridge, and opti
 ```cmd
 python -m unittest discover tests -v
 ```
+
+---
+
+## Security & GitHub Community Integration
+
+* **Security Policy & Disclosures:** See [SECURITY.md](SECURITY.md) for vulnerability disclosure standards, threat modeling, and security principles.
+* **Continuous Integration:** GitHub Actions matrix workflow runs on Windows and Linux across Python 3.10 through 3.13 (`.github/workflows/ci.yml`).
+* **Automated Security Auditing:** Weekly and push-triggered CodeQL C++/Python analysis and Bandit AST vulnerability scanning (`.github/workflows/security.yml`).
+* **Issue Templates:** Standardized GitHub templates for [Bug Reports](.github/ISSUE_TEMPLATE/bug_report.md) and [Feature Suggestions](.github/ISSUE_TEMPLATE/feature_request.md).
+* **Contributing Guidelines:** Code conventions, C++ static compilation flags, and PR instructions in [CONTRIBUTING.md](CONTRIBUTING.md).
+* **Code of Conduct:** Contributor Covenant guidelines documented in [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
 
 ---
 

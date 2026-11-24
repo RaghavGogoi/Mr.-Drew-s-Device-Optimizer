@@ -17,10 +17,12 @@
 #include <psapi.h>
 #include <timeapi.h>
 #include <powrprof.h>
+#include <shellapi.h>
 #ifdef _MSC_VER
 #pragma comment(lib, "winmm.lib")
 #pragma comment(lib, "psapi.lib")
 #pragma comment(lib, "powrprof.lib")
+#pragma comment(lib, "shell32.lib")
 #endif
 #else
 #include <unistd.h>
@@ -809,13 +811,85 @@ void PrintHelp() {
               << std::endl;
 }
 
+bool LaunchDesktopGui() {
+#ifdef _WIN32
+    wchar_t exePathBuf[MAX_PATH];
+    GetModuleFileNameW(NULL, exePathBuf, MAX_PATH);
+    std::filesystem::path appDir = std::filesystem::path(exePathBuf).parent_path();
+
+    // 1. Check for standalone GUI executable in the directory or dist
+    std::vector<std::wstring> guiExeCandidates = {
+        L"DeviceOptimizerGUI.exe",
+        L"MrDrewsDeviceOptimizer.exe",
+        L"dist\\DeviceOptimizerGUI\\DeviceOptimizerGUI.exe"
+    };
+
+    for (const auto& candidate : guiExeCandidates) {
+        std::filesystem::path fullGuiPath = appDir / candidate;
+        if (std::filesystem::exists(fullGuiPath)) {
+            HINSTANCE hInst = ShellExecuteW(NULL, L"open", fullGuiPath.c_str(), NULL, appDir.c_str(), SW_SHOWDEFAULT);
+            if ((INT_PTR)hInst > 32) {
+                return true;
+            }
+        }
+    }
+
+    // 2. Check for pythonw.exe or python.exe to run run.py
+    std::filesystem::path runPy = appDir / L"run.py";
+    if (std::filesystem::exists(runPy)) {
+        HINSTANCE hInst = ShellExecuteW(NULL, L"open", L"pythonw.exe", L"run.py", appDir.c_str(), SW_SHOWDEFAULT);
+        if ((INT_PTR)hInst > 32) {
+            return true;
+        }
+
+        hInst = ShellExecuteW(NULL, L"open", L"py.exe", L"-3 run.py", appDir.c_str(), SW_SHOWDEFAULT);
+        if ((INT_PTR)hInst > 32) {
+            return true;
+        }
+
+        hInst = ShellExecuteW(NULL, L"open", L"python.exe", L"run.py", appDir.c_str(), SW_SHOWDEFAULT);
+        if ((INT_PTR)hInst > 32) {
+            return true;
+        }
+    }
+
+    // 3. Fallback: check if launched from Windows Explorer
+    HWND hConsole = GetConsoleWindow();
+    DWORD procId = 0;
+    GetWindowThreadProcessId(hConsole, &procId);
+    bool isSpawnedFromExplorer = (GetCurrentProcessId() == procId);
+
+    if (isSpawnedFromExplorer) {
+        MessageBoxW(NULL,
+            L"Mr. Drew's Device Optimizer\n\n"
+            L"Desktop GUI requires DeviceOptimizerGUI.exe or Python 3.8+ (run.py).\n\n"
+            L"To run in high-speed C++ CLI mode, open Command Prompt and execute:\n"
+            L"  DeviceOptimizer.exe --fps-boost\n"
+            L"  DeviceOptimizer.exe --monster\n"
+            L"  DeviceOptimizer.exe --potato",
+            L"Mr. Drew's Device Optimizer",
+            MB_ICONINFORMATION | MB_OK);
+    } else {
+        PrintHelp();
+    }
+    return false;
+#else
+    std::string runPy = "python3 run.py";
+    int ret = system(runPy.c_str());
+    return (ret == 0);
+#endif
+}
+
 #ifndef BUILD_DLL
 int main(int argc, char* argv[]) {
     EnableAnsiSupport();
 
     std::vector<std::string> args(argv, argv + argc);
     if (args.size() <= 1) {
-        PrintHelp();
+        // If double-clicked in Explorer or run without arguments, launch GUI
+        if (LaunchDesktopGui()) {
+            return 0;
+        }
         return 0;
     }
 
@@ -888,11 +962,7 @@ int main(int argc, char* argv[]) {
     }
 
     if (launchGui) {
-#ifdef _WIN32
-        system("python run.py");
-#else
-        system("python3 run.py");
-#endif
+        LaunchDesktopGui();
         return 0;
     }
 

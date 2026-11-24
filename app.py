@@ -6,13 +6,33 @@ import platform
 import subprocess
 import json
 import webbrowser
+import http.server
+import socketserver
 from typing import Optional, Dict, Any, List, Tuple
 
-# Ensure working directory is set to script location
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+# Ensure working directory is set to script location or executable directory
+if getattr(sys, "frozen", False):
+    SCRIPT_DIR = os.path.dirname(sys.executable)
+else:
+    SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+
 os.chdir(SCRIPT_DIR)
 if SCRIPT_DIR not in sys.path:
     sys.path.insert(0, SCRIPT_DIR)
+
+def get_resource_path(relative_path: str) -> str:
+    """Returns absolute path to a resource, handling PyInstaller _MEIPASS and local dev directory."""
+    if hasattr(sys, '_MEIPASS'):
+        p = os.path.join(sys._MEIPASS, relative_path)
+        if os.path.exists(p):
+            return p
+    p = os.path.join(SCRIPT_DIR, relative_path)
+    if os.path.exists(p):
+        return p
+    dev_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), relative_path)
+    if os.path.exists(dev_path):
+        return dev_path
+    return p
 
 import config
 from optimizer_core import OptimizerCore
@@ -119,6 +139,37 @@ class Api:
             return []
 
     # =========================================================================
+    # User Account, Security Audit & Feedback Methods
+    # =========================================================================
+
+    def get_account_info(self) -> dict:
+        """Returns account profile (Guest by default, stats, custom profiles)."""
+        return config.get_account_info()
+
+    def update_account_info(self, account_dict: dict) -> bool:
+        """Updates account details (username, avatar, pin, active profile)."""
+        return config.update_account_info(account_dict)
+
+    def switch_profile(self, profile_id: str) -> dict:
+        """Switches user profile and updates configuration."""
+        return config.switch_profile(profile_id)
+
+    def audit_system_security(self) -> dict:
+        """Runs the complete security, UAC, Defender, and cryptominer audit."""
+        return self.core.audit_system_security()
+
+    def submit_feedback(self, report: dict) -> dict:
+        """Saves feedback or bug report locally and prepares GitHub submission."""
+        if not isinstance(report, dict):
+            report = {"title": "Feedback", "description": str(report)}
+        ok = config.save_feedback_entry(report)
+        return {"status": ok, "message": "Feedback saved locally.", "report": report}
+
+    def get_feedback_history(self) -> list:
+        """Returns past feedback and bug reports saved locally."""
+        return config.get_feedback_history()
+
+    # =========================================================================
     # Continuous Optimizer Methods
     # =========================================================================
 
@@ -205,6 +256,21 @@ class Api:
                 except Exception as e:
                     return {"logs": [f"[PROCESS ERROR] {str(e)}"]}
             return {"logs": ["[PROCESS MANAGER] Process ID not specified."]}
+        elif action_id == "boost_process":
+            if extra_arg:
+                try:
+                    pid = int(extra_arg)
+                    pname = f"PID {pid}"
+                    if HAS_PSUTIL:
+                        try:
+                            pname = psutil.Process(pid).name()
+                        except Exception:
+                            pass
+                    ok, msg = self.core.boost_game_process(pid, "high")
+                    return {"status": ok, "logs": [f"[PRIORITY BOOST] {msg} ({pname})"]}
+                except Exception as e:
+                    return {"status": False, "logs": [f"[BOOST ERROR] {str(e)}"]}
+            return {"status": False, "logs": ["[PRIORITY BOOST] Process ID not specified."]}
         elif action_id == "elevate_admin":
             if self.core.is_admin:
                 return {"logs": ["[ELEVATION] Optimizer is already running with Administrator / Elevated privileges."]}
@@ -235,6 +301,16 @@ class Api:
                 return {"logs": [f"[GAME BOOST] {msg}"]}
             else:
                 return {"logs": ["[GAME BOOST] No active game detected. Priority protection active for your next game."]}
+        elif action_id == "audit_system_security":
+            return self.audit_system_security()
+        elif action_id == "get_account_info":
+            return self.get_account_info()
+        elif action_id == "switch_profile":
+            return self.switch_profile(str(extra_arg))
+        elif action_id == "submit_feedback":
+            return self.submit_feedback(extra_arg if isinstance(extra_arg, dict) else {})
+        elif action_id == "get_feedback_history":
+            return {"history": self.get_feedback_history()}
         
         return {"logs": [f"Executed: {action_id}"]}
 
@@ -324,7 +400,7 @@ def setup_system_tray(window, api, core):
                 )
 
         def on_quick_purge(icon, item):
-            core.run_monster_optimizer()
+            core.run_monster_optimization()
 
         def on_quit_app(icon, item):
             window._force_quit = True
@@ -353,26 +429,164 @@ def setup_system_tray(window, api, core):
         return None
 
 
-def start_local_http_server(port=8080):
-    """Fallback local HTTP server if PyWebView runs in browser mode."""
+class ApiHttpHandler(http.server.SimpleHTTPRequestHandler):
+    """
+    High-performance, zero-dependency REST & Static HTTP server.
+    Ensures EVERY SINGLE BUTTON and telemetry feature works 100% even if PyWebView fails.
+    """
+    api_instance: Optional['Api'] = None
+    gui_directory: str = ""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, directory=self.gui_directory, **kwargs)
+
+    def log_message(self, format, *args):
+        # Suppress noisy HTTP request logging in console
+        pass
+
+    def send_json_response(self, data: Any, status: int = 200):
+        body = json.dumps(data).encode("utf-8")
+        self.send_response(status)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(body)))
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+        self.end_headers()
+        self.wfile.write(body)
+
+    def do_OPTIONS(self):
+        self.send_response(200)
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+        self.end_headers()
+
+    def do_GET(self):
+        api = self.api_instance
+        if self.path.startswith("/api/") and api:
+            if self.path == "/api/specs":
+                self.send_json_response(api.get_system_specs())
+            elif self.path == "/api/hardware":
+                self.send_json_response(api.get_hardware_details())
+            elif self.path.startswith("/api/top_processes"):
+                count = 15
+                if "count=" in self.path:
+                    try:
+                        count = int(self.path.split("count=")[1].split("&")[0])
+                    except Exception:
+                        count = 15
+                self.send_json_response(api.get_top_ram_processes(count))
+            elif self.path == "/api/config":
+                self.send_json_response(api.get_config())
+            elif self.path == "/api/continuous_status":
+                self.send_json_response(api.get_continuous_status())
+            elif self.path == "/api/guide_steps":
+                self.send_json_response(api.get_guide_steps())
+            elif self.path == "/api/startup_enabled":
+                self.send_json_response({"enabled": api.is_startup_enabled()})
+            elif self.path == "/api/account":
+                self.send_json_response(api.get_account_info())
+            elif self.path == "/api/security_audit":
+                self.send_json_response(api.audit_system_security())
+            elif self.path == "/api/feedback_history":
+                self.send_json_response(api.get_feedback_history())
+            elif self.path == "/api/diagnostics":
+                diag = api.export_diagnostics()
+                body = diag.encode("utf-8")
+                self.send_response(200)
+                self.send_header("Content-Type", "text/plain; charset=utf-8")
+                self.send_header("Content-Length", str(len(body)))
+                self.send_header("Access-Control-Allow-Origin", "*")
+                self.end_headers()
+                self.wfile.write(body)
+            else:
+                self.send_json_response({"error": "Unknown API endpoint"}, 404)
+            return
+
+        super().do_GET()
+
+    def do_POST(self):
+        api = self.api_instance
+        if self.path.startswith("/api/") and api:
+            content_length = int(self.headers.get("Content-Length", 0))
+            post_body = self.rfile.read(content_length)
+            req_data = {}
+            if post_body:
+                try:
+                    req_data = json.loads(post_body.decode("utf-8"))
+                except Exception:
+                    req_data = {}
+
+            if self.path == "/api/execute_action":
+                action_id = req_data.get("action_id", "")
+                extra_arg = req_data.get("extra_arg", None)
+                res = api.execute_action(action_id, extra_arg)
+                self.send_json_response(res)
+            elif self.path == "/api/update_setting":
+                key = req_data.get("key", "")
+                val = req_data.get("value", None)
+                res = api.update_setting(key, val)
+                self.send_json_response({"status": res})
+            elif self.path == "/api/save_config":
+                res = api.save_config(req_data)
+                self.send_json_response({"status": res})
+            elif self.path == "/api/reset_config":
+                res = api.reset_config()
+                self.send_json_response(res)
+            elif self.path == "/api/toggle_continuous":
+                enable = req_data.get("enable", None)
+                mode = req_data.get("mode", "gaming")
+                interval = req_data.get("interval_sec", 30)
+                res = api.toggle_continuous_mode(enable, mode, interval)
+                self.send_json_response(res)
+            elif self.path == "/api/account":
+                res = api.update_account_info(req_data)
+                self.send_json_response({"status": res})
+            elif self.path == "/api/switch_profile":
+                pid = req_data.get("profile_id", "")
+                res = api.switch_profile(pid)
+                self.send_json_response(res)
+            elif self.path == "/api/feedback":
+                res = api.submit_feedback(req_data)
+                self.send_json_response(res)
+            else:
+                self.send_json_response({"error": "Unknown POST endpoint"}, 404)
+            return
+
+        self.send_json_response({"error": "Method not allowed"}, 405)
+
+
+def start_local_http_server(api: Api, preferred_port: int = 8080) -> int:
+    """Fallback local HTTP server with full REST API if PyWebView runs in browser mode."""
     import http.server
     import socketserver
     
-    gui_dir = os.path.join(SCRIPT_DIR, "gui")
-    os.chdir(gui_dir)
-    handler = http.server.SimpleHTTPRequestHandler
-    
-    class ReusableTCPServer(socketserver.TCPServer):
+    gui_dir = get_resource_path("gui")
+    ApiHttpHandler.api_instance = api
+    ApiHttpHandler.gui_directory = gui_dir
+
+    class ReusableTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
         allow_reuse_address = True
+        daemon_threads = True
         
-    with ReusableTCPServer(("127.0.0.1", port), handler) as httpd:
-        httpd.serve_forever()
+    ports = list(range(preferred_port, preferred_port + 15)) + [0]
+    for p in ports:
+        try:
+            httpd = ReusableTCPServer(("127.0.0.1", p), ApiHttpHandler)
+            actual_port = httpd.server_address[1]
+            server_thread = threading.Thread(target=httpd.serve_forever, daemon=True)
+            server_thread.start()
+            return actual_port
+        except OSError:
+            continue
+    raise RuntimeError("Failed to bind local HTTP server to any port.")
 
 
 def main():
     api = Api()
-    html_path = os.path.join(SCRIPT_DIR, "gui", "index.html")
-    icon_ico = os.path.join(SCRIPT_DIR, "gui", "assets", "logo.ico")
+    html_path = get_resource_path(os.path.join("gui", "index.html"))
+    icon_ico = get_resource_path(os.path.join("gui", "assets", "logo.ico"))
 
     is_minimized_launch = "--minimized" in sys.argv
 
@@ -425,23 +639,31 @@ def main():
             return
         except Exception as e:
             print(f"[WEBVIEW WARNING] Native window launch failed: {e}")
-            print("[WEBVIEW FALLBACK] Launching local browser interface...")
+            print("[WEBVIEW FALLBACK] Launching local browser interface with full REST API...")
 
-    # Fallback to local HTTP server + default browser launch
-    port = 8080
-    t = threading.Thread(target=start_local_http_server, args=(port,), daemon=True)
-    t.start()
-    
-    url = f"http://127.0.0.1:{port}"
-    print(f"[+] Local Web GUI running at: {url}")
-    if not is_minimized_launch:
-        webbrowser.open(url)
-        
+    # Fallback to local HTTP server with full REST API + default browser launch
     try:
-        while True:
-            time.sleep(1)
-    except KeyboardInterrupt:
-        print("\n[+] Optimizer stopped.")
+        bound_port = start_local_http_server(api, preferred_port=8080)
+        url = f"http://127.0.0.1:{bound_port}"
+        print(f"[+] Local Web GUI running at: {url}")
+        
+        # Setup tray in browser fallback mode
+        tray_instance = setup_system_tray(None, api, api.core)
+        
+        if not is_minimized_launch:
+            webbrowser.open(url)
+            
+        try:
+            while True:
+                time.sleep(1)
+        except KeyboardInterrupt:
+            print("\n[+] Optimizer stopped.")
+            api.core.stop_continuous_mode()
+            if tray_instance:
+                tray_instance.stop()
+    except Exception as e:
+        print(f"[FATAL] Could not start interface: {e}")
+        sys.exit(1)
 
 
 if __name__ == "__main__":

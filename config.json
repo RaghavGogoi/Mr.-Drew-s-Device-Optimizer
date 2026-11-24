@@ -12,6 +12,7 @@
     "run_on_startup": false,
     "close_to_tray": true,
     "notify_on_optimization": true,
+    "low_power_mode": false,
     "custom_game_whitelist": [
         "Valorant.exe",
         "cs2.exe",
@@ -40,7 +41,7 @@
         "#8b5cf6",
         "#ff7300"
     ],
-    "bg_design": "starfield",
+    "bg_design": "circuit",
     "bg_fx_intensity": 0.7,
     "bg_fx_speed": 1.0,
     "bg_animated": true,
@@ -56,5 +57,77 @@
     "text_glow": true,
     "sound_effects": true,
     "sound_theme": "cyber",
-    "sound_volume": 0.08
+    "sound_volume": 0.08,
+    "user_account": {
+        "username": "Guest User",
+        "avatar": "\ud83c\udfae",
+        "account_type": "guest",
+        "created_at": "2026-11-25",
+        "pin_protected": false,
+        "pin_code": "",
+        "total_optimizations": 4,
+        "total_ram_reclaimed_gb": 3.86,
+        "custom_profiles": [
+            {
+                "id": "profile_guest",
+                "name": "Guest Profile (Default)",
+                "icon": "\ud83c\udfae",
+                "mode": "gaming",
+                "theme": "obsidian"
+            },
+            {
+                "id": "profile_esports",
+                "name": "Esports High-FPS Rig",
+                "icon": "\u26a1",
+                "mode": "gaming",
+                "theme": "cyberpunk"
+            },
+            {
+                "id": "profile_eco",
+                "name": "Silent Eco & Battery",
+                "icon": "\ud83c\udf31",
+                "mode": "potato",
+                "theme": "emerald"
+            }
+        ],
+        "active_profile_id": "profile_guest",
+        "is_guest": true
+    },
+    "security_settings": {
+        "process_whitelist_enforced": true,
+        "strict_path_validation": true,
+        "prevent_critical_termination": true,
+        "detect_suspicious_processes": true,
+        "app_lock_enabled": false
+    },
+    "feedback_history": [
+        {
+            "type": "feature",
+            "title": "Add Auto-Game Priority",
+            "description": "Automatically prioritize Steam games on launch.",
+            "category": "Gaming",
+            "severity": "Enhancement",
+            "timestamp": "2026-11-25 00:29:30"
+        },
+        {
+            "type": "bug",
+            "title": "Test Bug",
+            "description": "Unit test report",
+            "timestamp": "2026-11-25 00:29:25"
+        },
+        {
+            "type": "feature",
+            "title": "Add Auto-Game Priority",
+            "description": "Automatically prioritize Steam games on launch.",
+            "category": "Gaming",
+            "severity": "Enhancement",
+            "timestamp": "2026-11-25 00:28:18"
+        },
+        {
+            "type": "bug",
+            "title": "Test Bug",
+            "description": "Unit test report",
+            "timestamp": "2026-11-25 00:28:13"
+        }
+    ]
 }

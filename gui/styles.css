@@ -359,9 +359,14 @@ body {
 
 .badge-cyan { border-color: rgba(0, 240, 255, 0.4); color: var(--cyan); cursor: pointer; }
 .badge-cyan:hover { background: rgba(0, 240, 255, 0.15); }
-.badge-green { border-color: rgba(16, 185, 129, 0.4); color: var(--green); }
+.badge-green { border-color: rgba(16, 185, 129, 0.4); color: var(--green); cursor: pointer; }
+.badge-green:hover { background: rgba(16, 185, 129, 0.15); }
 .badge-amber { border-color: rgba(245, 158, 11, 0.4); color: var(--amber); cursor: pointer; }
 .badge-amber:hover { background: rgba(245, 158, 11, 0.18); }
+.badge-purple { border-color: rgba(168, 85, 247, 0.4); color: var(--purple); cursor: pointer; }
+.badge-purple:hover { background: rgba(168, 85, 247, 0.18); }
+.badge-surface { border-color: rgba(255, 255, 255, 0.14); cursor: pointer; }
+.badge-surface:hover { background: var(--bg-surface-hover); }
 
 /* -------------------------------------------------------------------------
    SIDEBAR (5 TABS)
@@ -996,4 +1001,94 @@ input:checked + .switch-sm-slider:before { transform: translateX(20px); backgrou
     .actions-grid { grid-template-columns: repeat(2, 1fr); }
     .bg-designs-grid { grid-template-columns: repeat(2, 1fr); }
     .themes-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* =========================================================================
+   ACCOUNT, SECURITY & REPORT / SUGGESTION STUDIO STYLING
+   ========================================================================= */
+
+/* Account & Profile Studio */
+.avatar-picker-grid {
+    display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0;
+}
+.avatar-btn {
+    font-size: 20px; width: 42px; height: 42px; border-radius: 10px;
+    background: var(--bg-surface); border: 1px solid var(--border-color);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: all 0.2s ease;
+}
+.avatar-btn:hover {
+    background: var(--bg-surface-hover); transform: translateY(-2px);
+    border-color: var(--accent);
+}
+.avatar-btn.active {
+    background: rgba(0, 240, 255, 0.2); border-color: var(--accent);
+    box-shadow: 0 0 10px var(--accent-glow);
+}
+.profile-stats-grid {
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin: 10px 0;
+}
+.profile-stat-box {
+    background: var(--bg-inner); border: 1px solid var(--border-color);
+    border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 4px;
+}
+.profile-stat-val {
+    font-size: 22px; font-weight: 800; font-family: 'Outfit', sans-serif;
+    color: var(--accent);
+}
+
+/* Security Checklist Styling */
+.security-banner {
+    display: flex; align-items: center; justify-content: space-between;
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(0, 240, 255, 0.1));
+    border: 1px solid rgba(16, 185, 129, 0.4);
+    border-radius: 12px; padding: 14px 18px; margin-bottom: 12px;
+}
+.security-grade-pill {
+    font-size: 24px; font-weight: 900; font-family: 'Outfit', sans-serif;
+    color: var(--green); padding: 4px 16px; border-radius: 9999px;
+    background: rgba(16, 185, 129, 0.2); border: 1px solid var(--green);
+}
+.security-item {
+    background: var(--bg-inner); border: 1px solid var(--border-color);
+    border-radius: 10px; padding: 10px 14px; margin-bottom: 8px;
+    display: flex; flex-direction: column; gap: 4px;
+}
+.security-item-header {
+    display: flex; align-items: center; justify-content: space-between;
+}
+.status-pill {
+    font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 4px;
+}
+.status-pill.pass { background: rgba(16, 185, 129, 0.2); color: var(--green); border: 1px solid var(--green); }
+.status-pill.warn { background: rgba(245, 158, 11, 0.2); color: var(--amber); border: 1px solid var(--amber); }
+
+/* Feedback & Suggestions Tabs & Spec Box */
+.tab-strip {
+    display: flex; gap: 6px; border-bottom: 1px solid var(--border-color);
+    padding-bottom: 8px; margin-bottom: 12px; overflow-x: auto;
+}
+.tab-btn {
+    padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 700;
+    background: var(--bg-surface); border: 1px solid var(--border-color);
+    color: var(--text-secondary); cursor: pointer; transition: all 0.2s ease;
+    white-space: nowrap;
+}
+.tab-btn:hover { background: var(--bg-surface-hover); color: var(--text-primary); }
+.tab-btn.active {
+    background: rgba(168, 85, 247, 0.2); border-color: var(--purple);
+    color: var(--purple);
+}
+.spec-preview-box {
+    background: #02040a; border: 1px solid var(--border-color);
+    border-radius: 8px; padding: 10px; font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; color: #a5b4fc; max-height: 110px; overflow-y: auto;
+    white-space: pre-wrap; line-height: 1.4;
+}
+.feedback-history-list {
+    display: flex; flex-direction: column; gap: 8px; max-height: 320px; overflow-y: auto;
+}
+.feedback-history-item {
+    background: var(--bg-inner); border: 1px solid var(--border-color);
+    border-radius: 8px; padding: 10px 12px; display: flex; flex-direction: column; gap: 4px;
 }

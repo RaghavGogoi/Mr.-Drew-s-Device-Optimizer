@@ -7,6 +7,7 @@ Verifies OptimizerCore, Api Bridge, Config Persistence, and Native C++ Engine.
 
 import os
 import sys
+import json
 import unittest
 import subprocess
 
@@ -167,6 +168,164 @@ class TestApiBridge(unittest.TestCase):
 
         res2 = self.api.execute_action("clean_shader_cache")
         self.assertIn("logs", res2)
+
+        res3 = self.api.execute_action("boost_process", os.getpid())
+        self.assertIn("logs", res3)
+
+    def test_monster_alias(self):
+        res = self.api.core.run_monster_optimizer()
+        self.assertIn("logs", res)
+        self.assertIn("reclaimed_mb", res)
+
+    def test_rest_api_server_endpoints(self):
+        import urllib.request
+        from app import start_local_http_server
+        port = start_local_http_server(self.api, preferred_port=8990)
+        self.assertGreater(port, 0)
+
+        # Test GET /api/specs
+        req = urllib.request.Request(f"http://127.0.0.1:{port}/api/specs")
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            self.assertEqual(resp.status, 200)
+            data = json.loads(resp.read().decode("utf-8"))
+            self.assertIn("total_ram_gb", data)
+
+        # Test GET /api/config
+        req = urllib.request.Request(f"http://127.0.0.1:{port}/api/config")
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            self.assertEqual(resp.status, 200)
+            data = json.loads(resp.read().decode("utf-8"))
+            self.assertIn("theme", data)
+
+        # Test POST /api/execute_action
+        post_data = json.dumps({"action_id": "trim_working_sets", "extra_arg": None}).encode("utf-8")
+        req = urllib.request.Request(f"http://127.0.0.1:{port}/api/execute_action", data=post_data, headers={"Content-Type": "application/json"})
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            self.assertEqual(resp.status, 200)
+            data = json.loads(resp.read().decode("utf-8"))
+            self.assertIn("logs", data)
+
+        # Test GET /api/account
+        with urllib.request.urlopen(f"http://127.0.0.1:{port}/api/account", timeout=5) as resp:
+            self.assertEqual(resp.status, 200)
+            account_data = json.loads(resp.read().decode("utf-8"))
+            self.assertIn("username", account_data)
+
+        # Test GET /api/security_audit
+        with urllib.request.urlopen(f"http://127.0.0.1:{port}/api/security_audit", timeout=5) as resp:
+            self.assertEqual(resp.status, 200)
+            sec_data = json.loads(resp.read().decode("utf-8"))
+            self.assertIn("security_score", sec_data)
+            self.assertIn("security_grade", sec_data)
+
+        # Test POST /api/feedback
+        fb_post = json.dumps({"type": "bug", "title": "Test Bug", "description": "Unit test report"}).encode("utf-8")
+        fb_req = urllib.request.Request(f"http://127.0.0.1:{port}/api/feedback", data=fb_post, headers={"Content-Type": "application/json"})
+        with urllib.request.urlopen(fb_req, timeout=5) as resp:
+            self.assertEqual(resp.status, 200)
+            fb_res = json.loads(resp.read().decode("utf-8"))
+            self.assertTrue(fb_res.get("status"))
+
+        # Test GET /api/feedback_history
+        with urllib.request.urlopen(f"http://127.0.0.1:{port}/api/feedback_history", timeout=5) as resp:
+            self.assertEqual(resp.status, 200)
+            history_data = json.loads(resp.read().decode("utf-8"))
+            self.assertIsInstance(history_data, list)
+            self.assertGreaterEqual(len(history_data), 1)
+
+
+class TestUserAccountAndSecurity(unittest.TestCase):
+    """Verifies guest-first account system, security audit, and feedback management."""
+
+    def setUp(self):
+        self.core = OptimizerCore()
+        self.api = Api()
+
+    def test_guest_account_default(self):
+        info = config.get_account_info()
+        self.assertIsInstance(info, dict)
+        self.assertIn("username", info)
+        self.assertIn("avatar", info)
+        self.assertIn("is_guest", info)
+        self.assertTrue(info["is_guest"])
+        self.assertIn("total_optimizations", info)
+        self.assertIn("total_ram_reclaimed_gb", info)
+
+    def test_update_account_info(self):
+        original = config.get_account_info().copy()
+        try:
+            ok = config.update_account_info({"username": "CyberAgent", "avatar": "⚡"})
+            self.assertTrue(ok)
+            updated = config.get_account_info()
+            self.assertEqual(updated["username"], "CyberAgent")
+            self.assertEqual(updated["avatar"], "⚡")
+        finally:
+            config.update_account_info(original)
+
+    def test_record_optimization_stat(self):
+        before = config.get_account_info()
+        before_runs = before.get("total_optimizations", 0)
+        before_ram = before.get("total_ram_reclaimed_gb", 0.0)
+
+        config.record_optimization_stat(1.25)
+        after = config.get_account_info()
+        self.assertEqual(after.get("total_optimizations"), before_runs + 1)
+        self.assertAlmostEqual(after.get("total_ram_reclaimed_gb"), before_ram + 1.25, places=1)
+
+    def test_switch_profile(self):
+        res = config.switch_profile("esports")
+        self.assertTrue(res["status"])
+        self.assertIn(config.get_account_info().get("active_profile_id"), ["esports", "profile_esports"])
+
+        # Switch back to guest default
+        res_back = config.switch_profile("guest")
+        self.assertTrue(res_back["status"])
+        self.assertIn(config.get_account_info().get("active_profile_id"), ["guest", "default", "profile_guest"])
+
+    def test_audit_system_security(self):
+        audit = self.core.audit_system_security()
+        self.assertIsInstance(audit, dict)
+        self.assertIn("security_score", audit)
+        self.assertIn("security_grade", audit)
+        self.assertIn("checks", audit)
+        self.assertIn("suspicious_processes", audit)
+        self.assertGreaterEqual(audit["security_score"], 60)
+        self.assertIn(audit["security_grade"], ["A+", "A", "B", "C"])
+        self.assertGreaterEqual(len(audit["checks"]), 4)
+
+        check_names = [c["name"] for c in audit["checks"]]
+        self.assertIn("Process Whitelist Immunity", check_names)
+        self.assertIn("Path Sanitization & Traversal Barrier", check_names)
+        self.assertIn("Real-Time Antivirus Protection", check_names)
+
+    def test_path_sanitization_barrier(self):
+        # Must reject parent directory traversal
+        self.assertFalse(self.core._is_safe_clean_path("../system32"))
+        self.assertFalse(self.core._is_safe_clean_path("C:\\Windows\\..\\Windows"))
+        self.assertFalse(self.core._is_safe_clean_path(""))
+        # Must reject root
+        self.assertFalse(self.core._is_safe_clean_path("C:\\"))
+        self.assertFalse(self.core._is_safe_clean_path("C:\\Windows"))
+        # Must allow valid temp folder
+        temp_dir = os.environ.get("TEMP", "")
+        if temp_dir and os.path.exists(temp_dir):
+            self.assertTrue(self.core._is_safe_clean_path(temp_dir))
+
+    def test_feedback_save_and_retrieve(self):
+        entry = {
+            "type": "feature",
+            "title": "Add Auto-Game Priority",
+            "description": "Automatically prioritize Steam games on launch.",
+            "category": "Gaming",
+            "severity": "Enhancement"
+        }
+        ok = config.save_feedback_entry(entry)
+        self.assertTrue(ok)
+        history = config.get_feedback_history()
+        self.assertIsInstance(history, list)
+        self.assertGreaterEqual(len(history), 1)
+        self.assertEqual(history[0]["title"], "Add Auto-Game Priority")
+        self.assertIn("timestamp", history[0])
 
 
 class TestNativeEngine(unittest.TestCase):

@@ -77,7 +77,7 @@ def compile_native_engine_if_available():
         try:
             print(f"[INFO] Compiling native C++ engine ({binary_name})...")
             if system == "windows":
-                compile_cmd = ["g++", "-O3", "-std=c++17", main_cpp, "-o", binary_path, "-static", "-lpsapi", "-lwinmm", "-lpowrprof"]
+                compile_cmd = ["g++", "-O3", "-std=c++17", main_cpp, "-o", binary_path, "-static", "-lpsapi", "-lwinmm", "-lpowrprof", "-lshell32"]
             else:
                 compile_cmd = ["g++", "-O3", "-std=c++17", main_cpp, "-o", binary_path]
             subprocess.check_call(compile_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)

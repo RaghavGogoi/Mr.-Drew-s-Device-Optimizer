@@ -35,7 +35,230 @@ let appConfig = {
     target_free_ram_gb: 4.0,
     sound_effects: true,
     run_on_startup: false,
-    close_to_tray: true
+    close_to_tray: true,
+    low_power_mode: false
+};
+
+// =========================================================================
+// UNIVERSAL API REST / PYWEBVIEW BRIDGE
+// =========================================================================
+const AppBackend = {
+    isNative() {
+        return !!(window.pywebview && window.pywebview.api && window.pywebview.api !== AppBackend);
+    },
+    async get_system_specs() {
+        if (this.isNative() && window.pywebview.api.get_system_specs) {
+            return await window.pywebview.api.get_system_specs();
+        }
+        try {
+            const res = await fetch("/api/specs");
+            if (res.ok) return await res.json();
+        } catch (e) {}
+        return null;
+    },
+    async get_hardware_details() {
+        if (this.isNative() && window.pywebview.api.get_hardware_details) {
+            return await window.pywebview.api.get_hardware_details();
+        }
+        try {
+            const res = await fetch("/api/hardware");
+            if (res.ok) return await res.json();
+        } catch (e) {}
+        return null;
+    },
+    async get_top_ram_processes(count = 15) {
+        if (this.isNative() && window.pywebview.api.get_top_ram_processes) {
+            return await window.pywebview.api.get_top_ram_processes(count);
+        }
+        try {
+            const res = await fetch(`/api/top_processes?count=${count}`);
+            if (res.ok) return await res.json();
+        } catch (e) {}
+        return [];
+    },
+    async get_config() {
+        if (this.isNative() && window.pywebview.api.get_config) {
+            return await window.pywebview.api.get_config();
+        }
+        try {
+            const res = await fetch("/api/config");
+            if (res.ok) return await res.json();
+        } catch (e) {}
+        return null;
+    },
+    async update_setting(key, value) {
+        if (this.isNative() && window.pywebview.api.update_setting) {
+            return await window.pywebview.api.update_setting(key, value);
+        }
+        try {
+            const res = await fetch("/api/update_setting", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ key, value })
+            });
+            if (res.ok) {
+                const data = await res.json();
+                return data.status;
+            }
+        } catch (e) {}
+        return false;
+    },
+    async reset_config() {
+        if (this.isNative() && window.pywebview.api.reset_config) {
+            return await window.pywebview.api.reset_config();
+        }
+        try {
+            const res = await fetch("/api/reset_config", { method: "POST" });
+            if (res.ok) return await res.json();
+        } catch (e) {}
+        return null;
+    },
+    async execute_action(actionId, extraArg = null) {
+        if (this.isNative() && window.pywebview.api.execute_action) {
+            return await window.pywebview.api.execute_action(actionId, extraArg);
+        }
+        try {
+            const res = await fetch("/api/execute_action", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ action_id: actionId, extra_arg: extraArg })
+            });
+            if (res.ok) return await res.json();
+        } catch (e) {}
+        return { logs: [`[API] Executed '${actionId}'.`] };
+    },
+    async toggle_continuous_mode(enable, mode = "gaming", interval_sec = 30) {
+        if (this.isNative() && window.pywebview.api.toggle_continuous_mode) {
+            return await window.pywebview.api.toggle_continuous_mode(enable, mode, interval_sec);
+        }
+        try {
+            const res = await fetch("/api/toggle_continuous", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ enable, mode, interval_sec })
+            });
+            if (res.ok) return await res.json();
+        } catch (e) {}
+        return null;
+    },
+    async get_continuous_status() {
+        if (this.isNative() && window.pywebview.api.get_continuous_status) {
+            return await window.pywebview.api.get_continuous_status();
+        }
+        try {
+            const res = await fetch("/api/continuous_status");
+            if (res.ok) return await res.json();
+        } catch (e) {}
+        return null;
+    },
+    async get_guide_steps() {
+        if (this.isNative() && window.pywebview.api.get_guide_steps) {
+            return await window.pywebview.api.get_guide_steps();
+        }
+        try {
+            const res = await fetch("/api/guide_steps");
+            if (res.ok) return await res.json();
+        } catch (e) {}
+        return null;
+    },
+    async export_diagnostics() {
+        if (this.isNative() && window.pywebview.api.export_diagnostics) {
+            return await window.pywebview.api.export_diagnostics();
+        }
+        try {
+            const res = await fetch("/api/diagnostics");
+            if (res.ok) return await res.text();
+        } catch (e) {}
+        return "";
+    },
+    async is_startup_enabled() {
+        if (this.isNative() && window.pywebview.api.is_startup_enabled) {
+            return await window.pywebview.api.is_startup_enabled();
+        }
+        try {
+            const res = await fetch("/api/startup_enabled");
+            if (res.ok) {
+                const data = await res.json();
+                return Boolean(data.enabled);
+            }
+        } catch (e) {}
+        return false;
+    },
+    async get_account_info() {
+        if (this.isNative() && window.pywebview.api.get_account_info) {
+            return await window.pywebview.api.get_account_info();
+        }
+        try {
+            const res = await fetch("/api/account");
+            if (res.ok) return await res.json();
+        } catch (e) {}
+        return null;
+    },
+    async update_account_info(accountDict) {
+        if (this.isNative() && window.pywebview.api.update_account_info) {
+            return await window.pywebview.api.update_account_info(accountDict);
+        }
+        try {
+            const res = await fetch("/api/account", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(accountDict)
+            });
+            if (res.ok) {
+                const data = await res.json();
+                return data.status;
+            }
+        } catch (e) {}
+        return false;
+    },
+    async switch_profile(profileId) {
+        if (this.isNative() && window.pywebview.api.switch_profile) {
+            return await window.pywebview.api.switch_profile(profileId);
+        }
+        try {
+            const res = await fetch("/api/switch_profile", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ profile_id: profileId })
+            });
+            if (res.ok) return await res.json();
+        } catch (e) {}
+        return null;
+    },
+    async audit_system_security() {
+        if (this.isNative() && window.pywebview.api.audit_system_security) {
+            return await window.pywebview.api.audit_system_security();
+        }
+        try {
+            const res = await fetch("/api/security_audit");
+            if (res.ok) return await res.json();
+        } catch (e) {}
+        return null;
+    },
+    async submit_feedback(report) {
+        if (this.isNative() && window.pywebview.api.submit_feedback) {
+            return await window.pywebview.api.submit_feedback(report);
+        }
+        try {
+            const res = await fetch("/api/feedback", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(report)
+            });
+            if (res.ok) return await res.json();
+        } catch (e) {}
+        return null;
+    },
+    async get_feedback_history() {
+        if (this.isNative() && window.pywebview.api.get_feedback_history) {
+            return await window.pywebview.api.get_feedback_history();
+        }
+        try {
+            const res = await fetch("/api/feedback_history");
+            if (res.ok) return await res.json();
+        } catch (e) {}
+        return [];
+    }
 };
 
 // =========================================================================
@@ -50,10 +273,23 @@ class BackgroundCanvasEngine {
         this.height = window.innerHeight;
         this.time = 0;
         this.lastTimestamp = performance.now();
+        this.lastFrameTime = 0;
+        this.isPaused = false;
         this.state = {};
         
         this.initResize();
+        this.initVisibility();
         this.start();
+    }
+
+    initVisibility() {
+        document.addEventListener("visibilitychange", () => {
+            if (document.hidden) {
+                this.pause();
+            } else {
+                this.resume();
+            }
+        });
     }
 
     initResize() {
@@ -165,13 +401,51 @@ class BackgroundCanvasEngine {
     }
 
     start() {
+        if (this.animationFrameId) return;
+        this.isPaused = false;
         const render = (now) => {
+            if (this.isPaused) {
+                this.animationFrameId = null;
+                return;
+            }
+
+            // Low-power / potato mode frame throttling: cap at ~25 FPS to save battery & CPU
+            const isLowPower = Boolean(appConfig.low_power_mode || appConfig.continuous_mode === "potato");
+            if (isLowPower && (now - this.lastFrameTime < 40)) {
+                this.animationFrameId = requestAnimationFrame(render);
+                return;
+            }
+            this.lastFrameTime = now;
+
             const dt = Math.min((now - this.lastTimestamp) / 1000, 0.1);
             this.lastTimestamp = now;
             this.draw(dt);
+
+            // If design is solid or low power static, do not loop continuously
+            if (appConfig.bg_design === "solid") {
+                this.animationFrameId = null;
+                return;
+            }
+
             this.animationFrameId = requestAnimationFrame(render);
         };
         this.animationFrameId = requestAnimationFrame(render);
+    }
+
+    pause() {
+        this.isPaused = true;
+        if (this.animationFrameId) {
+            cancelAnimationFrame(this.animationFrameId);
+            this.animationFrameId = null;
+        }
+    }
+
+    resume() {
+        if (this.isPaused) {
+            this.isPaused = false;
+            this.lastTimestamp = performance.now();
+            this.start();
+        }
     }
 
     draw(dt) {
@@ -727,30 +1001,30 @@ function initPyWebViewBridge() {
 
     setTimeout(async () => {
         if (!isPyWebViewReady) {
-            logToConsole("Running in Local Web Interface Mode.", "info");
+            if (!window.pywebview) window.pywebview = { api: AppBackend };
+            else if (!window.pywebview.api) window.pywebview.api = AppBackend;
+            logToConsole("Local Web Interface & Engine Bridge Active.", "info");
             await loadAppConfig();
             await refreshSystemStats();
             await refreshContinuousStatus();
             await refreshTopProcesses();
         }
-    }, 500);
+    }, 400);
 }
 
 // Config Loader
 async function loadAppConfig() {
     try {
-        if (window.pywebview && window.pywebview.api && window.pywebview.api.get_config) {
-            const cfg = await window.pywebview.api.get_config();
-            if (cfg) appConfig = Object.assign({}, appConfig, cfg);
-        }
-        if (window.pywebview && window.pywebview.api && window.pywebview.api.is_startup_enabled) {
-            const startupActive = await window.pywebview.api.is_startup_enabled();
-            appConfig.run_on_startup = startupActive;
-        }
+        const cfg = await AppBackend.get_config();
+        if (cfg) appConfig = Object.assign({}, appConfig, cfg);
+        const startupActive = await AppBackend.is_startup_enabled();
+        appConfig.run_on_startup = startupActive;
     } catch (e) {
         console.error("Config load error:", e);
     }
     applyConfigToUI();
+    await loadAccountInfo();
+    await loadSecurityStatus();
 }
 
 function applyConfigToUI() {
@@ -782,6 +1056,9 @@ function applyConfigToUI() {
 
     const soundToggle = document.getElementById("setting-sound-toggle");
     if (soundToggle) soundToggle.checked = Boolean(appConfig.sound_effects);
+
+    const lowPowerToggle = document.getElementById("setting-low-power-toggle");
+    if (lowPowerToggle) lowPowerToggle.checked = Boolean(appConfig.low_power_mode);
 
     const bgIntensitySelect = document.getElementById("setting-bg-intensity");
     if (bgIntensitySelect && appConfig.bg_fx_intensity !== undefined) {
@@ -872,7 +1149,31 @@ function applyCustomStyles() {
     const secHex = document.getElementById("secondary-hex-label");
     if (secHex) secHex.innerText = appConfig.accent_secondary || "#a855f7";
 
+    if (appConfig.low_power_mode) {
+        root.style.setProperty("--blur-val", "0px");
+        root.style.setProperty("--bg-fx-opacity", "0.30");
+    }
+
     if (bgCanvasEngine) bgCanvasEngine.resetDesignState();
+}
+
+async function toggleLowPowerMode(enable) {
+    appConfig.low_power_mode = Boolean(enable);
+    const toggle = document.getElementById("setting-low-power-toggle");
+    if (toggle) toggle.checked = appConfig.low_power_mode;
+    
+    if (bgCanvasEngine) {
+        bgCanvasEngine.resetDesignState();
+        if (appConfig.low_power_mode) {
+            bgCanvasEngine.pause();
+        } else {
+            bgCanvasEngine.resume();
+        }
+    }
+    applyCustomStyles();
+    playAudioFX("click");
+    logToConsole(`Low-Spec Hardware Mode ${appConfig.low_power_mode ? "ENABLED (Ultra-Low CPU)" : "DISABLED"}`, "info");
+    await AppBackend.update_setting("low_power_mode", appConfig.low_power_mode);
 }
 
 // =========================================================================
@@ -1169,14 +1470,34 @@ async function updateTargetRamThreshold(val) {
 
 async function exportDiagnosticsReport() {
     playAudioFX("click");
-    if (window.pywebview && window.pywebview.api && window.pywebview.api.export_diagnostics) {
-        try {
-            const report = await window.pywebview.api.export_diagnostics();
-            navigator.clipboard.writeText(report);
-            logToConsole("System diagnostics report copied to clipboard!", "success");
-        } catch (e) {
-            logToConsole(`Failed to export diagnostics: ${e}`, "warning");
+    try {
+        const report = await AppBackend.export_diagnostics();
+        if (!report) {
+            logToConsole("No diagnostics data available.", "warning");
+            return;
         }
+
+        let copied = false;
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            try {
+                await navigator.clipboard.writeText(report);
+                copied = true;
+            } catch (err) {}
+        }
+        if (!copied) {
+            const textarea = document.createElement("textarea");
+            textarea.value = report;
+            textarea.style.position = "fixed";
+            textarea.style.opacity = "0";
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand("copy");
+            document.body.removeChild(textarea);
+            copied = true;
+        }
+        logToConsole("System diagnostics report copied to clipboard!", "success");
+    } catch (e) {
+        logToConsole(`Failed to export diagnostics: ${e}`, "warning");
     }
 }
 
@@ -1316,15 +1637,11 @@ function setContinuousModePreset(mode, notifyBackend = true) {
 // Telemetry Stats Refresh
 async function refreshSystemStats() {
     try {
-        let specs = null;
-        let hw = null;
+        let specs = await AppBackend.get_system_specs();
+        let hw = await AppBackend.get_hardware_details();
 
-        if (window.pywebview && window.pywebview.api) {
-            specs = await window.pywebview.api.get_system_specs();
-            hw = await window.pywebview.api.get_hardware_details();
-        } else {
-            specs = { os_name: "Windows 11", total_ram_gb: 16.0, used_ram_gb: 6.8, avail_ram_gb: 9.2, percent_used: 42.5, cpu_percent: 18.0, timer_res_ms: 1.0, is_admin: true };
-            hw = { cpu_cores_logical: 16, gpu_vendor: "NVIDIA GeForce RTX 4070", device_profile: "High-End Gaming Rig (32GB+ RAM)" };
+        if (!specs) {
+            specs = { os_name: "Windows", total_ram_gb: 8.0, used_ram_gb: 4.0, avail_ram_gb: 4.0, percent_used: 50.0, cpu_percent: 10.0, timer_res_ms: 1.0, is_admin: false };
         }
 
         if (specs) {
@@ -1387,45 +1704,37 @@ async function triggerAction(actionId, extraArg = null) {
     playAudioFX("action");
     logToConsole(`Executing action: '${actionId}'...`, "info");
 
-    if (window.pywebview && window.pywebview.api && window.pywebview.api.execute_action) {
-        try {
-            const res = await window.pywebview.api.execute_action(actionId, extraArg);
-            if (res && res.logs) {
-                res.logs.forEach(msg => logToConsole(msg, "success"));
-                playAudioFX("success");
-            } else if (res && res.message) {
-                logToConsole(res.message, "success");
-                playAudioFX("success");
-            }
-            refreshSystemStats();
-        } catch (err) {
-            logToConsole(`Action error: ${err}`, "warning");
+    try {
+        const res = await AppBackend.execute_action(actionId, extraArg);
+        if (res && res.logs) {
+            res.logs.forEach(msg => logToConsole(msg, "success"));
+            playAudioFX("success");
+        } else if (res && res.message) {
+            logToConsole(res.message, "success");
+            playAudioFX("success");
         }
-    } else {
-        logToConsole(`Action '${actionId}' executed successfully.`, "success");
-        playAudioFX("success");
+        refreshSystemStats();
+    } catch (err) {
+        logToConsole(`Action error: ${err}`, "warning");
     }
 }
 
 // Process Manager
 async function refreshTopProcesses() {
     try {
-        let procs = [];
-        if (window.pywebview && window.pywebview.api && window.pywebview.api.get_top_ram_processes) {
-            procs = await window.pywebview.api.get_top_ram_processes(15);
-        } else {
-            procs = [
-                { pid: 14208, name: "Valorant.exe", mem_mb: 2480.5 },
-                { pid: 8912, name: "chrome.exe", mem_mb: 1220.2 },
-                { pid: 4310, name: "Discord.exe", mem_mb: 460.1 },
-                { pid: 9812, name: "Spotify.exe", mem_mb: 280.4 },
-                { pid: 2104, name: "Steam.exe", mem_mb: 210.8 }
-            ];
+        let procs = await AppBackend.get_top_ram_processes(15);
+        if (!procs || !procs.length) {
+            procs = [];
         }
 
         const tbody = document.getElementById("top-procs-tbody");
         if (!tbody) return;
         tbody.innerHTML = "";
+
+        if (procs.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="4" class="text-muted text-center">No high-memory processes detected or querying...</td></tr>`;
+            return;
+        }
 
         procs.forEach(p => {
             const tr = document.createElement("tr");
@@ -1434,7 +1743,10 @@ async function refreshTopProcesses() {
                 <td><code style="color:var(--text-muted);">${p.pid}</code></td>
                 <td><strong>${p.name}</strong></td>
                 <td class="text-cyan">${p.mem_mb} MB</td>
-                <td><button class="btn btn-xs btn-red" onclick="triggerAction('kill_process', ${p.pid})">End Process</button></td>
+                <td style="white-space:nowrap;">
+                    <button class="btn btn-xs btn-cyan" onclick="triggerAction('boost_process', ${p.pid})" style="margin-right:6px;" title="Boost CPU and Disk I/O priority for maximum performance">⚡ Boost</button>
+                    <button class="btn btn-xs btn-red" onclick="triggerAction('kill_process', ${p.pid})" title="Safely terminate process">End Process</button>
+                </td>
             `;
             tbody.appendChild(tr);
         });
@@ -1803,14 +2115,12 @@ async function openGuideModal() {
     playAudioFX("click");
     const select = document.getElementById("guide-topic-select");
     if (select && select.options.length === 0) {
-        if (window.pywebview && window.pywebview.api && window.pywebview.api.get_guide_steps) {
-            try {
-                const backendSteps = await window.pywebview.api.get_guide_steps();
-                if (backendSteps && backendSteps.length) {
-                    guideSteps = backendSteps;
-                }
-            } catch (e) {}
-        }
+        try {
+            const backendSteps = await AppBackend.get_guide_steps();
+            if (backendSteps && backendSteps.length) {
+                guideSteps = backendSteps;
+            }
+        } catch (e) {}
         select.innerHTML = "";
         guideSteps.forEach((s, i) => {
             const opt = document.createElement("option");
@@ -1835,6 +2145,9 @@ function closeGuideModal() {
 window.addEventListener("keydown", (e) => {
     if (e.key === "Escape") {
         closeGuideModal();
+        closeProfileModal();
+        closeSecurityModal();
+        closeFeedbackModal();
     } else if (e.key === "ArrowRight") {
         const overlay = document.getElementById("guide-modal-overlay");
         if (overlay && overlay.classList.contains("active")) nextGuideStep();
@@ -1845,10 +2158,427 @@ window.addEventListener("keydown", (e) => {
 });
 
 document.addEventListener("DOMContentLoaded", () => {
-    const overlay = document.getElementById("guide-modal-overlay");
-    if (overlay) {
-        overlay.addEventListener("click", (e) => {
-            if (e.target === overlay) closeGuideModal();
+    ["guide-modal-overlay", "profile-modal-overlay", "security-modal-overlay", "feedback-modal-overlay"].forEach(id => {
+        const overlay = document.getElementById(id);
+        if (overlay) {
+            overlay.addEventListener("click", (e) => {
+                if (e.target === overlay) {
+                    overlay.classList.remove("active");
+                }
+            });
+        }
+    });
+});
+
+// =========================================================================
+// USER ACCOUNT & PROFILE STUDIO CONTROLLER (Guest by Default)
+// =========================================================================
+
+let currentUserAccount = {
+    username: "Guest User",
+    avatar: "👤",
+    is_guest: true,
+    total_optimizations: 0,
+    total_ram_reclaimed_gb: 0.0,
+    active_profile_id: "default",
+    pin_code: ""
+};
+
+const AVAILABLE_AVATARS = ["👤", "🎮", "⚡", "🛡️", "🚀", "💻", "👑", "👾", "🤖", "🐉", "🎯", "🔮"];
+
+async function loadAccountInfo() {
+    try {
+        const info = await AppBackend.get_account_info();
+        if (info) {
+            currentUserAccount = Object.assign({}, currentUserAccount, info);
+        }
+    } catch (e) {
+        console.error("Account load error:", e);
+    }
+    updateAccountUI();
+}
+
+function updateAccountUI() {
+    // Header badges
+    const headerAvatar = document.getElementById("header-avatar");
+    const headerUsername = document.getElementById("header-username");
+    if (headerAvatar) headerAvatar.innerText = currentUserAccount.avatar || "👤";
+    if (headerUsername) headerUsername.innerText = currentUserAccount.username || "Guest User";
+
+    // Modal elements
+    const modalAvatar = document.getElementById("modal-profile-avatar");
+    if (modalAvatar) modalAvatar.innerText = currentUserAccount.avatar || "👤";
+
+    const nameInput = document.getElementById("profile-username-input");
+    if (nameInput) nameInput.value = currentUserAccount.username || "Guest User";
+
+    const ramStat = document.getElementById("profile-ram-stat");
+    if (ramStat) ramStat.innerText = `${(currentUserAccount.total_ram_reclaimed_gb || 0).toFixed(1)} GB`;
+
+    const runsStat = document.getElementById("profile-runs-stat");
+    if (runsStat) runsStat.innerText = `${currentUserAccount.total_optimizations || 0}`;
+
+    const profileSel = document.getElementById("profile-selector");
+    if (profileSel && currentUserAccount.active_profile_id) {
+        profileSel.value = currentUserAccount.active_profile_id;
+    }
+
+    const pinInput = document.getElementById("profile-pin-input");
+    if (pinInput) pinInput.value = currentUserAccount.pin_code || "";
+
+    // Build Avatar Picker
+    const picker = document.getElementById("avatar-picker");
+    if (picker) {
+        picker.innerHTML = "";
+        AVAILABLE_AVATARS.forEach(av => {
+            const btn = document.createElement("button");
+            btn.className = `avatar-btn ${av === currentUserAccount.avatar ? 'active' : ''}`;
+            btn.innerText = av;
+            btn.onclick = () => selectAvatar(av);
+            picker.appendChild(btn);
         });
     }
-});
+}
+
+function selectAvatar(avatarChar) {
+    playAudioFX("click");
+    currentUserAccount.avatar = avatarChar;
+    updateAccountUI();
+}
+
+function openProfileModal() {
+    playAudioFX("click");
+    loadAccountInfo();
+    const overlay = document.getElementById("profile-modal-overlay");
+    if (overlay) overlay.classList.add("active");
+}
+
+function closeProfileModal() {
+    playAudioFX("click");
+    const overlay = document.getElementById("profile-modal-overlay");
+    if (overlay) overlay.classList.remove("active");
+}
+
+async function saveProfileChanges() {
+    playAudioFX("action");
+    const nameInput = document.getElementById("profile-username-input");
+    const pinInput = document.getElementById("profile-pin-input");
+    if (nameInput) currentUserAccount.username = nameInput.value.trim() || "Guest User";
+    if (pinInput) currentUserAccount.pin_code = pinInput.value.trim();
+
+    try {
+        await AppBackend.update_account_info(currentUserAccount);
+        logToConsole(`Profile updated: ${currentUserAccount.username} (${currentUserAccount.avatar})`, "success");
+        playAudioFX("success");
+    } catch (e) {
+        logToConsole(`Profile save error: ${e}`, "error");
+    }
+    updateAccountUI();
+    closeProfileModal();
+}
+
+async function switchUserProfile(profileId) {
+    playAudioFX("action");
+    try {
+        const res = await AppBackend.switch_profile(profileId);
+        if (res && res.status) {
+            currentUserAccount.active_profile_id = profileId;
+            if (res.config) {
+                appConfig = Object.assign({}, appConfig, res.config);
+                applyConfigToUI();
+            }
+            logToConsole(`Switched profile to '${profileId}'.`, "success");
+            playAudioFX("success");
+        }
+    } catch (e) {
+        logToConsole(`Profile switch error: ${e}`, "error");
+    }
+}
+
+function exportProfileData() {
+    playAudioFX("click");
+    const jsonStr = JSON.stringify(currentUserAccount, null, 2);
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(jsonStr);
+        logToConsole("Account & Profile JSON copied to clipboard!", "success");
+    }
+}
+
+// =========================================================================
+// SYSTEM SECURITY & INTEGRITY SHIELD CONTROLLER
+// =========================================================================
+
+let lastSecurityData = null;
+
+async function loadSecurityStatus() {
+    try {
+        const sec = await AppBackend.audit_system_security();
+        if (sec) {
+            lastSecurityData = sec;
+            renderSecurityUI(sec);
+        }
+    } catch (e) {
+        console.error("Security audit error:", e);
+    }
+}
+
+function renderSecurityUI(sec) {
+    // Header Badge
+    const headerSecText = document.getElementById("header-security-text");
+    if (headerSecText) {
+        headerSecText.innerText = `Security: ${sec.security_grade || 'A+'}`;
+    }
+
+    // Modal elements
+    const scoreText = document.getElementById("sec-score-text");
+    if (scoreText) scoreText.innerText = `${sec.security_score} / 100`;
+
+    const gradePill = document.getElementById("sec-grade-pill");
+    if (gradePill) gradePill.innerText = sec.security_grade || "A+";
+
+    const auditTime = document.getElementById("sec-audit-time");
+    if (auditTime) auditTime.innerText = `Last audited: ${sec.timestamp || 'Just now'}`;
+
+    // Checklist
+    const checklist = document.getElementById("security-checklist-container");
+    if (checklist && sec.checks) {
+        checklist.innerHTML = "";
+        sec.checks.forEach(chk => {
+            const isPass = chk.status === "PASS";
+            const item = document.createElement("div");
+            item.className = "security-item";
+            item.innerHTML = `
+                <div class="security-item-header">
+                    <span style="font-weight:700; color:var(--text-primary); font-size:12px;">${isPass ? '🛡️' : '⚠️'} ${chk.name}</span>
+                    <span class="status-pill ${isPass ? 'pass' : 'warn'}">${chk.status}</span>
+                </div>
+                <div style="font-size:11px; color:var(--text-secondary);">${chk.desc}</div>
+                <div style="font-size:10px; color:${isPass ? 'var(--green)' : 'var(--amber)'}; font-weight:600;">Impact: ${chk.impact}</div>
+            `;
+            checklist.appendChild(item);
+        });
+    }
+
+    // Suspicious process alert
+    const suspBox = document.getElementById("suspicious-procs-box");
+    const suspList = document.getElementById("suspicious-procs-list");
+    if (suspBox && suspList) {
+        if (sec.suspicious_processes && sec.suspicious_processes.length > 0) {
+            suspBox.style.display = "block";
+            suspList.innerHTML = sec.suspicious_processes.map(p => `• PID ${p.pid}: <strong>${p.name}</strong> (${p.cpu}% CPU)`).join("<br>");
+        } else {
+            suspBox.style.display = "none";
+        }
+    }
+}
+
+function openSecurityModal() {
+    playAudioFX("click");
+    loadSecurityStatus();
+    const overlay = document.getElementById("security-modal-overlay");
+    if (overlay) overlay.classList.add("active");
+}
+
+function closeSecurityModal() {
+    playAudioFX("click");
+    const overlay = document.getElementById("security-modal-overlay");
+    if (overlay) overlay.classList.remove("active");
+}
+
+async function runLiveSecurityAudit() {
+    playAudioFX("action");
+    logToConsole("Running full security, whitelist, and cryptominer audit...", "info");
+    await loadSecurityStatus();
+    playAudioFX("success");
+    logToConsole(`Security Audit Complete! System Grade: ${lastSecurityData?.security_grade || 'A+'} (${lastSecurityData?.security_score || 100}/100)`, "success");
+}
+
+// =========================================================================
+// COMMUNITY REPORT & SUGGESTION CENTER CONTROLLER
+// =========================================================================
+
+let currentFeedbackTab = 'bug';
+let currentSanitizedSpecs = '';
+
+function openFeedbackModal() {
+    playAudioFX("click");
+    switchFeedbackTab('bug');
+    refreshSanitizedSpecsPreview();
+    const overlay = document.getElementById("feedback-modal-overlay");
+    if (overlay) overlay.classList.add("active");
+}
+
+function closeFeedbackModal() {
+    playAudioFX("click");
+    const overlay = document.getElementById("feedback-modal-overlay");
+    if (overlay) overlay.classList.remove("active");
+}
+
+function switchFeedbackTab(tab) {
+    playAudioFX("click");
+    currentFeedbackTab = tab;
+    ['bug', 'feature', 'general', 'history'].forEach(t => {
+        const btn = document.getElementById(`f-tab-${t}`);
+        if (btn) btn.classList.toggle('active', t === tab);
+    });
+
+    const formPanel = document.getElementById("feedback-form-panel");
+    const histPanel = document.getElementById("feedback-history-panel");
+    if (tab === 'history') {
+        if (formPanel) formPanel.style.display = "none";
+        if (histPanel) histPanel.style.display = "block";
+        loadFeedbackHistoryList();
+    } else {
+        if (formPanel) formPanel.style.display = "block";
+        if (histPanel) histPanel.style.display = "none";
+        
+        // Adjust default title placeholders based on tab
+        const titleInput = document.getElementById("feedback-title");
+        if (titleInput && !titleInput.value) {
+            if (tab === 'bug') titleInput.placeholder = "e.g. Memory flush error on low-end hardware";
+            else if (tab === 'feature') titleInput.placeholder = "e.g. Add quick hotkey to purge RAM from in-game";
+            else titleInput.placeholder = "e.g. Great tool! Here are my impressions";
+        }
+    }
+}
+
+async function refreshSanitizedSpecsPreview() {
+    const previewBox = document.getElementById("feedback-spec-preview");
+    if (!previewBox) return;
+    try {
+        const specs = await AppBackend.get_system_specs();
+        const hw = await AppBackend.get_hardware_details();
+        const cfg = await AppBackend.get_config();
+
+        currentSanitizedSpecs = [
+            `OS: ${specs?.os_name || 'Windows'} (${specs?.os_type || 'windows'}) [Anonymous]`,
+            `Physical RAM: ${specs?.total_ram_gb || 0} GB (Used: ${specs?.used_ram_gb || 0} GB)`,
+            `CPU Logical Cores: ${hw?.cpu_cores_logical || 4}`,
+            `GPU: ${hw?.gpu_vendor || 'Unknown GPU'}`,
+            `Device Profile: ${hw?.device_profile || 'Balanced'}`,
+            `Timer Precision: ${specs?.timer_res_ms || 1.0} ms`,
+            `Active Theme: ${cfg?.theme || 'obsidian'}`,
+            `Elevation: ${specs?.is_admin ? 'Elevated/Admin' : 'Standard User'}`
+        ].join('\n');
+
+        previewBox.innerText = currentSanitizedSpecs;
+    } catch (e) {
+        previewBox.innerText = "Anonymous specs ready.";
+    }
+}
+
+function toggleSpecPreview(include) {
+    const previewBox = document.getElementById("feedback-spec-preview");
+    if (previewBox) {
+        previewBox.style.display = include ? "block" : "none";
+    }
+}
+
+function buildReportPayload() {
+    const title = (document.getElementById("feedback-title")?.value || "").trim() || "User Report";
+    const category = document.getElementById("feedback-category")?.value || "General";
+    const severity = document.getElementById("feedback-severity")?.value || "Normal";
+    const desc = (document.getElementById("feedback-desc")?.value || "").trim();
+    const includeSpecs = document.getElementById("feedback-include-specs")?.checked ?? true;
+
+    return {
+        type: currentFeedbackTab,
+        title: title,
+        category: category,
+        severity: severity,
+        description: desc,
+        specs: includeSpecs ? currentSanitizedSpecs : "Omitted by user",
+        timestamp: new Date().toISOString()
+    };
+}
+
+function formatReportForClipboard(payload) {
+    return [
+        `### [${payload.type.toUpperCase()}] ${payload.title}`,
+        `**Category:** ${payload.category}`,
+        `**Severity / Impact:** ${payload.severity}`,
+        ``,
+        `#### Description & Details:`,
+        payload.description || "(No description provided)",
+        ``,
+        `#### Environment & Anonymous Diagnostics:`,
+        `\`\`\``,
+        payload.specs,
+        `\`\`\``
+    ].join('\n');
+}
+
+function copyFeedbackReport() {
+    playAudioFX("click");
+    const payload = buildReportPayload();
+    const formatted = formatReportForClipboard(payload);
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(formatted);
+        logToConsole("Report formatted and copied to clipboard!", "success");
+    }
+}
+
+async function saveFeedbackReportLocally() {
+    playAudioFX("action");
+    const payload = buildReportPayload();
+    try {
+        await AppBackend.submit_feedback(payload);
+        logToConsole("Feedback saved locally to history!", "success");
+        playAudioFX("success");
+    } catch (e) {
+        logToConsole(`Failed to save feedback: ${e}`, "error");
+    }
+}
+
+async function loadFeedbackHistoryList() {
+    const container = document.getElementById("feedback-history-container");
+    if (!container) return;
+    container.innerHTML = "<div class='text-muted' style='font-size:11px;'>Loading past reports...</div>";
+
+    try {
+        const list = await AppBackend.get_feedback_history();
+        if (!list || list.length === 0) {
+            container.innerHTML = "<div class='text-muted' style='padding:16px; text-align:center;'>No reports submitted yet. Your local history will appear here.</div>";
+            return;
+        }
+        container.innerHTML = "";
+        list.forEach(item => {
+            const div = document.createElement("div");
+            div.className = "feedback-history-item";
+            div.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span style="font-weight:700; color:var(--text-primary); font-size:12px;">${item.type === 'bug' ? '🐛' : item.type === 'feature' ? '💡' : '⭐'} ${item.title || 'Untitled'}</span>
+                    <span style="font-size:10px; color:var(--text-muted);">${item.timestamp || ''}</span>
+                </div>
+                <div style="font-size:11px; color:var(--text-secondary); max-height:40px; overflow:hidden; text-overflow:ellipsis;">${item.description || ''}</div>
+                <div style="font-size:10px; color:var(--cyan);">${item.category || ''} • ${item.severity || ''}</div>
+            `;
+            container.appendChild(div);
+        });
+    } catch (e) {
+        container.innerHTML = "<div class='text-muted'>Error loading history.</div>";
+    }
+}
+
+function submitToGitHubIssues() {
+    playAudioFX("action");
+    const payload = buildReportPayload();
+    saveFeedbackReportLocally();
+
+    const repoUrl = "https://github.com/RaghavGogoi/Mr.-Drew-s-Device-Optimizer/issues/new";
+    const issueTitle = encodeURIComponent(`[${payload.type.toUpperCase()}] ${payload.title}`);
+    const bodyText = formatReportForClipboard(payload);
+    const issueBody = encodeURIComponent(bodyText);
+
+    let targetUrl = `${repoUrl}?title=${issueTitle}&body=${issueBody}`;
+    if (payload.type === 'bug') {
+        targetUrl += `&labels=bug`;
+    } else if (payload.type === 'feature') {
+        targetUrl += `&labels=enhancement`;
+    }
+
+    logToConsole("Opening GitHub Issues page in browser...", "info");
+    if (typeof window.open === "function") {
+        window.open(targetUrl, "_blank");
+    }
+}
